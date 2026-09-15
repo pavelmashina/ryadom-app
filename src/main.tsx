@@ -4,6 +4,7 @@ import App from "./App";
 import CloudGate from "./CloudGate";
 import { checkSupabaseConnection } from "./supabase";
 import "./styles.css";
+import "./cloud.css";
 
 if ("serviceWorker" in navigator && !location.hostname.match(/^(localhost|127\.0\.0\.1)$/)) {
   window.addEventListener("load", () => {
