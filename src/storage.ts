@@ -16,7 +16,13 @@ export function loadState(): { state: State; error: string } {
   }
 }
 export function saveState(state: State) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(stateSchema.parse(state)));
+  const parsed = stateSchema.parse(state);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent<State>("ryadom:state-saved", { detail: parsed }),
+    );
+  }
 }
 export function parseBackup(raw: string) {
   return stateSchema.parse(JSON.parse(raw));
