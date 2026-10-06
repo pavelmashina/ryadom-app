@@ -37,6 +37,9 @@ function configured() {
 async function parseError(response: Response) {
   try {
     const body = (await response.json()) as AuthResponse;
+    if (body.code === "same_password") return "Новый пароль должен отличаться от прежнего.";
+    if (body.code === "weak_password") return "Выберите более надёжный пароль: минимум 8 символов, буквы и цифры.";
+    if (body.code === "email_address_not_authorized") return "Отправка писем пока недоступна для этого адреса. Обратитесь к владельцу приложения.";
     if (body.code === "PT409" || body.code === "40001") return "Данные изменились на другом устройстве. Обновите страницу перед сохранением.";
     if (body.code === "23505") return "Такая команда или запись уже существует.";
     if (response.status === 401) return "Сессия истекла или неверный email / пароль. Войдите снова.";
@@ -192,4 +195,65 @@ export async function rpc(session:AuthSession,name:string,body:Record<string,unk
   });
   if(!response.ok)throw new Error(await parseError(response));
   return response.json();
+}
+
+const RECOVERY_KEY = "ryadom:recovery:v1";
+const RECOVERY_EXPIRED = "Ссылка недействительна или устарела. Запросите новое письмо.";
+export function clearRecovery() { sessionStorage.removeItem(RECOVERY_KEY); }
+
+export async function requestPasswordReset(email: string) {
+  const { supabaseUrl, publishableKey } = configured();
+  const redirect = new URL(import.meta.env.BASE_URL, location.origin).href;
+  const response = await request(`${supabaseUrl}/auth/v1/recover?redirect_to=${encodeURIComponent(redirect)}`, {
+    method: "POST", headers: { apikey: publishableKey, "Content-Type": "application/json" },
+    body: JSON.stringify({ email: email.trim() }),
+  });
+  if (!response.ok) throw new Error(await parseError(response));
+}
+
+// Recovery is scoped to this tab and never replaces another account's login.
+export async function readRecoverySession(): Promise<AuthSession | null> {
+  const params = new URLSearchParams(location.hash.slice(1));
+  let candidate: Partial<AuthSession> | null = null;
+  if (params.has("error") || params.get("type") === "recovery") {
+    history.replaceState(null, "", location.pathname + location.search);
+    clearRecovery();
+    if (params.has("error")) throw new Error(RECOVERY_EXPIRED);
+    const seconds = Number(params.get("expires_in"));
+    const absolute = Number(params.get("expires_at"));
+    candidate = { accessToken: params.get("access_token") || "", refreshToken: params.get("refresh_token") || "",
+      expiresAt: absolute > 0 ? absolute * 1000 : Date.now() + Math.min(seconds, 3600) * 1000 };
+    sessionStorage.setItem(RECOVERY_KEY, JSON.stringify(candidate));
+  } else {
+    const saved = sessionStorage.getItem(RECOVERY_KEY);
+    if (!saved) return null;
+    try { candidate = JSON.parse(saved) as Partial<AuthSession>; }
+    catch { clearRecovery(); throw new Error(RECOVERY_EXPIRED); }
+  }
+  if (!candidate?.accessToken || !candidate.refreshToken || !candidate.expiresAt || candidate.expiresAt <= Date.now()) {
+    clearRecovery(); throw new Error(RECOVERY_EXPIRED);
+  }
+  const { supabaseUrl, publishableKey } = configured();
+  const response = await request(`${supabaseUrl}/auth/v1/user`, {
+    method: "GET", headers: { apikey: publishableKey, Authorization: `Bearer ${candidate.accessToken}` },
+  });
+  if (!response.ok) { clearRecovery(); throw new Error(RECOVERY_EXPIRED); }
+  const user = await response.json() as AuthUser;
+  if (!user.id) { clearRecovery(); throw new Error(RECOVERY_EXPIRED); }
+  return { accessToken: candidate.accessToken, refreshToken: candidate.refreshToken, expiresAt: candidate.expiresAt, user };
+}
+
+export async function resetPassword(session: AuthSession, password: string, confirmation: string) {
+  if (password.length < 8) throw new Error("Пароль должен содержать минимум 8 символов.");
+  if (password !== confirmation) throw new Error("Пароли не совпадают.");
+  if (session.expiresAt <= Date.now()) { clearRecovery(); throw new Error(RECOVERY_EXPIRED); }
+  const { supabaseUrl, publishableKey } = configured();
+  const response = await request(`${supabaseUrl}/auth/v1/user`, {
+    method: "PUT", headers: { apikey: publishableKey, Authorization: `Bearer ${session.accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
+  if (!response.ok) throw new Error(await parseError(response));
+  clearRecovery();
+  // Updating the password succeeded even if revoking the temporary session fails.
+  try { await signOut(session); } catch { /* Session expires normally if offline. */ }
 }
