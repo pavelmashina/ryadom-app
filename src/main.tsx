@@ -1,6 +1,5 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App";
 import CloudGate from "./CloudGate";
 import { checkSupabaseConnection } from "./supabase";
 import "./styles.css";
@@ -19,8 +18,6 @@ void checkSupabaseConnection().then((result) => {
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <CloudGate>
-      <App />
-    </CloudGate>
+    <CloudGate />
   </React.StrictMode>,
 );

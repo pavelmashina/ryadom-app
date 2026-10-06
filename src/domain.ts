@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { trainingSchema } from "./training-domain";
 export const iso = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 export const today = () => iso(new Date());
@@ -74,6 +75,7 @@ export const petSchema = z.object({
   done: z.record(z.boolean()),
   commands: z.array(z.object({ id: z.string(), name: nameSchema })),
   sessions: z.array(sessionSchema),
+  workouts: z.array(trainingSchema).default([]),
   weights: z.array(
     z.object({
       id: z.string(),
@@ -118,6 +120,8 @@ export const stateSchema = z
     )
       ctx.addIssue({ code: "custom", message: "Некорректные питомцы" });
     for (const p of s.pets) {
+      if (new Set(p.commands.map(c=>c.name.trim().toLowerCase())).size !== p.commands.length || new Set(p.commands.map(c=>c.id)).size !== p.commands.length) ctx.addIssue({code:"custom",message:"Повторяющиеся команды"});
+      if (new Set(p.workouts.map(w=>w.id)).size !== p.workouts.length || p.workouts.some(w=>w.results.some(r=>!p.commands.some(c=>c.id===r.command_id)))) ctx.addIssue({code:"custom",message:"Некорректные команды тренировки"});
       if (p.sessions.some((s) => !p.commands.some((c) => c.id === s.command)))
         ctx.addIssue({ code: "custom", message: "Занятие без команды" });
     }
@@ -135,6 +139,7 @@ export const blankPet = (name: string): Pet => ({
   done: {},
   commands: [],
   sessions: [],
+  workouts: [],
   weights: [],
   records: [],
   stock: 0,
@@ -145,7 +150,7 @@ export const blankPet = (name: string): Pet => ({
   documents: [],
 });
 export const initialState = (): State => {
-  const p = blankPet("Масюша");
+  const p = blankPet("Мой питомец");
   return { version: 1, selectedPet: p.id, pets: [p] };
 };
 export function occurs(e: PetEvent, s: string) {

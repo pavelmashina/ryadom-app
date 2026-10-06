@@ -23,6 +23,8 @@ type AuthResponse = {
   error?: string;
   error_description?: string;
   msg?: string;
+  message?: string;
+  code?: string;
 };
 
 function configured() {
@@ -35,7 +37,11 @@ function configured() {
 async function parseError(response: Response) {
   try {
     const body = (await response.json()) as AuthResponse;
-    return body.error_description || body.msg || body.error || `Ошибка ${response.status}`;
+    if (body.code === "PT409" || body.code === "40001") return "Данные изменились на другом устройстве. Обновите страницу перед сохранением.";
+    if (body.code === "23505") return "Такая команда или запись уже существует.";
+    if (response.status === 401) return "Сессия истекла или неверный email / пароль. Войдите снова.";
+    if (response.status === 429) return "Слишком много попыток. Подождите и повторите.";
+    return body.message || body.error_description || body.msg || body.error || `Ошибка ${response.status}`;
   } catch {
     return `Ошибка ${response.status}`;
   }
@@ -77,7 +83,7 @@ function storeSession(session: AuthSession | null) {
 
 export async function signIn(email: string, password: string) {
   const { supabaseUrl, publishableKey } = configured();
-  const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+  const response = await request(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
     method: "POST",
     headers: {
       apikey: publishableKey,
@@ -94,7 +100,7 @@ export async function signIn(email: string, password: string) {
 
 export async function signUp(email: string, password: string) {
   const { supabaseUrl, publishableKey } = configured();
-  const response = await fetch(`${supabaseUrl}/auth/v1/signup`, {
+  const response = await request(`${supabaseUrl}/auth/v1/signup`, {
     method: "POST",
     headers: {
       apikey: publishableKey,
@@ -109,9 +115,9 @@ export async function signUp(email: string, password: string) {
   return { session, needsEmailConfirmation: !session };
 }
 
-export async function refreshSession(session: AuthSession) {
+async function performRefresh(session: AuthSession) {
   const { supabaseUrl, publishableKey } = configured();
-  const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
+  const response = await request(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
     method: "POST",
     headers: {
       apikey: publishableKey,
@@ -120,10 +126,11 @@ export async function refreshSession(session: AuthSession) {
     body: JSON.stringify({ refresh_token: session.refreshToken }),
   });
   if (!response.ok) {
-    storeSession(null);
+    if (readStoredSession()?.refreshToken === session.refreshToken) storeSession(null);
     return null;
   }
   const next = toSession((await response.json()) as AuthResponse);
+  if (readStoredSession()?.user.id !== session.user.id) throw new Error("Аккаунт изменился");
   if (!next) {
     storeSession(null);
     return null;
@@ -132,6 +139,11 @@ export async function refreshSession(session: AuthSession) {
   return next;
 }
 
+let refreshing: Promise<AuthSession | null> | null = null;
+export function refreshSession(session: AuthSession) {
+  if (!refreshing) refreshing=performRefresh(session).finally(()=>{refreshing=null;});
+  return refreshing;
+}
 export async function getValidSession() {
   const session = readStoredSession();
   if (!session) return null;
@@ -143,7 +155,7 @@ export async function signOut(session: AuthSession | null) {
   try {
     if (session) {
       const { supabaseUrl, publishableKey } = configured();
-      await fetch(`${supabaseUrl}/auth/v1/logout`, {
+      await request(`${supabaseUrl}/auth/v1/logout`, {
         method: "POST",
         headers: {
           apikey: publishableKey,
@@ -152,53 +164,32 @@ export async function signOut(session: AuthSession | null) {
       });
     }
   } finally {
-    storeSession(null);
+    if (session && readStoredSession()?.user.id === session.user.id) storeSession(null);
   }
 }
 
 async function authorizedSession(session: AuthSession) {
-  if (session.expiresAt > Date.now() + 60_000) return session;
+  const stored=readStoredSession();
+  if(stored?.user.id!==session.user.id) throw new Error("Аккаунт изменился. Войдите снова.");
+  if (stored.expiresAt > Date.now() + 60_000) return stored;
   const refreshed = await refreshSession(session);
   if (!refreshed) throw new Error("Сессия истекла. Войдите снова.");
   return refreshed;
 }
 
-export async function loadCloudState(session: AuthSession) {
-  const current = await authorizedSession(session);
-  const { supabaseUrl, publishableKey } = configured();
-  const response = await fetch(
-    `${supabaseUrl}/rest/v1/user_state?select=state,updated_at&user_id=eq.${encodeURIComponent(current.user.id)}&limit=1`,
-    {
-      headers: {
-        apikey: publishableKey,
-        Authorization: `Bearer ${current.accessToken}`,
-        Accept: "application/json",
-      },
-      cache: "no-store",
-    },
-  );
-  if (!response.ok) throw new Error(await parseError(response));
-  const rows = (await response.json()) as Array<{ state: unknown; updated_at: string }>;
-  return rows[0] || null;
-}
 
-export async function saveCloudState(session: AuthSession, state: unknown) {
-  const current = await authorizedSession(session);
-  const { supabaseUrl, publishableKey } = configured();
-  const response = await fetch(`${supabaseUrl}/rest/v1/user_state?on_conflict=user_id`, {
-    method: "POST",
-    headers: {
-      apikey: publishableKey,
-      Authorization: `Bearer ${current.accessToken}`,
-      "Content-Type": "application/json",
-      Prefer: "resolution=merge-duplicates,return=minimal",
-    },
-    body: JSON.stringify({
-      user_id: current.user.id,
-      state,
-      updated_at: new Date().toISOString(),
-    }),
+async function request(url:string,options:RequestInit) {
+  try {return await fetch(url,{...options,signal:AbortSignal.timeout(25000)});}
+  catch {throw new Error("Нет связи с сервером. Проверьте интернет и повторите. Данные не сохранены.");}
+}
+export async function rpc(session:AuthSession,name:string,body:Record<string,unknown>):Promise<unknown> {
+  const current=await authorizedSession(session);
+  const {supabaseUrl,publishableKey}=configured();
+  const response=await request(supabaseUrl+"/rest/v1/rpc/"+name,{
+    method:"POST",cache:"no-store",
+    headers:{apikey:publishableKey,Authorization:"Bearer "+current.accessToken,"Content-Type":"application/json"},
+    body:JSON.stringify(body)
   });
-  if (!response.ok) throw new Error(await parseError(response));
-  return current;
+  if(!response.ok)throw new Error(await parseError(response));
+  return response.json();
 }

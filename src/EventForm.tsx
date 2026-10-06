@@ -13,14 +13,14 @@ export default function EventForm({
   category?: PetEvent["category"];
   name?: string;
   linkedRecord?: string;
-  onSave: (e: PetEvent) => void;
+  onSave: (e: PetEvent) => void | Promise<void>;
 }) {
   const [allDay, setAllDay] = useState(true),
     [repeat, setRepeat] = useState("once");
   return (
     <Form
       label="Добавить в календарь"
-      onSave={(d) => {
+      onSave={async (d) => {
         const parsed = eventSchema.safeParse({
           id: id(),
           name: text(d, "name"),
@@ -34,7 +34,7 @@ export default function EventForm({
           linkedRecord,
         });
         if (!parsed.success) throw new Error(parsed.error.issues[0].message);
-        onSave(parsed.data);
+        await onSave(parsed.data);
       }}
     >
       <Select label="Категория" name="category" defaultValue={category}>

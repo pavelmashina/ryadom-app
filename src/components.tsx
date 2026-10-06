@@ -82,8 +82,11 @@ export function Form({
 }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     const d = new FormData(e.currentTarget);
     setError("");
     setBusy(true);
@@ -92,6 +95,7 @@ export function Form({
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось сохранить");
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
   }

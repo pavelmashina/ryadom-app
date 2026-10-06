@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   PawPrint,
   Dog,
@@ -40,11 +40,8 @@ import {
   type State,
 } from "./domain";
 import {
-  loadState,
-  saveState,
   parseBackup,
   download,
-  STORAGE_KEY,
 } from "./storage";
 type Screen = "day" | "health" | "training" | "stock" | "profile";
 type Overlay =
@@ -77,8 +74,10 @@ const nav = [
   ["training", "Занятия", GraduationCap],
   ["stock", "Запасы", Package],
 ] as const;
-export default function App() {
-  const [loaded] = useState(loadState);
+export default function App({initial,onPersist}:{initial:State;onPersist:(next:State)=>Promise<State>}) {
+  const loaded={state:initial,error:""};
+  const saving=useRef(false);
+  const [busy,setBusy]=useState(false);
   const [state, setState] = useState(loaded.state),
     [storageError, setStorageError] = useState(loaded.error),
     [notice, setNotice] = useState(""),
@@ -88,34 +87,26 @@ export default function App() {
     [month, setMonth] = useState(today().slice(0, 7) + "-01"),
     [restore, setRestore] = useState<State | null>(null);
   const pet = state.pets.find((p) => p.id === state.selectedPet)!;
-  function commit(next: State) {
-    if (loaded.error && storageError)
-      throw new Error("Сначала восстановите данные в разделе резервных копий.");
+  async function commit(next: State) {
+    if(saving.current) throw new Error("Дождитесь завершения сохранения");
+    saving.current=true;setBusy(true);
     try {
-      saveState(next);
-    } catch {
-      setStorageError(
-        "Не удалось сохранить данные: хранилище браузера недоступно или заполнено. Изменение не применено. Сохраните резервную копию.",
-      );
-      throw new Error(
-        "Данные не сохранены. Возможно, хранилище заполнено — уменьшите размер документов.",
-      );
-    }
-    setState(next);
-    setStorageError("");
-    setNotice("Сохранено на этом устройстве");
+      const stored=await onPersist(next);
+      setState(stored);setStorageError("");setNotice("Сохранено в облаке");
+    } catch(e) {setNotice(e instanceof Error?e.message:"Не удалось сохранить");throw e;}
+    finally {saving.current=false;setBusy(false);}
   }
   function update(fn: (p: Pet) => Pet) {
-    commit({
+    return commit({
       ...state,
       pets: state.pets.map((p) =>
         p.id === pet.id ? petSchema.parse(fn(p)) : p,
       ),
     });
   }
-  function safe(fn: () => void) {
+  async function safe(fn: () => void | Promise<void>) {
     try {
-      fn();
+      await fn();
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Не удалось сохранить");
     }
@@ -123,12 +114,12 @@ export default function App() {
   function close() {
     setOverlay(null);
   }
-  function saved(fn: () => void) {
-    fn();
+  async function saved(fn: () => void | Promise<void>) {
+    await fn();
     close();
   }
-  function addEvent(e: PetEvent) {
-    saved(() => update((p) => ({ ...p, events: [...p.events, e] })));
+  async function addEvent(e: PetEvent) {
+    await saved(() => update((p) => ({ ...p, events: [...p.events, e] })));
     setSelected(e.date);
     setMonth(e.date.slice(0, 7) + "-01");
     setScreen("day");
@@ -145,8 +136,8 @@ export default function App() {
     );
   }
   function choose(p: Pet) {
-    safe(() => {
-      commit({ ...state, selectedPet: p.id });
+    safe(async () => {
+      await commit({ ...state, selectedPet: p.id });
       close();
       setScreen("day");
       setSelected(today());
@@ -233,9 +224,9 @@ export default function App() {
             {e.repeat === "once" && !done && (
               <Form
                 label="Перенести"
-                onSave={(d) => {
+                onSave={async (d) => {
                   const to = text(d, "date");
-                  saved(() => update((p) => moveEvent(p, e.id, to)));
+                  await saved(() => update((p) => moveEvent(p, e.id, to)));
                   setSelected(to);
                   setMonth(to.slice(0, 7) + "-01");
                 }}
@@ -292,9 +283,9 @@ export default function App() {
               <button
                 className="text-button"
                 onClick={() =>
-                  safe(() => {
+                  safe(async () => {
                     const p = demoPet();
-                    commit({
+                    await commit({
                       ...state,
                       pets: [...state.pets, p],
                       selectedPet: p.id,
@@ -312,10 +303,10 @@ export default function App() {
       case "newpet":
         return (
           <Form
-            onSave={(d) => {
+            onSave={async (d) => {
               const p = blankPet(text(d, "name"));
               petSchema.parse(p);
-              saved(() =>
+              await saved(() =>
                 commit({
                   ...state,
                   pets: [...state.pets, p],
@@ -335,8 +326,7 @@ export default function App() {
       case "editpet":
         return (
           <Form
-            onSave={(d) =>
-              saved(() =>
+            onSave={async (d) => await saved(() =>
                 update((p) => ({
                   ...p,
                   name: text(d, "name"),
@@ -384,7 +374,7 @@ export default function App() {
       case "command":
         return (
           <Form
-            onSave={(d) => {
+            onSave={async (d) => {
               const name = text(d, "name");
               if (!name) throw new Error("Введите название команды");
               if (
@@ -393,7 +383,7 @@ export default function App() {
                 )
               )
                 throw new Error("Такая команда уже есть");
-              saved(() =>
+              await saved(() =>
                 update((p) => ({
                   ...p,
                   commands: [...p.commands, { id: id(), name }],
@@ -414,7 +404,7 @@ export default function App() {
         return (
           <Form
             label="Сохранить результат"
-            onSave={(d) => {
+            onSave={async (d) => {
               const s = sessionSchema.safeParse({
                 id: id(),
                 command: overlay.command,
@@ -427,7 +417,7 @@ export default function App() {
               if (!s.success) throw new Error(s.error.issues[0].message);
               if (s.data.date > today())
                 throw new Error("Нельзя записать результат будущего занятия");
-              saved(() =>
+              await saved(() =>
                 update((p) => ({ ...p, sessions: [...p.sessions, s.data] })),
               );
             }}
@@ -479,8 +469,7 @@ export default function App() {
       case "weight":
         return (
           <Form
-            onSave={(d) =>
-              saved(() =>
+            onSave={async (d) => await saved(() =>
                 update((p) => ({
                   ...p,
                   weights: [
@@ -517,8 +506,7 @@ export default function App() {
       case "record":
         return (
           <Form
-            onSave={(d) =>
-              saved(() =>
+            onSave={async (d) => await saved(() =>
                 update((p) => ({
                   ...p,
                   records: [
@@ -604,8 +592,7 @@ export default function App() {
         return (
           <Form
             label="Добавить в запас"
-            onSave={(d) =>
-              saved(() =>
+            onSave={async (d) => await saved(() =>
                 update((p) => ({
                   ...p,
                   stock:
@@ -632,8 +619,7 @@ export default function App() {
       case "ration":
         return (
           <Form
-            onSave={(d) =>
-              saved(() =>
+            onSave={async (d) => await saved(() =>
                 update((p) => ({
                   ...p,
                   stock: number(d, "stock"),
@@ -682,8 +668,7 @@ export default function App() {
       case "shopping":
         return (
           <Form
-            onSave={(d) =>
-              saved(() =>
+            onSave={async (d) => await saved(() =>
                 update((p) => ({
                   ...p,
                   shopping: [
@@ -731,7 +716,7 @@ export default function App() {
                   reject(new Error("Не удалось прочитать файл"));
                 reader.readAsDataURL(file);
               });
-              saved(() =>
+              await saved(() =>
                 update((p) => ({
                   ...p,
                   documents: [
@@ -756,8 +741,8 @@ export default function App() {
               required
             />
             <p className="hint">
-              Файл хранится в этом браузере и входит в резервную копию. Место
-              ограничено; облачного хранения нет.
+              Файл сохраняется в вашем аккаунте и входит в резервную копию.
+              Доступен только вам после входа.
             </p>
           </Form>
         );
@@ -765,26 +750,13 @@ export default function App() {
         return (
           <>
             <p>
-              Данные сохраняются только в этом браузере. Резервная копия
+              Данные сохраняются в вашем аккаунте. Резервная копия
               включает всех питомцев и документы.
             </p>
             <button className="primary" onClick={exportData}>
               <Download size={18} />
               Скачать резервную копию
             </button>
-            {loaded.error && (
-              <button
-                className="secondary"
-                onClick={() =>
-                  download(
-                    "ryadom-unreadable-backup.json",
-                    localStorage.getItem(STORAGE_KEY) || "",
-                  )
-                }
-              >
-                Скачать исходные непрочитанные данные
-              </button>
-            )}
             <Field
               label="Восстановить из копии JSON"
               type="file"
@@ -819,9 +791,8 @@ export default function App() {
                 <button
                   className="primary"
                   onClick={() =>
-                    safe(() => {
-                      saveState(restore);
-                      setState(restore);
+                    safe(async () => {
+                      await commit(restore);
                       setStorageError("");
                       setRestore(null);
                       setScreen("day");
@@ -842,7 +813,7 @@ export default function App() {
     }
   }
   return (
-    <div className="app">
+    <div className="app" aria-busy={busy}><fieldset className="app-fields" disabled={busy}>
       <header>
         <span className="brand">
           <PawPrint size={25} />
@@ -876,7 +847,7 @@ export default function App() {
         </div>
       )}
       <div className="save-status" role="status" aria-live="polite">
-        {notice || "Данные хранятся на этом устройстве"}
+        {notice || "Данные вашего аккаунта"}
       </div>
       <main>
         {screen === "day" && (
@@ -892,13 +863,9 @@ export default function App() {
           />
         )}{" "}
         {screen === "training" && (
-          <Training
-            pet={pet}
-            onCommand={() => setOverlay({ kind: "command" })}
-            onSession={(command) => setOverlay({ kind: "session", command })}
-            onPlan={(name) =>
-              setOverlay({ kind: "event", category: "training", name })
-            }
+          <Training key={pet.id} pet={pet}
+            onSave={next=>update(()=>next)}
+            onPlan={name=>setOverlay({kind:"event",category:"training",name})}
           />
         )}{" "}
         {screen === "health" && (
@@ -1041,6 +1008,6 @@ export default function App() {
           {modalBody()}
         </Modal>
       )}
-    </div>
+    </fieldset></div>
   );
 }
