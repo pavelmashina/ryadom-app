@@ -46,7 +46,7 @@ writeFileSync('dist/sw.js',`
 const CACHE=${JSON.stringify(cache)};
 const BASE='/ryadom-app/';
 const FILES=${JSON.stringify(files.map(f=>'/ryadom-app/'+f))};
-self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES))));
+self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('ryadom-shell-')&&k!==CACHE).map(k=>caches.delete(k))))));
 self.addEventListener('fetch',event=>{
   const url=new URL(event.request.url);
