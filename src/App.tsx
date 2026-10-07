@@ -1,4 +1,18 @@
-import { SectionHeader, Button, InteractiveCard, IconButton, Card, Empty, Modal, Form, Field, Select, Note, text, number } from "./components";
+import {
+  SectionHeader,
+  Button,
+  InteractiveCard,
+  IconButton,
+  Card,
+  Empty,
+  Modal,
+  Form,
+  Field,
+  Select,
+  Note,
+  text,
+  number,
+} from "./components";
 import { useRef, useState, type ReactNode } from "react";
 import {
   PawPrint,
@@ -273,13 +287,6 @@ export default function App({
                 </span>
                 <span>
                   <strong>{p.name}</strong>
-                  <small>
-                    {p.demo
-                      ? "Демонстрационные данные"
-                      : p.id === pet.id
-                        ? "Выбран сейчас"
-                        : "Отдельные календарь и история"}
-                  </small>
                 </span>
                 {p.id === pet.id ? "✓" : "→"}
               </InteractiveCard>
@@ -854,6 +861,21 @@ export default function App({
             рядом
           </span>
           <div className="app-header-actions">
+            {screen !== "account" && (
+              <Button
+                onClick={() => setOverlay({ kind: "pets" })}
+                className="pet-button"
+                variant="secondary"
+                aria-label={"Выбрать питомца: " + pet.name}
+              >
+                <span className="avatar">
+                  <Dog />
+                </span>
+                <span>{pet.name}</span>
+                <ChevronDown />
+              </Button>
+            )}
+
             {(screen === "account" || screen === "profile") && (
               <IconButton
                 label="Назад к планам"
@@ -876,22 +898,6 @@ export default function App({
             </IconButton>
           </div>
         </header>
-        {screen !== "account" && (
-          <div className="pet-switcher">
-            <Button
-              onClick={() => setOverlay({ kind: "pets" })}
-              className="pet-button"
-              variant="secondary"
-              aria-label={"Выбрать питомца: " + pet.name}
-            >
-              <span className="avatar">
-                <Dog />
-              </span>
-              <span>{pet.name}</span>
-              <ChevronDown />
-            </Button>
-          </div>
-        )}
         {pet.demo && (
           <div className="demo-banner">
             Демонстрационный питомец · все данные вымышлены
@@ -909,7 +915,7 @@ export default function App({
           </div>
         )}
         <div className="save-status" role="status" aria-live="polite">
-          {notice || "Данные вашего аккаунта"}
+          {notice}
         </div>
         <main>
           {screen === "account" && accountContent}

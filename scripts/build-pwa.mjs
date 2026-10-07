@@ -33,7 +33,7 @@ writeFileSync('dist/apple-touch-icon.png',icon(180));
 writeFileSync('dist/manifest.webmanifest',JSON.stringify({
   id:'/ryadom-app/',name:'Рядом — забота о питомце',short_name:'Рядом',lang:'ru',
   start_url:'/ryadom-app/',scope:'/ryadom-app/',display:'standalone',
-  background_color:'#f9f7ef',theme_color:'#345941',
+  background_color:'#f7f6ee',theme_color:'#f7f6ee',
   icons:[192,512].map(size=>({src:`icon-${size}.png`,sizes:`${size}x${size}`,type:'image/png',purpose:'any maskable'}))
 },null,2));
 const files=readdirSync('dist',{recursive:true,withFileTypes:true}).filter(f=>f.isFile())

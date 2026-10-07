@@ -1,4 +1,18 @@
-import { SectionHeader, Textarea, Select, PageHeader, Button, InteractiveCard, Card, Empty, Field, Form, Modal, Badge, text } from "./components";
+import {
+  SectionHeader,
+  Textarea,
+  Select,
+  PageHeader,
+  Button,
+  InteractiveCard,
+  Card,
+  Empty,
+  Field,
+  Form,
+  Modal,
+  Badge,
+  text,
+} from "./components";
 import { useState } from "react";
 import { fmt, id, today, type Pet } from "./domain";
 import {
@@ -100,28 +114,41 @@ export default function Training({
           Команды принадлежат только этому питомцу.
         </Empty>
       )}
-      {pet.commands.map((c) => {
-        const p = commandProgress(sessions, c.id);
-        return (
-          <InteractiveCard
-            key={c.id}
-            onClick={() => setView({ kind: "command", id: c.id })}
-            className="training-row"
-          >
-            <strong>{c.name}</strong>
-            <span>
-              {p.status}
-              {p.average !== null ? " · " + p.average.toFixed(1) + " / 5" : ""}
-            </span>
-            <progress
-              max={5}
-              value={p.average ?? 0}
-              aria-label={"Прогресс " + c.name}
-            />
-            {p.preliminary && <small>Предварительная оценка</small>}
-          </InteractiveCard>
-        );
-      })}
+      <div className="command-list">
+        {pet.commands.map((c) => {
+          const p = commandProgress(sessions, c.id);
+          return (
+            <InteractiveCard
+              key={c.id}
+              onClick={() => setView({ kind: "command", id: c.id })}
+              className="command-row"
+              aria-label={
+                c.name +
+                ", " +
+                p.status +
+                ", " +
+                (p.average === null
+                  ? "без оценки"
+                  : p.average.toFixed(1) + " из 5") +
+                ", тренировок: " +
+                p.count
+              }
+            >
+              <span className="command-row-title">
+                <strong title={c.name}>{c.name}</strong>
+                <Badge>{p.status}</Badge>
+              </span>
+              <span className="command-row-meta">
+                {p.average === null
+                  ? "Без оценки"
+                  : p.average.toFixed(1) + " / 5"}
+                {" · Тренировок: "}
+                {p.count}
+              </span>
+            </InteractiveCard>
+          );
+        })}
+      </div>
       {!!pet.sessions.length && (
         <details className="explanation">
           <summary>Архив занятий с повторами · {pet.sessions.length}</summary>

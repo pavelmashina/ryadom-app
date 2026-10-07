@@ -5,6 +5,44 @@
 .training-row p {
   margin: 0;
 }
+.command-list {
+  display: grid;
+  gap: var(--space-1);
+}
+.command-row.card {
+  min-height: var(--button-height-sm);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  gap: var(--space-2);
+}
+.command-row-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.command-row-title strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--font-size-body);
+}
+.command-row-title .badge {
+  flex: none;
+  white-space: nowrap;
+  margin: 0;
+  padding: 0 var(--space-2);
+}
+.command-row-meta {
+  display: block;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  margin-top: var(--space-1);
+}
 .training-excerpt {
   overflow: hidden;
   display: -webkit-box;

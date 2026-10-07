@@ -3,15 +3,22 @@
   box-sizing: border-box;
 }
 :root {
+  color-scheme: light;
   font-family: var(--font-family-base);
   font-synthesis: none;
   color: var(--color-text-primary);
-  background: var(--color-canvas);
+  background: var(--color-background);
   font-size: var(--font-size-root);
   line-height: var(--line-height-body);
 }
 body {
   margin: 0;
+}
+html,
+body,
+#root {
+  min-height: 100%;
+  background: var(--color-background);
 }
 button,
 input,
@@ -168,7 +175,7 @@ button svg {
   min-height: 100dvh;
   margin: auto;
   background: var(--color-background);
-  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  padding-bottom: calc(112px + env(safe-area-inset-bottom));
   box-shadow: var(--shadow-sm);
 }
 .app-fields,
@@ -183,12 +190,13 @@ button svg {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-2);
   padding: calc(var(--space-4) + env(safe-area-inset-top)) var(--page-gutter)
     var(--space-4);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--color-background);
 }
 .brand {
+  flex-shrink: 0;
   display: flex;
   gap: var(--space-2);
   align-items: center;
@@ -205,14 +213,15 @@ button svg {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  min-width: 0;
+  justify-content: flex-end;
+  flex: 1;
 }
 .account-trigger {
   background: var(--color-surface-secondary);
 }
-.pet-switcher {
-  padding: var(--space-3) var(--page-gutter) 0;
-}
 .pet-button {
+  min-width: 0;
   max-width: 100%;
   justify-content: flex-start;
   border-radius: var(--radius-full);
@@ -220,6 +229,7 @@ button svg {
   gap: var(--space-2);
 }
 .pet-button > span:nth-child(2) {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -244,6 +254,17 @@ button svg {
   padding: var(--space-2) var(--page-gutter) 0;
   line-height: var(--line-height-compact);
   overflow-wrap: anywhere;
+}
+.save-status:empty {
+  display: none;
+}
+@media (max-width: 359px) {
+  .app-header .brand svg {
+    display: none;
+  }
+  .app-header .pet-button .avatar {
+    display: none;
+  }
 }
 .heading {
   margin: var(--space-2) 0 var(--space-6);
@@ -675,7 +696,7 @@ dd {
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
   padding: var(--space-2) var(--space-2)
-    max(var(--space-2), env(safe-area-inset-bottom));
+    calc(var(--space-6) + env(safe-area-inset-bottom));
   gap: var(--space-1);
   z-index: 3;
 }
