@@ -1,3 +1,4 @@
+import { PageHeader, Button, IconButton, Empty, Checkbox } from "./components";
 import { ChevronLeft, ChevronRight, Plus, CalendarDays } from "lucide-react";
 import {
   date,
@@ -9,7 +10,6 @@ import {
   type Pet,
   type PetEvent,
 } from "./domain";
-import { Empty } from "./components";
 export const categories = {
   health: "Здоровье",
   training: "Занятия",
@@ -59,57 +59,60 @@ export default function Calendar({
     return (
       <div className={`task ${checked ? "done" : ""}`} key={e.id}>
         <span className={`tag ${e.category}`} />
-        <input
-          type="checkbox"
+        <Checkbox
           checked={checked}
           onChange={() => onToggle(e, selected)}
           aria-label={`${checked ? "Снять отметку" : "Выполнить"}: ${e.name}`}
         />
-        <button className="task-body" onClick={() => onDetail(e, selected)}>
+        <Button
+          onClick={() => onDetail(e, selected)}
+          className="task-body"
+          variant="ghost"
+        >
           <strong>{e.name}</strong>
           <small>
             {e.time || "Весь день"} · {categories[e.category]}
             {e.repeat !== "once" ? " · повтор" : ""}
           </small>
-        </button>
-        <ChevronRight size={17} />
+        </Button>
+        <ChevronRight />
       </div>
     );
   }
   return (
     <>
-      <div className="heading">
-        <span className="eyebrow">Забота каждый день</span>
-        <h1>Наши планы</h1>
-        <p>Всё важное для {pet.name} — в одном месте</p>
-      </div>
+      <PageHeader title="Наши планы" eyebrow="Забота каждый день">
+        Всё важное для {pet.name} — в одном месте
+      </PageHeader>
       <section className="calendar" aria-label="Календарь месяца">
         <div className="month">
           <h2>
             {fmt(month, { month: "long", year: "numeric" }).replace(" г.", "")}
           </h2>
           <div className="month-controls">
-            <button className="pill" onClick={() => choose(today())}>
+            <Button
+              onClick={() => choose(today())}
+              size="sm"
+              variant="secondary"
+            >
               Сегодня
-            </button>
-            <button
-              className="icon"
-              aria-label="Предыдущий месяц"
+            </Button>
+            <IconButton
+              label="Предыдущий месяц"
               onClick={() =>
                 choose(iso(new Date(m.getFullYear(), m.getMonth() - 1, 1)))
               }
             >
               <ChevronLeft />
-            </button>
-            <button
-              className="icon"
-              aria-label="Следующий месяц"
+            </IconButton>
+            <IconButton
+              label="Следующий месяц"
               onClick={() =>
                 choose(iso(new Date(m.getFullYear(), m.getMonth() + 1, 1)))
               }
             >
               <ChevronRight />
-            </button>
+            </IconButton>
           </div>
         </div>
         <div className="weekdays">
@@ -122,12 +125,13 @@ export default function Calendar({
             const ev = eventsFor(pet, s),
               cats = [...new Set(ev.map((e) => e.category))];
             return (
-              <button
+              <Button
                 key={s}
                 className={`date ${s.slice(0, 7) !== month.slice(0, 7) ? "outside" : ""} ${s === today() ? "today" : ""}`}
                 aria-pressed={s === selected}
                 aria-label={`${fmt(s, { day: "numeric", month: "long", year: "numeric" })}${s === today() ? ", сегодня" : ""}, событий: ${ev.length}${cats.length ? `, ${cats.map((c) => categories[c]).join(", ")}` : ""}`}
                 onClick={() => choose(s)}
+                variant="ghost"
               >
                 <span>{date(s).getDate()}</span>
                 <span className="dots" aria-hidden="true">
@@ -135,7 +139,7 @@ export default function Calendar({
                     <i key={c} className={`dot ${c}`} />
                   ))}
                 </span>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -160,7 +164,7 @@ export default function Calendar({
             Выполнено {done.length} из {events.length}
           </p>
         </div>
-        <CalendarDays size={23} />
+        <CalendarDays />
       </div>
       {todo.length ? (
         todo.map(task)
@@ -179,20 +183,20 @@ export default function Calendar({
           {done.map(task)}
         </details>
       )}
-      <button className="primary" onClick={onAdd}>
-        <Plus size={18} /> Добавить событие
-      </button>
+      <Button onClick={onAdd} fullWidth variant="primary">
+        <Plus /> Добавить событие
+      </Button>
       {overdue.length > 0 && (
         <aside className="notice">
           <strong>Есть незавершённые дела · {overdue.length}</strong>
           {overdue.map((e) => (
-            <button
+            <Button
               key={e.id}
-              className="text-button"
               onClick={() => onDetail(e, e.date)}
+              variant="ghost"
             >
               {e.name} · {fmt(e.date)} → перенести или отметить
-            </button>
+            </Button>
           ))}
         </aside>
       )}

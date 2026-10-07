@@ -1,2 +1,65 @@
-.training-row{display:grid;width:100%;text-align:left;gap:8px;color:inherit;font:inherit;cursor:pointer}.training-row p{margin:0}.training-excerpt{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}.training-fields{border:0;padding:0;margin:0;min-width:0}.command-chips,.score-buttons{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.command-chips button,.score-buttons button{border:1px solid #cad5c9;border-radius:12px;background:#f9f7ef;color:#345941;padding:12px;font:inherit;min-height:44px}.score-buttons button{flex:1;min-width:38px}.command-chips [aria-pressed=true],.score-buttons [aria-pressed=true]{background:#345941;color:white;border-color:#345941}.inline-command{display:flex;gap:8px;align-items:end;margin-bottom:16px}.inline-command .field{flex:1;min-width:0}.score-history{display:flex;gap:12px;overflow-x:auto;padding:12px 0}.score-history>div{display:grid;gap:5px;min-width:78px;font-size:12px}.score-history meter{width:78px}.app fieldset.app-fields{padding:0;border:0;min-width:0}.cloud-account{position:sticky;top:0;left:auto;transform:none;margin:6px auto;width:fit-content}.cloud-account span{display:inline!important}.cloud-account button{flex-shrink:0} .auth-busy{opacity:.65}
-
+.training-row .interactive-content {
+  display: grid;
+  gap: var(--space-2);
+}
+.training-row p {
+  margin: 0;
+}
+.training-excerpt {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.command-chips,
+.score-buttons {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin: var(--space-3) 0;
+}
+.command-chips .btn {
+  border-radius: var(--radius-full);
+}
+.score-buttons .btn {
+  flex: 1;
+  min-width: var(--button-height-sm);
+  padding: var(--space-2);
+}
+.command-chips [aria-pressed="true"],
+.score-buttons [aria-pressed="true"] {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-on-primary);
+}
+.inline-command {
+  display: flex;
+  gap: var(--space-2);
+  align-items: end;
+  margin-bottom: var(--space-4);
+}
+.inline-command .field {
+  flex: 1;
+  min-width: 0;
+}
+.inline-command .btn {
+  width: auto;
+  margin: 0;
+}
+.score-history {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  padding: var(--space-3) 0;
+}
+.score-history > div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 80px;
+  font-size: var(--font-size-caption);
+}
+.score-history meter {
+  width: 80px;
+  accent-color: var(--color-primary);
+}

@@ -1,6 +1,6 @@
+import { SectionHeader, PageHeader, Button, Card, Empty, Checkbox, Badge } from "./components";
 import { Plus, Package } from "lucide-react";
 import { fmt, type Pet } from "./domain";
-import { Card, Empty } from "./components";
 export default function Stock({
   pet,
   onEdit,
@@ -18,21 +18,19 @@ export default function Stock({
     pet.ration > 0 ? Math.floor((pet.stock * 1000) / pet.ration) : null;
   return (
     <>
-      <div className="heading">
-        <span className="eyebrow">Всё под рукой</span>
-        <h1>Питание и запасы</h1>
-        <p>Остаток корма и список покупок</p>
-      </div>
-      <Card>
+      <PageHeader title="Питание и запасы" eyebrow="Всё под рукой">
+        Остаток корма и список покупок
+      </PageHeader>
+      <Card variant="info">
         <span className="eyebrow">Корм · фактический остаток</span>
         <div className="section-title">
           <div className="large">
             {pet.stock.toLocaleString("ru-RU")} <small>кг</small>
           </div>
-          <span className="pill">
-            <Package size={16} />
+          <Badge>
+            <Package />
             {days === null ? "Укажите расход" : `≈ ${days} дн.`}
-          </span>
+          </Badge>
         </div>
         <progress
           value={Math.min(pet.stock, pet.pack)}
@@ -54,48 +52,48 @@ export default function Stock({
           Расход автоматически не списывается — обновляйте остаток после
           проверки.
         </p>
-        <button className="primary" onClick={onAdd}>
-          <Plus size={18} />
+        <Button onClick={onAdd} fullWidth variant="primary">
+          <Plus />
           Пополнить
-        </button>
-        <button className="text-button" onClick={onEdit}>
+        </Button>
+        <Button onClick={onEdit} variant="ghost">
           Изменить расход или остаток
-        </button>
+        </Button>
       </Card>
       {days !== null && days <= 7 && (
         <p className="notice">
           По указанному остатку корма хватит примерно на {days} дн.
         </p>
       )}
-      <div className="section-title">
-        <h2>Купить</h2>
+      <SectionHeader title="Купить">
         <span className="hint">
           {pet.shopping.filter((s) => !s.done).length} в списке
         </span>
-      </div>
+      </SectionHeader>
       {pet.shopping.length ? (
         pet.shopping.map((s) => (
-          <label className={`shopping ${s.done ? "done" : ""}`} key={s.id}>
-            <input
-              type="checkbox"
-              checked={s.done}
-              onChange={() => onToggle(s.id)}
-            />
-            <span>
-              {s.name}
-              <small>{s.quantity}</small>
-            </span>
-          </label>
+          <Checkbox
+            className={`shopping ${s.done ? "done" : ""}`}
+            key={s.id}
+            checked={s.done}
+            onChange={() => onToggle(s.id)}
+            label={
+              <span>
+                {s.name}
+                <small>{s.quantity}</small>
+              </span>
+            }
+          />
         ))
       ) : (
         <Empty title="Всё есть дома">
           Добавляйте покупки по мере необходимости.
         </Empty>
       )}
-      <button className="secondary" onClick={onShop}>
-        <Plus size={17} />
+      <Button onClick={onShop} fullWidth variant="secondary">
+        <Plus />
         Добавить покупку
-      </button>
+      </Button>
       <p className="hint">
         Отметка покупки не меняет запас. Купленный корм добавляйте кнопкой
         «Пополнить».

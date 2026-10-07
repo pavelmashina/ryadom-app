@@ -1,11 +1,16 @@
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim().replace(/\/+$/, "");
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim().replace(
+  /\/+$/,
+  "",
+);
 const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
 
 const AUTH_STORAGE_KEY = "ryadom:auth:v1";
 
-type AuthUser = {
+export type AuthUser = {
   id: string;
   email?: string;
+  created_at?: string;
+  new_email?: string;
 };
 
 export type AuthSession = {
@@ -37,14 +42,34 @@ function configured() {
 async function parseError(response: Response) {
   try {
     const body = (await response.json()) as AuthResponse;
-    if (body.code === "same_password") return "Новый пароль должен отличаться от прежнего.";
-    if (body.code === "weak_password") return "Выберите более надёжный пароль: минимум 8 символов, буквы и цифры.";
-    if (body.code === "email_address_not_authorized") return "Отправка писем пока недоступна для этого адреса. Обратитесь к владельцу приложения.";
-    if (body.code === "PT409" || body.code === "40001") return "Данные изменились на другом устройстве. Обновите страницу перед сохранением.";
-    if (body.code === "23505") return "Такая команда или запись уже существует.";
-    if (response.status === 401) return "Сессия истекла или неверный email / пароль. Войдите снова.";
-    if (response.status === 429) return "Слишком много попыток. Подождите и повторите.";
-    return body.message || body.error_description || body.msg || body.error || `Ошибка ${response.status}`;
+    if (
+      body.code === "reauthentication_needed" ||
+      body.code === "reauthentication_not_valid"
+    )
+      return "Для смены пароля выйдите и войдите снова, затем повторите действие.";
+    if (body.code === "email_exists" || body.code === "user_already_exists")
+      return "Этот email уже используется другим аккаунтом.";
+    if (body.code === "same_password")
+      return "Новый пароль должен отличаться от прежнего.";
+    if (body.code === "weak_password")
+      return "Выберите более надёжный пароль: минимум 8 символов, буквы и цифры.";
+    if (body.code === "email_address_not_authorized")
+      return "Отправка писем пока недоступна для этого адреса. Обратитесь к владельцу приложения.";
+    if (body.code === "PT409" || body.code === "40001")
+      return "Данные изменились на другом устройстве. Обновите страницу перед сохранением.";
+    if (body.code === "23505")
+      return "Такая команда или запись уже существует.";
+    if (response.status === 401)
+      return "Сессия истекла или неверный email / пароль. Войдите снова.";
+    if (response.status === 429)
+      return "Слишком много попыток. Подождите и повторите.";
+    return (
+      body.message ||
+      body.error_description ||
+      body.msg ||
+      body.error ||
+      `Ошибка ${response.status}`
+    );
   } catch {
     return `Ошибка ${response.status}`;
   }
@@ -86,14 +111,17 @@ function storeSession(session: AuthSession | null) {
 
 export async function signIn(email: string, password: string) {
   const { supabaseUrl, publishableKey } = configured();
-  const response = await request(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
-    method: "POST",
-    headers: {
-      apikey: publishableKey,
-      "Content-Type": "application/json",
+  const response = await request(
+    `${supabaseUrl}/auth/v1/token?grant_type=password`,
+    {
+      method: "POST",
+      headers: {
+        apikey: publishableKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
     },
-    body: JSON.stringify({ email, password }),
-  });
+  );
   if (!response.ok) throw new Error(await parseError(response));
   const session = toSession((await response.json()) as AuthResponse);
   if (!session) throw new Error("Supabase не вернул сессию");
@@ -120,20 +148,25 @@ export async function signUp(email: string, password: string) {
 
 async function performRefresh(session: AuthSession) {
   const { supabaseUrl, publishableKey } = configured();
-  const response = await request(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
-    method: "POST",
-    headers: {
-      apikey: publishableKey,
-      "Content-Type": "application/json",
+  const response = await request(
+    `${supabaseUrl}/auth/v1/token?grant_type=refresh_token`,
+    {
+      method: "POST",
+      headers: {
+        apikey: publishableKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refresh_token: session.refreshToken }),
     },
-    body: JSON.stringify({ refresh_token: session.refreshToken }),
-  });
+  );
   if (!response.ok) {
-    if (readStoredSession()?.refreshToken === session.refreshToken) storeSession(null);
+    if (readStoredSession()?.refreshToken === session.refreshToken)
+      storeSession(null);
     return null;
   }
   const next = toSession((await response.json()) as AuthResponse);
-  if (readStoredSession()?.user.id !== session.user.id) throw new Error("Аккаунт изменился");
+  if (readStoredSession()?.user.id !== session.user.id)
+    throw new Error("Аккаунт изменился");
   if (!next) {
     storeSession(null);
     return null;
@@ -144,7 +177,10 @@ async function performRefresh(session: AuthSession) {
 
 let refreshing: Promise<AuthSession | null> | null = null;
 export function refreshSession(session: AuthSession) {
-  if (!refreshing) refreshing=performRefresh(session).finally(()=>{refreshing=null;});
+  if (!refreshing)
+    refreshing = performRefresh(session).finally(() => {
+      refreshing = null;
+    });
   return refreshing;
 }
 export async function getValidSession() {
@@ -167,53 +203,82 @@ export async function signOut(session: AuthSession | null) {
       });
     }
   } finally {
-    if (session && readStoredSession()?.user.id === session.user.id) storeSession(null);
+    if (session && readStoredSession()?.user.id === session.user.id)
+      storeSession(null);
   }
 }
 
 async function authorizedSession(session: AuthSession) {
-  const stored=readStoredSession();
-  if(stored?.user.id!==session.user.id) throw new Error("Аккаунт изменился. Войдите снова.");
+  const stored = readStoredSession();
+  if (stored?.user.id !== session.user.id)
+    throw new Error("Аккаунт изменился. Войдите снова.");
   if (stored.expiresAt > Date.now() + 60_000) return stored;
   const refreshed = await refreshSession(session);
   if (!refreshed) throw new Error("Сессия истекла. Войдите снова.");
   return refreshed;
 }
 
-
-async function request(url:string,options:RequestInit) {
-  try {return await fetch(url,{...options,signal:AbortSignal.timeout(25000)});}
-  catch {throw new Error("Нет связи с сервером. Проверьте интернет и повторите. Данные не сохранены.");}
+async function request(url: string, options: RequestInit) {
+  try {
+    return await fetch(url, { ...options, signal: AbortSignal.timeout(25000) });
+  } catch {
+    throw new Error(
+      "Нет связи с сервером. Проверьте интернет и повторите. Данные не сохранены.",
+    );
+  }
 }
-export async function rpc(session:AuthSession,name:string,body:Record<string,unknown>):Promise<unknown> {
-  const current=await authorizedSession(session);
-  const {supabaseUrl,publishableKey}=configured();
-  const response=await request(supabaseUrl+"/rest/v1/rpc/"+name,{
-    method:"POST",cache:"no-store",
-    headers:{apikey:publishableKey,Authorization:"Bearer "+current.accessToken,"Content-Type":"application/json"},
-    body:JSON.stringify(body)
+export async function rpc(
+  session: AuthSession,
+  name: string,
+  body: Record<string, unknown>,
+): Promise<unknown> {
+  const current = await authorizedSession(session);
+  const { supabaseUrl, publishableKey } = configured();
+  const response = await request(supabaseUrl + "/rest/v1/rpc/" + name, {
+    method: "POST",
+    cache: "no-store",
+    headers: {
+      apikey: publishableKey,
+      Authorization: "Bearer " + current.accessToken,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
   });
-  if(!response.ok)throw new Error(await parseError(response));
+  if (!response.ok) throw new Error(await parseError(response));
   return response.json();
 }
 
 const RECOVERY_KEY = "ryadom:recovery:v1";
-const RECOVERY_EXPIRED = "Ссылка недействительна или устарела. Запросите новое письмо.";
-export function clearRecovery() { sessionStorage.removeItem(RECOVERY_KEY); }
+const RECOVERY_EXPIRED =
+  "Ссылка недействительна или устарела. Запросите новое письмо.";
+export function clearRecovery() {
+  sessionStorage.removeItem(RECOVERY_KEY);
+}
 
 export async function requestPasswordReset(email: string) {
   const { supabaseUrl, publishableKey } = configured();
   const redirect = new URL(import.meta.env.BASE_URL, location.origin).href;
-  const response = await request(`${supabaseUrl}/auth/v1/recover?redirect_to=${encodeURIComponent(redirect)}`, {
-    method: "POST", headers: { apikey: publishableKey, "Content-Type": "application/json" },
-    body: JSON.stringify({ email: email.trim() }),
-  });
+  const response = await request(
+    `${supabaseUrl}/auth/v1/recover?redirect_to=${encodeURIComponent(redirect)}`,
+    {
+      method: "POST",
+      headers: { apikey: publishableKey, "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim() }),
+    },
+  );
   if (!response.ok) throw new Error(await parseError(response));
 }
 
 // Recovery is scoped to this tab and never replaces another account's login.
 export async function readRecoverySession(): Promise<AuthSession | null> {
   const params = new URLSearchParams(location.hash.slice(1));
+  // Email confirmation completes on the server. Keep the existing account and
+  // remove any callback credentials rather than silently switching identities.
+  if (params.get("type") === "email_change" && !params.has("error")) {
+    history.replaceState(null, "", location.pathname + location.search);
+    clearRecovery();
+    return null;
+  }
   let candidate: Partial<AuthSession> | null = null;
   if (params.has("error") || params.get("type") === "recovery") {
     history.replaceState(null, "", location.pathname + location.search);
@@ -221,39 +286,146 @@ export async function readRecoverySession(): Promise<AuthSession | null> {
     if (params.has("error")) throw new Error(RECOVERY_EXPIRED);
     const seconds = Number(params.get("expires_in"));
     const absolute = Number(params.get("expires_at"));
-    candidate = { accessToken: params.get("access_token") || "", refreshToken: params.get("refresh_token") || "",
-      expiresAt: absolute > 0 ? absolute * 1000 : Date.now() + Math.min(seconds, 3600) * 1000 };
+    candidate = {
+      accessToken: params.get("access_token") || "",
+      refreshToken: params.get("refresh_token") || "",
+      expiresAt:
+        absolute > 0
+          ? absolute * 1000
+          : Date.now() + Math.min(seconds, 3600) * 1000,
+    };
     sessionStorage.setItem(RECOVERY_KEY, JSON.stringify(candidate));
   } else {
     const saved = sessionStorage.getItem(RECOVERY_KEY);
     if (!saved) return null;
-    try { candidate = JSON.parse(saved) as Partial<AuthSession>; }
-    catch { clearRecovery(); throw new Error(RECOVERY_EXPIRED); }
+    try {
+      candidate = JSON.parse(saved) as Partial<AuthSession>;
+    } catch {
+      clearRecovery();
+      throw new Error(RECOVERY_EXPIRED);
+    }
   }
-  if (!candidate?.accessToken || !candidate.refreshToken || !candidate.expiresAt || candidate.expiresAt <= Date.now()) {
-    clearRecovery(); throw new Error(RECOVERY_EXPIRED);
+  if (
+    !candidate?.accessToken ||
+    !candidate.refreshToken ||
+    !candidate.expiresAt ||
+    candidate.expiresAt <= Date.now()
+  ) {
+    clearRecovery();
+    throw new Error(RECOVERY_EXPIRED);
   }
   const { supabaseUrl, publishableKey } = configured();
   const response = await request(`${supabaseUrl}/auth/v1/user`, {
-    method: "GET", headers: { apikey: publishableKey, Authorization: `Bearer ${candidate.accessToken}` },
+    method: "GET",
+    headers: {
+      apikey: publishableKey,
+      Authorization: `Bearer ${candidate.accessToken}`,
+    },
   });
-  if (!response.ok) { clearRecovery(); throw new Error(RECOVERY_EXPIRED); }
-  const user = await response.json() as AuthUser;
-  if (!user.id) { clearRecovery(); throw new Error(RECOVERY_EXPIRED); }
-  return { accessToken: candidate.accessToken, refreshToken: candidate.refreshToken, expiresAt: candidate.expiresAt, user };
+  if (!response.ok) {
+    clearRecovery();
+    throw new Error(RECOVERY_EXPIRED);
+  }
+  const user = (await response.json()) as AuthUser;
+  if (!user.id) {
+    clearRecovery();
+    throw new Error(RECOVERY_EXPIRED);
+  }
+  return {
+    accessToken: candidate.accessToken,
+    refreshToken: candidate.refreshToken,
+    expiresAt: candidate.expiresAt,
+    user,
+  };
 }
 
-export async function resetPassword(session: AuthSession, password: string, confirmation: string) {
-  if (password.length < 8) throw new Error("Пароль должен содержать минимум 8 символов.");
+export async function resetPassword(
+  session: AuthSession,
+  password: string,
+  confirmation: string,
+) {
+  if (password.length < 8)
+    throw new Error("Пароль должен содержать минимум 8 символов.");
   if (password !== confirmation) throw new Error("Пароли не совпадают.");
-  if (session.expiresAt <= Date.now()) { clearRecovery(); throw new Error(RECOVERY_EXPIRED); }
+  if (session.expiresAt <= Date.now()) {
+    clearRecovery();
+    throw new Error(RECOVERY_EXPIRED);
+  }
   const { supabaseUrl, publishableKey } = configured();
   const response = await request(`${supabaseUrl}/auth/v1/user`, {
-    method: "PUT", headers: { apikey: publishableKey, Authorization: `Bearer ${session.accessToken}`, "Content-Type": "application/json" },
+    method: "PUT",
+    headers: {
+      apikey: publishableKey,
+      Authorization: `Bearer ${session.accessToken}`,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ password }),
   });
   if (!response.ok) throw new Error(await parseError(response));
   clearRecovery();
   // Updating the password succeeded even if revoking the temporary session fails.
-  try { await signOut(session); } catch { /* Session expires normally if offline. */ }
+  try {
+    await signOut(session);
+  } catch {
+    /* Session expires normally if offline. */
+  }
+}
+
+async function accountRequest(
+  session: AuthSession,
+  method: "GET" | "PUT",
+  attributes?: Record<string, string>,
+): Promise<AuthUser> {
+  const current = await authorizedSession(session);
+  const { supabaseUrl, publishableKey } = configured();
+  const redirect = new URL(import.meta.env.BASE_URL, location.origin).href;
+  const response = await request(
+    `${supabaseUrl}/auth/v1/user?redirect_to=${encodeURIComponent(redirect)}`,
+    {
+      method,
+      headers: {
+        apikey: publishableKey,
+        Authorization: `Bearer ${current.accessToken}`,
+        "Content-Type": "application/json",
+      },
+      ...(attributes ? { body: JSON.stringify(attributes) } : {}),
+    },
+  );
+  if (!response.ok) throw new Error(await parseError(response));
+  const user = (await response.json()) as AuthUser;
+  const stored = readStoredSession();
+  if (
+    !stored ||
+    stored.user.id !== session.user.id ||
+    user.id !== session.user.id
+  )
+    throw new Error("Аккаунт изменился. Войдите снова.");
+  storeSession({ ...stored, user });
+  return user;
+}
+export function getAccountUser(session: AuthSession) {
+  return accountRequest(session, "GET");
+}
+export async function changeEmail(session: AuthSession, email: string) {
+  const next = email.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(next))
+    throw new Error("Введите корректный email.");
+  if (next.toLowerCase() === session.user.email?.toLowerCase())
+    throw new Error("Укажите новый email.");
+  return accountRequest(session, "PUT", { email: next });
+}
+export async function changePassword(
+  session: AuthSession,
+  password: string,
+  confirmation: string,
+  currentPassword: string,
+) {
+  if (password.length < 8)
+    throw new Error("Пароль должен содержать минимум 8 символов.");
+  if (password !== confirmation) throw new Error("Пароли не совпадают.");
+  if (!currentPassword) throw new Error("Введите текущий пароль.");
+  return accountRequest(session, "PUT", {
+    password,
+    current_password: currentPassword,
+  });
 }

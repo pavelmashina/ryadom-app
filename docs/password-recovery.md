@@ -2,7 +2,7 @@
 
 ## Настройка Supabase перед использованием
 
-В Authentication → URL Configuration установите Site URL `https://pavelmashina.github.io/ryadom-app/` и добавьте этот же точный адрес в Redirect URLs. При проверке 6 октября 2026 сервер возвращал ссылки на `http://localhost:3000`; это необходимо исправить в панели проекта.
+В Authentication → URL Configuration Site URL и разрешённый Redirect URL настроены на `https://pavelmashina.github.io/ryadom-app/`. Первоначальный адрес localhost исправлен; владелец подтвердил успешный вход с телефона после восстановления доступа.
 
 В Authentication → Emails проверьте доставку и шаблон Reset Password: он должен содержать стандартную ссылку `{{ .ConfirmationURL }}`. Для доставки произвольным пользователям требуется настроенный SMTP: встроенная почта Supabase имеет ограничения. Проверку реального письма завершает владелец почтового ящика; пароль вводится только в приложении.
 

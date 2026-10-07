@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { SectionHeader, Button, InteractiveCard, IconButton, Card, Empty, Modal, Form, Field, Select, Note, text, number } from "./components";
+import { useRef, useState, type ReactNode } from "react";
 import {
   PawPrint,
   Dog,
@@ -8,23 +9,14 @@ import {
   GraduationCap,
   Package,
   Download,
+  UserRound,
+  ArrowLeft,
 } from "lucide-react";
 import Calendar from "./Calendar";
 import Training from "./Training";
 import Health from "./Health";
 import Stock from "./Stock";
 import EventForm from "./EventForm";
-import {
-  Card,
-  Empty,
-  Modal,
-  Form,
-  Field,
-  Select,
-  Note,
-  text,
-  number,
-} from "./components";
 import {
   blankPet,
   demoPet,
@@ -39,11 +31,8 @@ import {
   type PetEvent,
   type State,
 } from "./domain";
-import {
-  parseBackup,
-  download,
-} from "./storage";
-type Screen = "day" | "health" | "training" | "stock" | "profile";
+import { parseBackup, download } from "./storage";
+type Screen = "day" | "health" | "training" | "stock" | "profile" | "account";
 type Overlay =
   | {
       kind: "event";
@@ -51,8 +40,15 @@ type Overlay =
       name?: string;
       linkedRecord?: string;
     }
-  | { kind: "detail"; event: PetEvent; on: string }
-  | { kind: "session"; command: string }
+  | {
+      kind: "detail";
+      event: PetEvent;
+      on: string;
+    }
+  | {
+      kind: "session";
+      command: string;
+    }
   | {
       kind:
         | "pets"
@@ -74,10 +70,18 @@ const nav = [
   ["training", "Занятия", GraduationCap],
   ["stock", "Запасы", Package],
 ] as const;
-export default function App({initial,onPersist}:{initial:State;onPersist:(next:State)=>Promise<State>}) {
-  const loaded={state:initial,error:""};
-  const saving=useRef(false);
-  const [busy,setBusy]=useState(false);
+export default function App({
+  initial,
+  onPersist,
+  accountContent,
+}: {
+  initial: State;
+  onPersist: (next: State) => Promise<State>;
+  accountContent: ReactNode;
+}) {
+  const loaded = { state: initial, error: "" };
+  const saving = useRef(false);
+  const [busy, setBusy] = useState(false);
   const [state, setState] = useState(loaded.state),
     [storageError, setStorageError] = useState(loaded.error),
     [notice, setNotice] = useState(""),
@@ -88,13 +92,21 @@ export default function App({initial,onPersist}:{initial:State;onPersist:(next:S
     [restore, setRestore] = useState<State | null>(null);
   const pet = state.pets.find((p) => p.id === state.selectedPet)!;
   async function commit(next: State) {
-    if(saving.current) throw new Error("Дождитесь завершения сохранения");
-    saving.current=true;setBusy(true);
+    if (saving.current) throw new Error("Дождитесь завершения сохранения");
+    saving.current = true;
+    setBusy(true);
     try {
-      const stored=await onPersist(next);
-      setState(stored);setStorageError("");setNotice("Сохранено в облаке");
-    } catch(e) {setNotice(e instanceof Error?e.message:"Не удалось сохранить");throw e;}
-    finally {saving.current=false;setBusy(false);}
+      const stored = await onPersist(next);
+      setState(stored);
+      setStorageError("");
+      setNotice("Сохранено в облаке");
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : "Не удалось сохранить");
+      throw e;
+    } finally {
+      saving.current = false;
+      setBusy(false);
+    }
   }
   function update(fn: (p: Pet) => Pet) {
     return commit({
@@ -218,9 +230,13 @@ export default function App({initial,onPersist}:{initial:State;onPersist:(next:S
                   : `за ${e.reminder} мин · только настройка, доставка не подключена`}
               </p>
             </Card>
-            <button className="primary" onClick={() => toggle(e, overlay.on)}>
+            <Button
+              onClick={() => toggle(e, overlay.on)}
+              fullWidth
+              variant="primary"
+            >
               {done ? "Снять отметку о выполнении" : "Отметить выполненным"}
-            </button>
+            </Button>
             {e.repeat === "once" && !done && (
               <Form
                 label="Перенести"
@@ -247,7 +263,11 @@ export default function App({initial,onPersist}:{initial:State;onPersist:(next:S
         return (
           <>
             {state.pets.map((p) => (
-              <button className="pet-row" key={p.id} onClick={() => choose(p)}>
+              <InteractiveCard
+                key={p.id}
+                onClick={() => choose(p)}
+                className="pet-row"
+              >
                 <span className="avatar">
                   <Dog />
                 </span>
@@ -262,26 +282,27 @@ export default function App({initial,onPersist}:{initial:State;onPersist:(next:S
                   </small>
                 </span>
                 {p.id === pet.id ? "✓" : "→"}
-              </button>
+              </InteractiveCard>
             ))}
-            <button
-              className="primary"
+            <Button
               onClick={() => setOverlay({ kind: "newpet" })}
+              fullWidth
+              variant="primary"
             >
               Добавить питомца
-            </button>
-            <button
-              className="secondary"
+            </Button>
+            <Button
               onClick={() => {
                 close();
                 setScreen("profile");
               }}
+              fullWidth
+              variant="secondary"
             >
               Профиль · {pet.name}
-            </button>
+            </Button>
             {!state.pets.some((p) => p.demo) && (
-              <button
-                className="text-button"
+              <Button
                 onClick={() =>
                   safe(async () => {
                     const p = demoPet();
@@ -294,9 +315,10 @@ export default function App({initial,onPersist}:{initial:State;onPersist:(next:S
                     setScreen("day");
                   })
                 }
+                variant="ghost"
               >
                 Открыть отдельный демонстрационный пример
-              </button>
+              </Button>
             )}
           </>
         );
@@ -326,7 +348,8 @@ export default function App({initial,onPersist}:{initial:State;onPersist:(next:S
       case "editpet":
         return (
           <Form
-            onSave={async (d) => await saved(() =>
+            onSave={async (d) =>
+              await saved(() =>
                 update((p) => ({
                   ...p,
                   name: text(d, "name"),
@@ -469,7 +492,8 @@ export default function App({initial,onPersist}:{initial:State;onPersist:(next:S
       case "weight":
         return (
           <Form
-            onSave={async (d) => await saved(() =>
+            onSave={async (d) =>
+              await saved(() =>
                 update((p) => ({
                   ...p,
                   weights: [
@@ -506,7 +530,8 @@ export default function App({initial,onPersist}:{initial:State;onPersist:(next:S
       case "record":
         return (
           <Form
-            onSave={async (d) => await saved(() =>
+            onSave={async (d) =>
+              await saved(() =>
                 update((p) => ({
                   ...p,
                   records: [
@@ -592,7 +617,8 @@ export default function App({initial,onPersist}:{initial:State;onPersist:(next:S
         return (
           <Form
             label="Добавить в запас"
-            onSave={async (d) => await saved(() =>
+            onSave={async (d) =>
+              await saved(() =>
                 update((p) => ({
                   ...p,
                   stock:
@@ -619,7 +645,8 @@ export default function App({initial,onPersist}:{initial:State;onPersist:(next:S
       case "ration":
         return (
           <Form
-            onSave={async (d) => await saved(() =>
+            onSave={async (d) =>
+              await saved(() =>
                 update((p) => ({
                   ...p,
                   stock: number(d, "stock"),
@@ -668,7 +695,8 @@ export default function App({initial,onPersist}:{initial:State;onPersist:(next:S
       case "shopping":
         return (
           <Form
-            onSave={async (d) => await saved(() =>
+            onSave={async (d) =>
+              await saved(() =>
                 update((p) => ({
                   ...p,
                   shopping: [
@@ -750,13 +778,13 @@ export default function App({initial,onPersist}:{initial:State;onPersist:(next:S
         return (
           <>
             <p>
-              Данные сохраняются в вашем аккаунте. Резервная копия
-              включает всех питомцев и документы.
+              Данные сохраняются в вашем аккаунте. Резервная копия включает всех
+              питомцев и документы.
             </p>
-            <button className="primary" onClick={exportData}>
-              <Download size={18} />
+            <Button onClick={exportData} fullWidth variant="primary">
+              <Download />
               Скачать резервную копию
-            </button>
+            </Button>
             <Field
               label="Восстановить из копии JSON"
               type="file"
@@ -788,8 +816,7 @@ export default function App({initial,onPersist}:{initial:State;onPersist:(next:S
                   Восстановление заменит текущие данные всех питомцев. Сначала
                   скачайте текущую копию, если она нужна.
                 </p>
-                <button
-                  className="primary"
+                <Button
                   onClick={() =>
                     safe(async () => {
                       await commit(restore);
@@ -800,12 +827,18 @@ export default function App({initial,onPersist}:{initial:State;onPersist:(next:S
                       setNotice("Данные восстановлены");
                     })
                   }
+                  fullWidth
+                  variant="destructive"
                 >
                   Заменить данные этой копией
-                </button>
-                <button className="secondary" onClick={() => setRestore(null)}>
+                </Button>
+                <Button
+                  onClick={() => setRestore(null)}
+                  fullWidth
+                  variant="secondary"
+                >
                   Отмена
-                </button>
+                </Button>
               </Card>
             )}
           </>
@@ -813,201 +846,241 @@ export default function App({initial,onPersist}:{initial:State;onPersist:(next:S
     }
   }
   return (
-    <div className="app" aria-busy={busy}><fieldset className="app-fields" disabled={busy}>
-      <header>
-        <span className="brand">
-          <PawPrint size={25} />
-          рядом
-        </span>
-        <button
-          className="pet-button"
-          onClick={() => setOverlay({ kind: "pets" })}
-        >
-          <span className="avatar">
-            <Dog size={21} />
+    <div className="app" aria-busy={busy}>
+      <fieldset className="app-fields" disabled={busy}>
+        <header className="app-header">
+          <span className="brand">
+            <PawPrint />
+            рядом
           </span>
-          <span>{pet.name}</span>
-          <ChevronDown size={16} />
-        </button>
-      </header>
-      {pet.demo && (
-        <div className="demo-banner">
-          Демонстрационный питомец · все данные вымышлены
-        </div>
-      )}
-      {storageError && (
-        <div className="notice" role="alert">
-          {storageError}
-          <button
-            className="text-button"
-            onClick={() => setOverlay({ kind: "backup" })}
-          >
-            Открыть резервные копии
-          </button>
-        </div>
-      )}
-      <div className="save-status" role="status" aria-live="polite">
-        {notice || "Данные вашего аккаунта"}
-      </div>
-      <main>
-        {screen === "day" && (
-          <Calendar
-            pet={pet}
-            selected={selected}
-            month={month}
-            setSelected={setSelected}
-            setMonth={setMonth}
-            onAdd={() => setOverlay({ kind: "event" })}
-            onToggle={toggle}
-            onDetail={(event, on) => setOverlay({ kind: "detail", event, on })}
-          />
-        )}{" "}
-        {screen === "training" && (
-          <Training key={pet.id} pet={pet}
-            onSave={next=>update(()=>next)}
-            onPlan={name=>setOverlay({kind:"event",category:"training",name})}
-          />
-        )}{" "}
-        {screen === "health" && (
-          <Health
-            pet={pet}
-            onWeight={() => setOverlay({ kind: "weight" })}
-            onRecord={() => setOverlay({ kind: "record" })}
-            onSummary={() => setOverlay({ kind: "summary" })}
-            onPlan={(name, linkedRecord) =>
-              setOverlay({
-                kind: "event",
-                category: "health",
-                name,
-                linkedRecord,
-              })
-            }
-          />
-        )}{" "}
-        {screen === "stock" && (
-          <Stock
-            pet={pet}
-            onEdit={() => setOverlay({ kind: "ration" })}
-            onAdd={() => setOverlay({ kind: "stock" })}
-            onShop={() => setOverlay({ kind: "shopping" })}
-            onToggle={(item) =>
-              safe(() =>
-                update((p) => ({
-                  ...p,
-                  shopping: p.shopping.map((s) =>
-                    s.id === item ? { ...s, done: !s.done } : s,
-                  ),
-                })),
-              )
-            }
-          />
-        )}{" "}
-        {screen === "profile" && (
-          <>
-            <div className="profile-hero">
-              <span className="avatar">
-                <Dog size={38} />
-              </span>
-              <div>
-                <span className="eyebrow">Мой питомец</span>
-                <h1>{pet.name}</h1>
-                <p>{pet.breed || "Порода не указана"}</p>
-              </div>
-            </div>
-            <Card>
-              <dl>
-                <div>
-                  <dt>Дата рождения</dt>
-                  <dd>
-                    {pet.birthday
-                      ? fmt(pet.birthday, {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })
-                      : "Не указана"}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Пол</dt>
-                  <dd>{pet.sex || "Не указан"}</dd>
-                </div>
-                <div>
-                  <dt>Чип</dt>
-                  <dd>{pet.chip || "Не указан"}</dd>
-                </div>
-              </dl>
-              <button
-                className="secondary"
-                onClick={() => setOverlay({ kind: "editpet" })}
+          <div className="app-header-actions">
+            {(screen === "account" || screen === "profile") && (
+              <IconButton
+                label="Назад к планам"
+                onClick={() => setScreen("day")}
               >
-                Редактировать профиль
-              </button>
-            </Card>
-            <div className="section-title">
-              <h2>Документы</h2>
-              <button
-                className="text-button"
-                onClick={() => setOverlay({ kind: "document" })}
-              >
-                Добавить
-              </button>
-            </div>
-            {pet.documents.length ? (
-              pet.documents.map((d) => (
-                <Card key={d.id}>
-                  <h3>{d.name}</h3>
-                  <p className="hint">{d.filename}</p>
-                  <a
-                    className="text-button"
-                    href={d.data}
-                    download={d.filename}
-                  >
-                    Скачать документ
-                  </a>
-                </Card>
-              ))
-            ) : (
-              <Empty title="Документов пока нет">
-                Добавьте ветпаспорт или результаты обследований.
-              </Empty>
+                <ArrowLeft />
+              </IconButton>
             )}
-            <button
-              className="secondary"
+            <IconButton
+              label="Аккаунт"
+              className="account-trigger"
+              aria-current={screen === "account" ? "page" : undefined}
+              onClick={() => {
+                setScreen("account");
+                setNotice("");
+                window.scrollTo({ top: 0 });
+              }}
+            >
+              <UserRound />
+            </IconButton>
+          </div>
+        </header>
+        {screen !== "account" && (
+          <div className="pet-switcher">
+            <Button
               onClick={() => setOverlay({ kind: "pets" })}
+              className="pet-button"
+              variant="secondary"
+              aria-label={"Выбрать питомца: " + pet.name}
             >
-              Все питомцы
-            </button>
-            <button
-              className="secondary"
-              onClick={() => setOverlay({ kind: "backup" })}
-            >
-              Резервные копии и восстановление
-            </button>
-          </>
+              <span className="avatar">
+                <Dog />
+              </span>
+              <span>{pet.name}</span>
+              <ChevronDown />
+            </Button>
+          </div>
         )}
-      </main>
-      <nav aria-label="Разделы приложения">
-        {nav.map(([key, label, Icon]) => (
-          <button
-            key={key}
-            aria-current={screen === key ? "page" : undefined}
-            onClick={() => {
-              setScreen(key);
-              setNotice("");
-              window.scrollTo({ top: 0 });
-            }}
-          >
-            <Icon size={22} />
-            <span>{label}</span>
-          </button>
-        ))}
-      </nav>
-      {overlay && (
-        <Modal title={title} onClose={close}>
-          {modalBody()}
-        </Modal>
-      )}
-    </fieldset></div>
+        {pet.demo && (
+          <div className="demo-banner">
+            Демонстрационный питомец · все данные вымышлены
+          </div>
+        )}
+        {storageError && (
+          <div className="notice" role="alert">
+            {storageError}
+            <Button
+              onClick={() => setOverlay({ kind: "backup" })}
+              variant="ghost"
+            >
+              Открыть резервные копии
+            </Button>
+          </div>
+        )}
+        <div className="save-status" role="status" aria-live="polite">
+          {notice || "Данные вашего аккаунта"}
+        </div>
+        <main>
+          {screen === "account" && accountContent}
+          {screen === "day" && (
+            <Calendar
+              pet={pet}
+              selected={selected}
+              month={month}
+              setSelected={setSelected}
+              setMonth={setMonth}
+              onAdd={() => setOverlay({ kind: "event" })}
+              onToggle={toggle}
+              onDetail={(event, on) =>
+                setOverlay({ kind: "detail", event, on })
+              }
+            />
+          )}{" "}
+          {screen === "training" && (
+            <Training
+              key={pet.id}
+              pet={pet}
+              onSave={(next) => update(() => next)}
+              onPlan={(name) =>
+                setOverlay({ kind: "event", category: "training", name })
+              }
+            />
+          )}{" "}
+          {screen === "health" && (
+            <Health
+              pet={pet}
+              onWeight={() => setOverlay({ kind: "weight" })}
+              onRecord={() => setOverlay({ kind: "record" })}
+              onSummary={() => setOverlay({ kind: "summary" })}
+              onPlan={(name, linkedRecord) =>
+                setOverlay({
+                  kind: "event",
+                  category: "health",
+                  name,
+                  linkedRecord,
+                })
+              }
+            />
+          )}{" "}
+          {screen === "stock" && (
+            <Stock
+              pet={pet}
+              onEdit={() => setOverlay({ kind: "ration" })}
+              onAdd={() => setOverlay({ kind: "stock" })}
+              onShop={() => setOverlay({ kind: "shopping" })}
+              onToggle={(item) =>
+                safe(() =>
+                  update((p) => ({
+                    ...p,
+                    shopping: p.shopping.map((s) =>
+                      s.id === item ? { ...s, done: !s.done } : s,
+                    ),
+                  })),
+                )
+              }
+            />
+          )}{" "}
+          {screen === "profile" && (
+            <>
+              <div className="profile-hero">
+                <span className="avatar">
+                  <Dog />
+                </span>
+                <div>
+                  <span className="eyebrow">Мой питомец</span>
+                  <h1>{pet.name}</h1>
+                  <p>{pet.breed || "Порода не указана"}</p>
+                </div>
+              </div>
+              <Card>
+                <dl>
+                  <div>
+                    <dt>Дата рождения</dt>
+                    <dd>
+                      {pet.birthday
+                        ? fmt(pet.birthday, {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : "Не указана"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Пол</dt>
+                    <dd>{pet.sex || "Не указан"}</dd>
+                  </div>
+                  <div>
+                    <dt>Чип</dt>
+                    <dd>{pet.chip || "Не указан"}</dd>
+                  </div>
+                </dl>
+                <Button
+                  onClick={() => setOverlay({ kind: "editpet" })}
+                  fullWidth
+                  variant="secondary"
+                >
+                  Редактировать профиль
+                </Button>
+              </Card>
+              <SectionHeader title="Документы">
+                <Button
+                  onClick={() => setOverlay({ kind: "document" })}
+                  variant="ghost"
+                >
+                  Добавить
+                </Button>
+              </SectionHeader>
+              {pet.documents.length ? (
+                pet.documents.map((d) => (
+                  <Card key={d.id}>
+                    <h3>{d.name}</h3>
+                    <p className="hint">{d.filename}</p>
+                    <a
+                      className="text-button"
+                      href={d.data}
+                      download={d.filename}
+                    >
+                      Скачать документ
+                    </a>
+                  </Card>
+                ))
+              ) : (
+                <Empty title="Документов пока нет">
+                  Добавьте ветпаспорт или результаты обследований.
+                </Empty>
+              )}
+              <Button
+                onClick={() => setOverlay({ kind: "pets" })}
+                fullWidth
+                variant="secondary"
+              >
+                Все питомцы
+              </Button>
+              <Button
+                onClick={() => setOverlay({ kind: "backup" })}
+                fullWidth
+                variant="secondary"
+              >
+                Резервные копии и восстановление
+              </Button>
+            </>
+          )}
+        </main>
+        <nav className="bottom-nav" aria-label="Разделы приложения">
+          {nav.map(([key, label, Icon]) => (
+            <Button
+              key={key}
+              aria-current={screen === key ? "page" : undefined}
+              onClick={() => {
+                setScreen(key);
+                setNotice("");
+                window.scrollTo({ top: 0 });
+              }}
+              variant="ghost"
+            >
+              <Icon />
+              <span>{label}</span>
+            </Button>
+          ))}
+        </nav>
+        {overlay && (
+          <Modal title={title} onClose={close}>
+            {modalBody()}
+          </Modal>
+        )}
+      </fieldset>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
+import { Field, Select, Note, Form, text, Checkbox } from "./components";
 import { useState } from "react";
 import { eventSchema, id, type PetEvent } from "./domain";
-import { Field, Select, Note, Form, text } from "./components";
 import { categories } from "./Calendar";
 export default function EventForm({
   selected,
@@ -68,14 +68,11 @@ export default function EventForm({
           required={!allDay}
         />
       </div>
-      <label className="checkline">
-        <input
-          type="checkbox"
-          checked={allDay}
-          onChange={(e) => setAllDay(e.target.checked)}
-        />
-        Весь день
-      </label>
+      <Checkbox
+        label="Весь день"
+        checked={allDay}
+        onChange={(e) => setAllDay(e.target.checked)}
+      />
       <Select
         label="Повторять"
         value={repeat}
