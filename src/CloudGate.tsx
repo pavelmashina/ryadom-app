@@ -31,11 +31,13 @@ export default function CloudGate() {
     revision = useRef(0),
     generation = useRef(0),
     saving = useRef(false);
+  const latestSnapshot = useRef<CloudSnapshot | undefined>(undefined);
   async function activate(session: AuthSession, epoch: number) {
     const snapshot = await loadAccount(session);
     if (generation.current !== epoch) return;
     active.current = session;
     revision.current = snapshot.revision;
+    latestSnapshot.current = snapshot;
     setAccount({ session, snapshot });
     setPhase("ready");
   }
@@ -99,7 +101,7 @@ export default function CloudGate() {
       window.removeEventListener("hashchange", recoveryLink);
     };
   }, []);
-  async function persist(next: State) {
+  async function persist(next: State, before: State) {
     const s = active.current;
     if (!s) throw new Error("Войдите в аккаунт");
     if (saving.current) throw new Error("Дождитесь завершения сохранения");
@@ -107,10 +109,11 @@ export default function CloudGate() {
     setBusy(true);
     const epoch = generation.current;
     try {
-      const saved = await saveAccount(s, next, revision.current);
+      const saved = await saveAccount(s, next, before);
       if (epoch !== generation.current)
         throw new Error("Аккаунт изменился. Войдите снова.");
       revision.current = saved.revision;
+      latestSnapshot.current = saved;
       return saved.state;
     } finally {
       saving.current = false;
@@ -278,6 +281,16 @@ export default function CloudGate() {
     <App
       key={account.session.user.id}
       initial={account.snapshot.state}
+      session={account.session}
+      onRefresh={async () => {
+        const s = active.current;
+        if (!s) throw new Error("Войдите в аккаунт");
+        const epoch = generation.current;
+        const result = await loadAccount(s, latestSnapshot.current);
+        if (epoch !== generation.current) throw new Error("Аккаунт изменился");
+        latestSnapshot.current = result;
+        return result.state;
+      }}
       onPersist={persist}
       accountContent={
         <Account

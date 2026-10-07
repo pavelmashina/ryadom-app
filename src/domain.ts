@@ -65,6 +65,10 @@ const docSchema = z.object({
 });
 export const petSchema = z.object({
   id: z.string(),
+  shareCode: z.string().optional(),
+  role: z.enum(["owner", "editor"]).optional(),
+  revision: z.number().int().optional(),
+  pendingRequests: z.number().int().optional(),
   name: nameSchema,
   demo: z.boolean(),
   breed: z.string(),
@@ -120,8 +124,22 @@ export const stateSchema = z
     )
       ctx.addIssue({ code: "custom", message: "Некорректные питомцы" });
     for (const p of s.pets) {
-      if (new Set(p.commands.map(c=>c.name.trim().toLowerCase())).size !== p.commands.length || new Set(p.commands.map(c=>c.id)).size !== p.commands.length) ctx.addIssue({code:"custom",message:"Повторяющиеся команды"});
-      if (new Set(p.workouts.map(w=>w.id)).size !== p.workouts.length || p.workouts.some(w=>w.results.some(r=>!p.commands.some(c=>c.id===r.command_id)))) ctx.addIssue({code:"custom",message:"Некорректные команды тренировки"});
+      if (
+        new Set(p.commands.map((c) => c.name.trim().toLowerCase())).size !==
+          p.commands.length ||
+        new Set(p.commands.map((c) => c.id)).size !== p.commands.length
+      )
+        ctx.addIssue({ code: "custom", message: "Повторяющиеся команды" });
+      if (
+        new Set(p.workouts.map((w) => w.id)).size !== p.workouts.length ||
+        p.workouts.some((w) =>
+          w.results.some((r) => !p.commands.some((c) => c.id === r.command_id)),
+        )
+      )
+        ctx.addIssue({
+          code: "custom",
+          message: "Некорректные команды тренировки",
+        });
       if (p.sessions.some((s) => !p.commands.some((c) => c.id === s.command)))
         ctx.addIssue({ code: "custom", message: "Занятие без команды" });
     }

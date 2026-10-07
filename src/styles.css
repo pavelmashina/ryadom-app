@@ -1,4 +1,21 @@
 @import "./tokens.css";
+.share-code {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  user-select: all;
+  overflow-wrap: anywhere;
+}
+.sharing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.sharing-confirm {
+  border-color: var(--color-danger);
+}
+.request-dot {
+  color: var(--color-warning);
+}
 * {
   box-sizing: border-box;
 }

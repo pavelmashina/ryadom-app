@@ -1,0 +1,45 @@
+-- Run through an administrative SQL connection. Every synthetic row is rolled back.
+begin;
+do $$
+declare a uuid:=gen_random_uuid(); b uuid:=gen_random_uuid(); pid uuid:=gen_random_uuid(); rid uuid; code text; v jsonb; p jsonb; denied boolean;
+begin
+ insert into auth.users(id,email) values(a,a::text||'@example.invalid'),(b,b::text||'@example.invalid');
+ p=jsonb_build_object('id',pid,'name','Sharing verification','demo',false,'breed','','birthday','','sex','','chip','','events','[]'::jsonb,'done','{}'::jsonb,'commands','[]'::jsonb,'sessions','[]'::jsonb,'workouts','[]'::jsonb,'weights','[]'::jsonb,'records','[]'::jsonb,'stock',0,'pack',3,'ration',0,'stockDate','','shopping','[]'::jsonb,'documents','[]'::jsonb);
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ execute 'set local role authenticated';
+ v=public.save_shared_state(jsonb_build_array(jsonb_build_object('pet',p,'revision',null)),'[]'::jsonb,pid::text);
+ code=v->'state'->'pets'->0->>'shareCode';
+ if code is null or v->'state'->'pets'->0->>'role'<>'owner' then raise exception 'Owner creation failed'; end if;
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ v=public.pet_access('lookup',lower(code));
+ if v<>jsonb_build_object('name','Sharing verification','status','available') then raise exception 'Lookup leaks data'; end if;
+ perform public.pet_access('request',code);
+ perform public.pet_access('request',code);
+ v=public.pet_access('outgoing');
+ if jsonb_array_length(v)<>1 then raise exception 'Duplicate requests'; end if;
+ rid=(v->0->>'id')::uuid;
+ if exists(select 1 from public.pets where id=pid) then raise exception 'Pending user can read pet'; end if;
+ denied=false;begin perform public.pet_access('approve',null,null,rid);exception when insufficient_privilege then denied=true;end;
+ if not denied then raise exception 'Editor approval allowed'; end if;
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ perform public.pet_access('approve',null,null,rid);
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ if not exists(select 1 from public.pets where id=pid) then raise exception 'Member cannot read shared pet'; end if;
+ p=jsonb_set(p,'{weights}','[{"id":"weight-test","date":"2026-10-07","value":7.3}]'::jsonb);
+ perform public.save_shared_state(jsonb_build_array(jsonb_build_object('pet',p,'revision',1)),'[]'::jsonb,pid::text);
+ denied=false;begin update public.pet_members set role='owner' where pet_id=pid and user_id=b;exception when insufficient_privilege then denied=true;end;
+ if not denied then raise exception 'Role escalation allowed'; end if;
+ perform set_config('request.jwt.claim.sub',a::text,true);
+ v=public.load_shared_state();
+ if v->'state'->'pets'->0->'weights'->0->>'value'<>'7.3' then raise exception 'Shared edit not visible'; end if;
+ perform public.pet_access('rotate',null,pid);
+ perform public.pet_access('revoke',null,pid,b);
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ if exists(select 1 from public.pets where id=pid) then raise exception 'Revoked user can read pet'; end if;
+ denied=false;begin perform public.save_shared_state(jsonb_build_array(jsonb_build_object('pet',p,'revision',2)),'[]'::jsonb,pid::text);exception when insufficient_privilege then denied=true;end;
+ if not denied then raise exception 'Revoked user can write pet'; end if;
+ if public.pet_access('lookup',code)->>'error' is null then raise exception 'Old code still valid'; end if;
+ execute 'reset role';
+end $$;
+rollback;
+select 'PASS: owner, lookup, duplicate prevention, pending isolation, approval, shared edits, role escalation, rotation, revocation; all test rows rolled back' as result;

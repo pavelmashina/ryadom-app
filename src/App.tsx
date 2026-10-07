@@ -13,7 +13,9 @@ import {
   text,
   number,
 } from "./components";
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Sharing, JoinPet } from "./Sharing";
+import type { AuthSession } from "./backend";
 import {
   PawPrint,
   Dog,
@@ -66,6 +68,8 @@ type Overlay =
   | {
       kind:
         | "pets"
+        | "sharing"
+        | "join"
         | "newpet"
         | "editpet"
         | "command"
@@ -88,13 +92,18 @@ export default function App({
   initial,
   onPersist,
   accountContent,
+  session,
+  onRefresh,
 }: {
   initial: State;
-  onPersist: (next: State) => Promise<State>;
+  onPersist: (next: State, before: State) => Promise<State>;
   accountContent: ReactNode;
+  session: AuthSession;
+  onRefresh: () => Promise<State>;
 }) {
   const loaded = { state: initial, error: "" };
   const saving = useRef(false);
+  const epoch = useRef(0);
   const [busy, setBusy] = useState(false);
   const [state, setState] = useState(loaded.state),
     [storageError, setStorageError] = useState(loaded.error),
@@ -105,12 +114,74 @@ export default function App({
     [month, setMonth] = useState(today().slice(0, 7) + "-01"),
     [restore, setRestore] = useState<State | null>(null);
   const pet = state.pets.find((p) => p.id === state.selectedPet)!;
+  const overlayRef = useRef(overlay);
+  overlayRef.current = overlay;
+  const refreshRef = useRef(onRefresh);
+  refreshRef.current = onRefresh;
+  useEffect(() => {
+    let stopped = false,
+      running = false;
+    async function refresh() {
+      if (running || saving.current || document.hidden) return;
+      running = true;
+      const stamp = epoch.current;
+      try {
+        const next = await refreshRef.current();
+        if (stopped || saving.current || stamp !== epoch.current) return;
+        setState((previous) => {
+          const lost = previous.pets.some(
+            (p) => !next.pets.some((n) => n.id === p.id),
+          );
+          if (
+            document.querySelector("dialog[open]") &&
+            !lost &&
+            overlayRef.current?.kind !== "join"
+          )
+            return previous;
+          if (lost) {
+            setOverlay(null);
+            setNotice(
+              "Список питомцев обновлён. Доступ к одному из питомцев прекращён.",
+            );
+          }
+          if (JSON.stringify(previous) === JSON.stringify(next))
+            return previous;
+          return {
+            ...next,
+            selectedPet: next.pets.some((p) => p.id === previous.selectedPet)
+              ? previous.selectedPet
+              : next.selectedPet,
+          };
+        });
+      } catch {
+        /* Keep the current draft during a transient network failure. Writes still require server authorization. */
+      } finally {
+        running = false;
+      }
+    }
+    const timer = setInterval(refresh, 3000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, []);
+  async function refreshNow() {
+    ++epoch.current;
+    const next = await onRefresh();
+    setState(next);
+    if (!next.pets.some((p) => p.id === pet.id)) close();
+  }
   async function commit(next: State) {
     if (saving.current) throw new Error("Дождитесь завершения сохранения");
     saving.current = true;
+    ++epoch.current;
     setBusy(true);
     try {
-      const stored = await onPersist(next);
+      const stored = await onPersist(next, state);
       setState(stored);
       setStorageError("");
       setNotice("Сохранено в облаке");
@@ -184,6 +255,8 @@ export default function App({
           : (
               {
                 pets: "Мои питомцы",
+                sharing: "Совместный доступ",
+                join: "Добавить существующего питомца",
                 newpet: "Новый питомец",
                 editpet: "Данные питомца",
                 command: "Новая команда",
@@ -200,6 +273,10 @@ export default function App({
   function modalBody() {
     if (!overlay) return null;
     switch (overlay.kind) {
+      case "sharing":
+        return <Sharing session={session} pet={pet} onChanged={refreshNow} />;
+      case "join":
+        return <JoinPet session={session} onChanged={refreshNow} />;
       case "event":
         return (
           <EventForm
@@ -287,6 +364,12 @@ export default function App({
                 </span>
                 <span>
                   <strong>{p.name}</strong>
+                  <small>
+                    {p.role === "editor" ? "Совместный доступ" : "Владелец"}
+                    {p.pendingRequests
+                      ? ` · Запросы: ${p.pendingRequests}`
+                      : ""}
+                  </small>
                 </span>
                 {p.id === pet.id ? "✓" : "→"}
               </InteractiveCard>
@@ -297,6 +380,13 @@ export default function App({
               variant="primary"
             >
               Добавить питомца
+            </Button>
+            <Button fullWidth onClick={() => setOverlay({ kind: "join" })}>
+              Добавить существующего питомца
+            </Button>
+            <Button fullWidth onClick={() => setOverlay({ kind: "sharing" })}>
+              Совместный доступ
+              {pet.pendingRequests ? ` · ${pet.pendingRequests}` : ""}
             </Button>
             <Button
               onClick={() => {
@@ -777,7 +867,7 @@ export default function App({
             />
             <p className="hint">
               Файл сохраняется в вашем аккаунте и входит в резервную копию.
-              Доступен только вам после входа.
+              Доступен активным участникам питомца после входа.
             </p>
           </Form>
         );
@@ -896,6 +986,16 @@ export default function App({
             >
               <UserRound />
             </IconButton>
+            {state.pets.some((p) => (p.pendingRequests ?? 0) > 0) && (
+              <IconButton
+                label="Есть запросы на доступ"
+                onClick={() => setOverlay({ kind: "pets" })}
+              >
+                <span className="request-dot" aria-hidden="true">
+                  ●
+                </span>
+              </IconButton>
+            )}
           </div>
         </header>
         {pet.demo && (
@@ -1018,6 +1118,21 @@ export default function App({
                   variant="secondary"
                 >
                   Редактировать профиль
+                </Button>
+              </Card>
+              <Card>
+                <SectionHeader title="Совместный доступ" compact />
+                <p>
+                  {pet.role === "editor"
+                    ? "У вас совместный доступ к этой карточке."
+                    : "Вы владелец этой карточки."}
+                </p>
+                <Button
+                  fullWidth
+                  onClick={() => setOverlay({ kind: "sharing" })}
+                >
+                  Управлять доступом
+                  {pet.pendingRequests ? ` · ${pet.pendingRequests}` : ""}
                 </Button>
               </Card>
               <SectionHeader title="Документы">
