@@ -80,6 +80,23 @@ export const petSchema = z.object({
   commands: z.array(z.object({ id: z.string(), name: nameSchema })),
   sessions: z.array(sessionSchema),
   workouts: z.array(trainingSchema).default([]),
+  trainingDiary: z
+    .array(
+      z.object({
+        source_key: z.string(),
+        date: daySchema,
+        status: z.enum(["conducted", "skipped", "linked"]),
+        original_text: z.string(),
+        session_id: z.string().uuid().nullable(),
+        details: z
+          .object({
+            reason: z.string().nullable().optional(),
+            commandNotes: z.record(z.string()).optional(),
+          })
+          .passthrough(),
+      }),
+    )
+    .optional(),
   weights: z.array(
     z.object({
       id: z.string(),

@@ -50,6 +50,16 @@ export default function Training({
   onPlan: (name: string) => void;
 }) {
   const [view, setView] = useState<View>(null);
+  const [visibleCount, setVisibleCount] = useState(5);
+  const diary = pet.trainingDiary ?? [];
+  const sourceEntry = diary.find((d) => d.session_id === selectedId());
+  function selectedId() {
+    return view?.kind === "session" ? view.id : undefined;
+  }
+  const learningNotes = Object.assign(
+    {},
+    ...diary.map((d) => d.details.commandNotes ?? {}),
+  ) as Record<string, string>;
   const sessions = [...pet.workouts].sort(
     (a, b) =>
       b.date.localeCompare(a.date) || b.created_at.localeCompare(a.created_at),
@@ -88,7 +98,7 @@ export default function Training({
           Выберите команды и отметьте, как прошло занятие.
         </Empty>
       )}
-      {sessions.map((s) => (
+      {sessions.slice(0, visibleCount).map((s) => (
         <InteractiveCard
           key={s.id}
           onClick={() => setView({ kind: "session", id: s.id })}
@@ -104,6 +114,15 @@ export default function Training({
           {s.comment && <p className="training-excerpt">{s.comment}</p>}
         </InteractiveCard>
       ))}
+      {sessions.length > visibleCount && (
+        <Button
+          variant="ghost"
+          fullWidth
+          onClick={() => setVisibleCount((n) => n + 10)}
+        >
+          Показать ещё тренировки
+        </Button>
+      )}
       <SectionHeader title="Команды">
         <Button onClick={() => setView({ kind: "addCommand" })} variant="ghost">
           Добавить команду
@@ -149,6 +168,44 @@ export default function Training({
           );
         })}
       </div>
+      {!!diary.length && (
+        <details className="explanation">
+          <summary>Исходный дневник · {diary.length} записей</summary>
+          <p>
+            Оценки восстановлены по тексту, а не по числу успешных повторов.
+            Пропуски не влияют на прогресс. Исходные записи сохранены отдельно
+            от редактируемых тренировок.
+          </p>
+          {diary.map((d) => (
+            <details key={d.source_key}>
+              <summary>
+                {fmt(d.date, {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}{" "}
+                ·{" "}
+                {d.status === "skipped"
+                  ? "Пропуск"
+                  : d.status === "linked"
+                    ? "Уже в приложении"
+                    : "Занятие"}
+              </summary>
+              <p className="note">{d.original_text}</p>
+              {d.session_id && sessions.some((s) => s.id === d.session_id) && (
+                <Button
+                  variant="ghost"
+                  onClick={() =>
+                    setView({ kind: "session", id: d.session_id! })
+                  }
+                >
+                  Открыть тренировку
+                </Button>
+              )}
+            </details>
+          ))}
+        </details>
+      )}
       {!!pet.sessions.length && (
         <details className="explanation">
           <summary>Архив занятий с повторами · {pet.sessions.length}</summary>
@@ -226,6 +283,19 @@ export default function Training({
                   ? selected.duration_minutes + " мин"
                   : "Длительность не указана"}
               </p>
+              {sourceEntry && (
+                <>
+                  <Badge>
+                    {sourceEntry.status === "linked"
+                      ? "Связано с дневником"
+                      : "Восстановлено из дневника"}
+                  </Badge>
+                  <details className="explanation">
+                    <summary>Исходная запись</summary>
+                    <p className="note">{sourceEntry.original_text}</p>
+                  </details>
+                </>
+              )}
               <p className="note">
                 {selected.comment || "Без общего комментария"}
               </p>
@@ -268,6 +338,9 @@ export default function Training({
                 {progress.average !== null &&
                   "· " + progress.average.toFixed(1) + " / 5"}
               </h3>
+              {learningNotes[command.name] && (
+                <p className="note">{learningNotes[command.name]}</p>
+              )}
               {progress.preliminary && (
                 <Badge tone="warning">Предварительная оценка</Badge>
               )}

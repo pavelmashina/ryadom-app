@@ -64,6 +64,7 @@ beforeAll(async () => {
   ]);
   await db.exec("reset role");
   await db.exec(sql("20261007154510_pet_sharing.sql"));
+  await db.exec(sql("20261008092135_training_diary_provenance.sql"));
 }, 30000);
 afterAll(async () => {
   await db.close();
@@ -293,4 +294,58 @@ it("an owner deletion hides the pet while retaining recoverable records", async 
       )
     ).rows,
   ).toHaveLength(1);
+});
+
+it("keeps immutable diary through saves and restricts it to active members", async () => {
+  const importedPet = blankPet("Дневник тестового питомца");
+  await asUser(owner);
+  await save(importedPet, null);
+  await db.exec("reset role");
+  await db.query(
+    "insert into public.training_diary(pet_id,source_key,source_hash,date,status,original_text,details) values($1,'fixture:row:1',repeat('a',64),'2025-01-01','skipped','Пропуск: исходный текст',$2::jsonb)",
+    [
+      importedPet.id,
+      JSON.stringify({ commandNotes: { Рядом: "Знал до начала дневника" } }),
+    ],
+  );
+  await asUser(owner);
+  let state = await load();
+  let stored = state.pets.find((p: any) => p.id === importedPet.id);
+  expect(stored.trainingDiary[0].original_text).toBe("Пропуск: исходный текст");
+  stored.trainingDiary[0].original_text = "Подмена из клиента";
+  await save(stored, stored.revision);
+  expect(
+    (await load()).pets.find((p: any) => p.id === importedPet.id)
+      .trainingDiary[0].original_text,
+  ).toBe("Пропуск: исходный текст");
+  await expect(
+    db.query("update public.training_diary set original_text='Подмена'"),
+  ).rejects.toThrow(/permission denied/);
+  await asUser(third);
+  expect(
+    (await db.query("select * from public.training_diary")).rows,
+  ).toHaveLength(0);
+  await db.exec("reset role");
+  await db.query(
+    "insert into public.pet_members(pet_id,user_id,role) values($1,$2,'editor')",
+    [importedPet.id, editor],
+  );
+  await asUser(editor);
+  expect(
+    (await db.query("select * from public.training_diary")).rows,
+  ).toHaveLength(1);
+  await db.exec("reset role");
+  await db.query(
+    "update public.pet_members set status='revoked' where pet_id=$1 and user_id=$2",
+    [importedPet.id, editor],
+  );
+  await asUser(editor);
+  expect(
+    (await db.query("select * from public.training_diary")).rows,
+  ).toHaveLength(0);
+  await db.exec("reset role; set role anon");
+  await expect(db.query("select * from public.training_diary")).rejects.toThrow(
+    /permission denied/,
+  );
+  await db.exec("reset role");
 });
