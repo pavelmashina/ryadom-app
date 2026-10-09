@@ -23,6 +23,7 @@ import {
   type TrainingSession,
 } from "./training-domain";
 import "./training.css";
+import TrainingHistory from "./TrainingHistory";
 type View =
   | {
       kind: "edit";
@@ -50,7 +51,6 @@ export default function Training({
   onPlan: (name: string) => void;
 }) {
   const [view, setView] = useState<View>(null);
-  const [visibleCount, setVisibleCount] = useState(5);
   const diary = pet.trainingDiary ?? [];
   const sourceEntry = diary.find((d) => d.session_id === selectedId());
   function selectedId() {
@@ -90,39 +90,6 @@ export default function Training({
       >
         Добавить тренировку
       </Button>
-      <SectionHeader title="Последние тренировки">
-        <span>{sessions.length}</span>
-      </SectionHeader>
-      {!sessions.length && (
-        <Empty title="Пока нет тренировок">
-          Выберите команды и отметьте, как прошло занятие.
-        </Empty>
-      )}
-      {sessions.slice(0, visibleCount).map((s) => (
-        <InteractiveCard
-          key={s.id}
-          onClick={() => setView({ kind: "session", id: s.id })}
-          className="training-row"
-        >
-          <strong>
-            {fmt(s.date, { day: "numeric", month: "long", year: "numeric" })}
-          </strong>
-          <span>
-            {s.duration_minutes ? s.duration_minutes + " мин · " : ""}Команд:{" "}
-            {s.results.length}
-          </span>
-          {s.comment && <p className="training-excerpt">{s.comment}</p>}
-        </InteractiveCard>
-      ))}
-      {sessions.length > visibleCount && (
-        <Button
-          variant="ghost"
-          fullWidth
-          onClick={() => setVisibleCount((n) => n + 10)}
-        >
-          Показать ещё тренировки
-        </Button>
-      )}
       <SectionHeader title="Команды">
         <Button onClick={() => setView({ kind: "addCommand" })} variant="ghost">
           Добавить команду
@@ -153,21 +120,42 @@ export default function Training({
                 p.count
               }
             >
-              <span className="command-row-title">
-                <strong title={c.name}>{c.name}</strong>
-                <Badge>{p.status}</Badge>
-              </span>
-              <span className="command-row-meta">
-                {p.average === null
-                  ? "Без оценки"
-                  : p.average.toFixed(1) + " / 5"}
-                {" · Тренировок: "}
-                {p.count}
+              <span className="command-compact">
+                <strong className="command-name" title={c.name}>
+                  {c.name}
+                </strong>
+                <span className="command-rating">
+                  {p.average === null ? "—" : p.average.toFixed(1) + " / 5"}
+                </span>
+                <span className="command-scale" aria-hidden="true">
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <span key={i}>
+                      <i
+                        style={{
+                          width:
+                            (p.average === null
+                              ? 0
+                              : Math.max(0, Math.min(1, p.average - i))) *
+                              100 +
+                            "%",
+                        }}
+                      />
+                    </span>
+                  ))}
+                </span>
+                <span className="command-status">{p.status}</span>
               </span>
             </InteractiveCard>
           );
         })}
       </div>
+      <TrainingHistory
+        key={pet.id}
+        sessions={sessions}
+        commands={pet.commands}
+        onOpen={(id) => setView({ kind: "session", id })}
+        onEdit={(session) => setView({ kind: "edit", session })}
+      />
       {!!diary.length && (
         <details className="explanation">
           <summary>Исходный дневник · {diary.length} записей</summary>

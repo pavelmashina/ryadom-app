@@ -101,3 +101,227 @@
   width: 80px;
   accent-color: var(--color-primary);
 }
+
+/* Calendar training layout, matching the app's cream and green palette. */
+.command-compact {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 80px 92px;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+}
+.command-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  font-size: var(--font-size-small);
+}
+.command-rating {
+  font-size: var(--font-size-small);
+  font-weight: 700;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.command-status {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+.command-scale {
+  display: flex;
+  gap: 3px;
+  height: 9px;
+}
+.command-scale > span {
+  flex: 1;
+  background: var(--color-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.command-scale i {
+  display: block;
+  height: 100%;
+  background: var(--color-primary);
+}
+.command-row.card {
+  min-height: 48px;
+  padding: 8px 12px;
+}
+.training-calendar {
+  padding: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.training-month {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.training-month h3 {
+  margin: 0;
+  text-align: center;
+  text-transform: capitalize;
+  font-size: var(--font-size-body);
+}
+.training-weekdays,
+.training-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+.training-weekdays span {
+  text-align: center;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  padding: 4px 0;
+}
+.training-day {
+  position: relative;
+  min-width: 0;
+  min-height: 44px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  cursor: pointer;
+  padding: 4px 2px 12px;
+}
+.training-day:hover {
+  background: var(--color-surface-secondary);
+}
+.training-day[aria-current="date"] {
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+.training-day[aria-pressed="true"] {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 700;
+}
+.training-day:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+.training-day-dot {
+  position: absolute;
+  bottom: 5px;
+  left: calc(50% - 2px);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.calendar-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  margin: 8px 0 0;
+}
+.calendar-key > span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+.training-selected-date {
+  font-size: var(--font-size-small);
+  margin: 16px 0 8px;
+}
+.training-session-summary.card {
+  padding: 12px;
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  margin: 8px 0;
+}
+.training-session-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+.training-session-heading strong {
+  font-size: var(--font-size-small);
+}
+.training-session-heading > span {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+.training-result-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+}
+.training-result-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 3px 6px;
+  background: var(--color-surface-secondary);
+  border-radius: 6px;
+  font-size: var(--font-size-caption);
+}
+.training-result-chip > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.training-result-chip b {
+  flex: none;
+  white-space: nowrap;
+  color: var(--color-primary);
+}
+.training-comment summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+}
+.training-comment .comment-toggle {
+  display: block;
+  color: var(--color-primary);
+  font-size: var(--font-size-caption);
+  text-decoration: underline;
+  margin-top: 4px;
+}
+.training-comment[open] .training-excerpt {
+  display: none;
+}
+.training-comment .note {
+  overflow-wrap: anywhere;
+  font-size: var(--font-size-small);
+}
+.training-session-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 6px;
+}
+.training-session-actions .btn {
+  margin: 0;
+}
+@media (max-width: 480px) {
+  .command-compact {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 3px 12px;
+  }
+  .command-scale {
+    grid-column: 1;
+    width: 80px;
+  }
+  .command-status {
+    grid-column: 2;
+    text-align: right;
+  }
+  .command-row.card {
+    min-height: 60px;
+  }
+}
