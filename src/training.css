@@ -304,3 +304,42 @@
     padding: 4px 8px;
   }
 }
+
+.command-choice.card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 3px;
+  border: 2px solid var(--color-primary);
+  background: var(--color-surface);
+  text-align: left;
+  color: var(--color-text-primary);
+}
+.command-choice-name {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-small);
+  line-height: 1.25;
+  font-weight: 700;
+}
+.command-choice-state {
+  display: block;
+  white-space: nowrap;
+  font-size: var(--font-size-caption);
+  line-height: 1.25;
+}
+.command-choice[aria-pressed="true"] {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.command-choice[aria-pressed="true"]:not(:disabled):hover {
+  background: var(--color-primary-hover);
+}
+.command-choice:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}

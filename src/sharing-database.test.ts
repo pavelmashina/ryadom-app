@@ -65,6 +65,7 @@ beforeAll(async () => {
   await db.exec("reset role");
   await db.exec(sql("20261007154510_pet_sharing.sql"));
   await db.exec(sql("20261008092135_training_diary_provenance.sql"));
+  await db.exec(sql("20261009140053_command_archiving.sql"));
 }, 30000);
 afterAll(async () => {
   await db.close();
@@ -346,6 +347,90 @@ it("keeps immutable diary through saves and restricts it to active members", asy
   await db.exec("reset role; set role anon");
   await expect(db.query("select * from public.training_diary")).rejects.toThrow(
     /permission denied/,
+  );
+  await db.exec("reset role");
+});
+
+it("archives commands for editors without losing history and rejects revoked edits", async () => {
+  const fixture = blankPet("Архив команд");
+  const used = crypto.randomUUID(),
+    unused = crypto.randomUUID(),
+    sid = crypto.randomUUID();
+  fixture.commands = [
+    { id: used, name: "Сохранить историю" },
+    { id: unused, name: "Без занятий" },
+  ];
+  fixture.workouts = [
+    {
+      id: sid,
+      date: "2026-01-01",
+      duration_minutes: null,
+      comment: "История",
+      created_at: "2026-01-01T12:00:00Z",
+      updated_at: "2026-01-01T12:00:00Z",
+      results: [
+        {
+          command_id: used,
+          performance_score: 4,
+          mode: "repeat",
+          comment: "Оценка",
+        },
+      ],
+    },
+  ];
+  await asUser(owner);
+  await save(fixture, null);
+  await db.exec("reset role");
+  await db.query(
+    "insert into public.pet_members(pet_id,user_id,role) values($1,$2,'editor')",
+    [fixture.id, editor],
+  );
+  await db.query(
+    "insert into public.training_diary(pet_id,source_key,source_hash,date,status,original_text,session_id) values($1,'archive-test',repeat('a',64),'2026-01-01','conducted','Оригинал',$2)",
+    [fixture.id, sid],
+  );
+  await asUser(editor);
+  let current = (await load()).pets.find((p: any) => p.id === fixture.id);
+  const history = JSON.stringify(current.workouts),
+    diary = JSON.stringify(current.trainingDiary);
+  current.commands = current.commands.map((c: any) => ({
+    ...c,
+    archived: true,
+  }));
+  await save(current, current.revision);
+  current = (await load()).pets.find((p: any) => p.id === fixture.id);
+  expect(current.commands.every((c: any) => c.archived)).toBe(true);
+  expect(JSON.stringify(current.workouts)).toBe(history);
+  expect(JSON.stringify(current.trainingDiary)).toBe(diary);
+  // A stale client that does not know the archive property must not restore it.
+  current.commands = current.commands.map(({ archived, ...c }: any) => c);
+  await save(current, current.revision);
+  current = (await load()).pets.find((p: any) => p.id === fixture.id);
+  expect(current.commands.every((c: any) => c.archived)).toBe(true);
+  // Even an omitted command cannot cascade-delete its historical score.
+  current.commands = [];
+  await save(current, current.revision);
+  current = (await load()).pets.find((p: any) => p.id === fixture.id);
+  expect(current.commands).toHaveLength(2);
+  expect(JSON.stringify(current.workouts)).toBe(history);
+  current.workouts[0].comment = "Отредактировано";
+  await save(current, current.revision);
+  current = (await load()).pets.find((p: any) => p.id === fixture.id);
+  expect(current.workouts[0].results[0]).toMatchObject({
+    command_id: used,
+    performance_score: 4,
+    comment: "Оценка",
+  });
+  expect(JSON.stringify(current.trainingDiary)).toBe(diary);
+  await db.exec("reset role");
+  await db.query(
+    "update pet_members set status='revoked' where pet_id=$1 and user_id=$2",
+    [fixture.id, editor],
+  );
+  await asUser(editor);
+  current.commands[0].archived = false;
+  await expect(save(current, current.revision)).rejects.toThrow(
+    /отозван|отсутствует/,
   );
   await db.exec("reset role");
 });

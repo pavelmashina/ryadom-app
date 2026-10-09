@@ -9,7 +9,9 @@ export default function TrainingHistory({
   commands,
   onOpen,
   onEdit,
+  readOnly = false,
 }: {
+  readOnly?: boolean;
   sessions: TrainingSession[];
   commands: Pet["commands"];
   onOpen: (id: string) => void;
@@ -154,7 +156,12 @@ export default function TrainingHistory({
             <Button size="sm" variant="ghost" onClick={() => onOpen(s.id)}>
               Подробнее
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => onEdit(s)}>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={readOnly}
+              onClick={() => onEdit(s)}
+            >
               Редактировать
             </Button>
           </div>

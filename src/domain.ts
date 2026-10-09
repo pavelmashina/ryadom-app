@@ -77,7 +77,13 @@ export const petSchema = z.object({
   chip: z.string(),
   events: z.array(eventSchema),
   done: z.record(z.boolean()),
-  commands: z.array(z.object({ id: z.string(), name: nameSchema })),
+  commands: z.array(
+    z.object({
+      id: z.string(),
+      name: nameSchema,
+      archived: z.boolean().optional(),
+    }),
+  ),
   sessions: z.array(sessionSchema),
   workouts: z.array(trainingSchema).default([]),
   trainingDiary: z

@@ -1035,6 +1035,7 @@ export default function App({
           )}{" "}
           {screen === "training" && (
             <Training
+              canEdit={pet.role === "owner" || pet.role === "editor"}
               key={pet.id}
               pet={pet}
               onSave={(next) => update(() => next)}

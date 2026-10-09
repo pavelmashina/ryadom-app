@@ -24,7 +24,10 @@ import {
 } from "./training-domain";
 import "./training.css";
 import TrainingHistory from "./TrainingHistory";
+import CommandGrid from "./CommandGrid";
+import { setCommandArchived, selectableCommands } from "./command-catalog";
 type View =
+  | { kind: "archive"; id: string }
   | {
       kind: "edit";
       session?: TrainingSession;
@@ -45,8 +48,10 @@ export default function Training({
   pet,
   onSave,
   onPlan,
+  canEdit = false,
 }: {
   pet: Pet;
+  canEdit?: boolean;
   onSave: (pet: Pet) => Promise<void>;
   onPlan: (name: string) => void;
 }) {
@@ -69,11 +74,17 @@ export default function Training({
       ? sessions.find((s) => s.id === view.id)
       : undefined;
   const command =
-    view?.kind === "command"
+    view?.kind === "command" || view?.kind === "archive"
       ? pet.commands.find((c) => c.id === view.id)
       : undefined;
   const progress = command ? commandProgress(sessions, command.id) : null;
+  const activeCommands = pet.commands.filter((c) => !c.archived);
+  const archivedCommands = pet.commands.filter((c) => c.archived);
+  function requireEdit() {
+    if (!canEdit) throw new Error("Доступно только чтение");
+  }
   async function saveCommand(name: string) {
+    requireEdit();
     const next = { id: id(), name: validateCommandName(name, pet.commands) };
     await onSave({ ...pet, commands: [...pet.commands, next] });
     setView(null);
@@ -84,6 +95,7 @@ export default function Training({
         Небольшие шаги, заметный прогресс · {pet.name}
       </PageHeader>
       <Button
+        disabled={!canEdit}
         onClick={() => setView({ kind: "edit" })}
         fullWidth
         variant="primary"
@@ -91,17 +103,21 @@ export default function Training({
         Добавить тренировку
       </Button>
       <SectionHeader title="Команды">
-        <Button onClick={() => setView({ kind: "addCommand" })} variant="ghost">
+        <Button
+          disabled={!canEdit}
+          onClick={() => setView({ kind: "addCommand" })}
+          variant="ghost"
+        >
           Добавить команду
         </Button>
       </SectionHeader>
-      {!pet.commands.length && (
+      {!activeCommands.length && (
         <Empty title="Начните с первой команды">
           Команды принадлежат только этому питомцу.
         </Empty>
       )}
-      <div className="command-list">
-        {pet.commands.map((c) => {
+      <CommandGrid>
+        {activeCommands.map((c) => {
           const p = commandProgress(sessions, c.id);
           return (
             <InteractiveCard
@@ -147,11 +163,27 @@ export default function Training({
             </InteractiveCard>
           );
         })}
-      </div>
+      </CommandGrid>
+      {!!archivedCommands.length && (
+        <details className="explanation">
+          <summary>Удалённые из списка · {archivedCommands.length}</summary>
+          <p>История и оценки этих команд сохранены.</p>
+          {archivedCommands.map((c) => (
+            <Button
+              key={c.id}
+              variant="ghost"
+              onClick={() => setView({ kind: "command", id: c.id })}
+            >
+              {c.name}
+            </Button>
+          ))}
+        </details>
+      )}
       <TrainingHistory
         key={pet.id}
         sessions={sessions}
         commands={pet.commands}
+        readOnly={!canEdit}
         onOpen={(id) => setView({ kind: "session", id })}
         onEdit={(session) => setView({ kind: "edit", session })}
       />
@@ -230,11 +262,12 @@ export default function Training({
           }
           onClose={() => setView(null)}
         >
-          {view.kind === "edit" && (
+          {view.kind === "edit" && canEdit && (
             <TrainingForm
               pet={pet}
               session={view.session}
               onSave={async (next, commands) => {
+                requireEdit();
                 await onSave({
                   ...pet,
                   commands,
@@ -247,7 +280,7 @@ export default function Training({
               }}
             />
           )}
-          {view.kind === "addCommand" && (
+          {view.kind === "addCommand" && canEdit && (
             <Form onSave={(d) => saveCommand(text(d, "name"))}>
               <Field
                 label="Название команды"
@@ -310,6 +343,7 @@ export default function Training({
                 </Card>
               ))}
               <Button
+                disabled={!canEdit}
                 onClick={() => setView({ kind: "edit", session: selected })}
                 fullWidth
                 variant="primary"
@@ -318,7 +352,36 @@ export default function Training({
               </Button>
             </>
           )}
-          {command && progress && (
+          {view.kind === "archive" && command && canEdit && (
+            <Form
+              label={command.archived ? "Вернуть в список" : "Удалить команду"}
+              variant={command.archived ? "primary" : "destructive"}
+              onSave={async () => {
+                requireEdit();
+                await onSave(
+                  setCommandArchived(pet, command.id, !command.archived),
+                );
+                setView(null);
+              }}
+            >
+              <p>
+                {command.archived ? "Вернуть" : "Удалить"} команду «
+                {command.name}»?
+              </p>
+              <p>
+                Команда {command.archived ? "появится в" : "исчезнет из"}{" "}
+                активного списка и выбора для новых тренировок. Прошлые
+                тренировки, оценки и исходный дневник сохранятся.
+              </p>
+              <Button
+                variant="ghost"
+                onClick={() => setView({ kind: "command", id: command.id })}
+              >
+                Отмена
+              </Button>
+            </Form>
+          )}
+          {view.kind === "command" && command && progress && (
             <>
               <h3>
                 {progress.status}{" "}
@@ -360,6 +423,7 @@ export default function Training({
                 </InteractiveCard>
               ))}
               <Button
+                disabled={!canEdit || !!command.archived}
                 onClick={() => {
                   setView(null);
                   onPlan("Повторить «" + command.name + "»");
@@ -369,6 +433,14 @@ export default function Training({
               >
                 Запланировать повторение
               </Button>
+              <Button
+                disabled={!canEdit}
+                fullWidth
+                variant={command.archived ? "secondary" : "destructive"}
+                onClick={() => setView({ kind: "archive", id: command.id })}
+              >
+                {command.archived ? "Вернуть в список" : "Удалить команду"}
+              </Button>
             </>
           )}
         </Modal>
@@ -376,7 +448,7 @@ export default function Training({
     </>
   );
 }
-function TrainingForm({
+export function TrainingForm({
   pet,
   session,
   onSave,
@@ -470,19 +542,43 @@ function TrainingForm({
           defaultValue={session?.comment ?? ""}
         />
         <h3>Выберите команды</h3>
-        <div className="command-chips">
-          {commands.map((c) => (
+        <p aria-live="polite">Выбрано: {results.length}</p>
+        <CommandGrid>
+          {selectableCommands(commands, session).map((c) => (
             <Button
               type="button"
               aria-pressed={results.some((r) => r.command_id === c.id)}
               key={c.id}
               onClick={() => toggle(c.id)}
-              variant="ghost"
+              variant="secondary"
+              className="card command-row command-choice"
+              aria-label={
+                c.name +
+                (c.archived
+                  ? " — удалена из списка, сохранена в этой тренировке"
+                  : "")
+              }
+              title={c.name}
             >
-              {c.name}
+              <span className="command-choice-name">{c.name}</span>
+              <span className="command-choice-state">
+                {results.some((r) => r.command_id === c.id)
+                  ? "✓ Выбрана"
+                  : c.archived
+                    ? "Из истории"
+                    : "Выбрать"}
+              </span>
             </Button>
           ))}
-        </div>
+        </CommandGrid>
+        {session?.results.some(
+          (r) => commands.find((c) => c.id === r.command_id)?.archived,
+        ) && (
+          <p className="hint">
+            Команды, удалённые из списка, сохранены в этой тренировке вместе с
+            оценками.
+          </p>
+        )}
         <div className="inline-command">
           <Field
             label="Новая команда"
