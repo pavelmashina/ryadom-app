@@ -125,7 +125,7 @@ export default function Training({
                   {c.name}
                 </strong>
                 <span className="command-rating">
-                  {p.average === null ? "—" : p.average.toFixed(1) + " / 5"}
+                  {p.average === null ? "—" : p.average.toFixed(1) + "/5"}
                 </span>
                 <span className="command-scale" aria-hidden="true">
                   {Array.from({ length: 5 }, (_, i) => (
@@ -143,7 +143,6 @@ export default function Training({
                     </span>
                   ))}
                 </span>
-                <span className="command-status">{p.status}</span>
               </span>
             </InteractiveCard>
           );

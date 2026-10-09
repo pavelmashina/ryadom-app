@@ -7,42 +7,10 @@
 }
 .command-list {
   display: grid;
-  gap: var(--space-1);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
 }
-.command-row.card {
-  min-height: var(--button-height-sm);
-  margin: 0;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  box-shadow: none;
-  gap: var(--space-2);
-}
-.command-row-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-}
-.command-row-title strong {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-size: var(--font-size-body);
-}
-.command-row-title .badge {
-  flex: none;
-  white-space: nowrap;
-  margin: 0;
-  padding: 0 var(--space-2);
-}
-.command-row-meta {
-  display: block;
-  font-size: var(--font-size-caption);
-  color: var(--color-text-muted);
-  margin-top: var(--space-1);
-}
+
 .training-excerpt {
   overflow: hidden;
   display: -webkit-box;
@@ -105,10 +73,11 @@
 /* Calendar training layout, matching the app's cream and green palette. */
 .command-compact {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto 80px 92px;
-  gap: 10px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3px 4px;
   align-items: center;
   width: 100%;
+  line-height: 1.25;
 }
 .command-name {
   overflow: hidden;
@@ -123,15 +92,11 @@
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.command-status {
-  font-size: var(--font-size-caption);
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-}
+
 .command-scale {
   display: flex;
-  gap: 3px;
-  height: 9px;
+  gap: 2px;
+  height: 7px;
 }
 .command-scale > span {
   flex: 1;
@@ -144,10 +109,7 @@
   height: 100%;
   background: var(--color-primary);
 }
-.command-row.card {
-  min-height: 48px;
-  padding: 8px 12px;
-}
+
 .training-calendar {
   padding: 12px;
   background: var(--color-surface);
@@ -308,20 +270,37 @@
 .training-session-actions .btn {
   margin: 0;
 }
-@media (max-width: 480px) {
-  .command-compact {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 3px 12px;
-  }
-  .command-scale {
-    grid-column: 1;
-    width: 80px;
-  }
-  .command-status {
-    grid-column: 2;
-    text-align: right;
+
+.command-row.card {
+  height: 60px;
+  min-height: 60px;
+  min-width: 0;
+  margin: 0;
+  padding: 6px;
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  gap: 0;
+}
+.command-row .card-chevron {
+  display: none;
+}
+.command-name {
+  grid-column: 1 / -1;
+}
+.command-rating {
+  grid-column: 1;
+}
+.command-scale {
+  grid-column: 2;
+  min-width: 0;
+}
+@media (min-width: 600px) {
+  .command-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .command-row.card {
-    min-height: 60px;
+    height: 48px;
+    min-height: 48px;
+    padding: 4px 8px;
   }
 }
