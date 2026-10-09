@@ -11,7 +11,12 @@ export function sharedChanges(next: State, before?: State) {
       const old = before?.pets.find((x) => x.id === p.id);
       if (old && JSON.stringify(petData(old)) === JSON.stringify(petData(p)))
         return [];
-      return [{ pet: petData(p), revision: old?.revision ?? null }];
+      return [
+        {
+          pet: { ...petData(p), trainingVersion: 2 },
+          revision: old?.revision ?? null,
+        },
+      ];
     }),
     removed:
       before?.pets
@@ -28,11 +33,7 @@ export async function loadAccount(
   session: AuthSession,
   previous?: CloudSnapshot,
 ): Promise<CloudSnapshot> {
-  if (
-    previous?.tag &&
-    (await rpc(session, "shared_state_tag", {})) === previous.tag
-  )
-    return previous;
+  void previous;
   const result = (await rpc(session, "load_shared_state", {})) as {
     state: { pets: unknown[] };
   };

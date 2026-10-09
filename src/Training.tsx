@@ -13,7 +13,10 @@ import {
   Badge,
   text,
 } from "./components";
-import { useState } from "react";
+import TrainingPlan from "./TrainingPlan";
+import type { TrainingSchedule } from "./training-planning";
+import { trainingTimestamp } from "./training-planning";
+import { useEffect, useState } from "react";
 import { fmt, id, today, type Pet } from "./domain";
 import {
   commandProgress,
@@ -27,6 +30,9 @@ import TrainingHistory from "./TrainingHistory";
 import CommandGrid from "./CommandGrid";
 import { setCommandArchived, selectableCommands } from "./command-catalog";
 type View =
+  | { kind: "plan"; session?: TrainingSession; schedule?: TrainingSchedule }
+  | { kind: "rename"; id: string }
+  | { kind: "comments"; id: string }
   | { kind: "archive"; id: string }
   | {
       kind: "edit";
@@ -47,15 +53,24 @@ type View =
 export default function Training({
   pet,
   onSave,
-  onPlan,
+  openSession,
+  onOpened,
   canEdit = false,
 }: {
   pet: Pet;
   canEdit?: boolean;
   onSave: (pet: Pet) => Promise<void>;
-  onPlan: (name: string) => void;
+  onPlan?: (name: string) => void;
+  openSession?: string;
+  onOpened?: () => void;
 }) {
   const [view, setView] = useState<View>(null);
+  useEffect(() => {
+    if (openSession) {
+      setView({ kind: "session", id: openSession });
+      onOpened?.();
+    }
+  }, [openSession]);
   const diary = pet.trainingDiary ?? [];
   const sourceEntry = diary.find((d) => d.session_id === selectedId());
   function selectedId() {
@@ -74,7 +89,10 @@ export default function Training({
       ? sessions.find((s) => s.id === view.id)
       : undefined;
   const command =
-    view?.kind === "command" || view?.kind === "archive"
+    view?.kind === "command" ||
+    view?.kind === "archive" ||
+    view?.kind === "rename" ||
+    view?.kind === "comments"
       ? pet.commands.find((c) => c.id === view.id)
       : undefined;
   const progress = command ? commandProgress(sessions, command.id) : null;
@@ -85,7 +103,7 @@ export default function Training({
   }
   async function saveCommand(name: string) {
     requireEdit();
-    const next = { id: id(), name: validateCommandName(name, pet.commands) };
+    const next = { id: id(), name: validateCommandName(name, activeCommands) };
     await onSave({ ...pet, commands: [...pet.commands, next] });
     setView(null);
   }
@@ -179,13 +197,58 @@ export default function Training({
           ))}
         </details>
       )}
+      <Button
+        disabled={!canEdit}
+        fullWidth
+        variant="secondary"
+        onClick={() => setView({ kind: "plan" })}
+      >
+        Запланировать тренировку
+      </Button>
+      {!!pet.trainingSchedules?.length && (
+        <details className="explanation">
+          <summary>Регулярный график</summary>
+          {pet.trainingSchedules.map((sc) => (
+            <Card key={sc.id}>
+              <strong>
+                {sc.name || "Тренировки"} ·{" "}
+                {sc.is_active ? "Активен" : "Остановлен"}
+              </strong>
+              <Button
+                disabled={!canEdit}
+                onClick={() => setView({ kind: "plan", schedule: sc })}
+              >
+                Изменить график
+              </Button>
+              <Button
+                disabled={!canEdit}
+                onClick={async () => {
+                  await onSave({
+                    ...pet,
+                    trainingSchedules: pet.trainingSchedules?.map((x) =>
+                      x.id === sc.id ? { ...x, is_active: !x.is_active } : x,
+                    ),
+                  });
+                }}
+              >
+                {sc.is_active ? "Остановить" : "Возобновить"}
+              </Button>
+            </Card>
+          ))}
+        </details>
+      )}
       <TrainingHistory
         key={pet.id}
         sessions={sessions}
         commands={pet.commands}
         readOnly={!canEdit}
         onOpen={(id) => setView({ kind: "session", id })}
-        onEdit={(session) => setView({ kind: "edit", session })}
+        onEdit={(session) =>
+          setView({
+            kind: session.status === "planned" ? "plan" : "edit",
+            session,
+          })
+        }
       />
       {!!diary.length && (
         <details className="explanation">
@@ -252,16 +315,79 @@ export default function Training({
       {view && (
         <Modal
           title={
-            view.kind === "edit"
-              ? view.session
-                ? "Редактировать тренировку"
-                : "Новая тренировка"
-              : view.kind === "addCommand"
-                ? "Новая команда"
-                : (command?.name ?? "Тренировка")
+            view.kind === "plan"
+              ? "План тренировки"
+              : view.kind === "rename"
+                ? "Редактировать команду"
+                : view.kind === "comments"
+                  ? "Комментарии"
+                  : view.kind === "edit"
+                    ? view.session
+                      ? "Редактировать тренировку"
+                      : "Новая тренировка"
+                    : view.kind === "addCommand"
+                      ? "Новая команда"
+                      : (command?.name ?? "Тренировка")
           }
           onClose={() => setView(null)}
         >
+          {view.kind === "plan" && canEdit && (
+            <TrainingPlan
+              pet={pet}
+              session={view.session}
+              schedule={view.schedule}
+              onSave={async (p) => {
+                requireEdit();
+                await onSave(p);
+                setView(null);
+              }}
+            />
+          )}
+          {view.kind === "rename" && command && canEdit && (
+            <Form
+              onSave={async (d) => {
+                const name = validateCommandName(
+                  text(d, "name"),
+                  activeCommands.filter((c) => c.id !== command.id),
+                );
+                await onSave({
+                  ...pet,
+                  commands: pet.commands.map((c) =>
+                    c.id === command.id ? { ...c, name } : c,
+                  ),
+                });
+                setView({ kind: "command", id: command.id });
+              }}
+            >
+              <Field
+                label="Название команды"
+                name="name"
+                required
+                maxLength={120}
+                defaultValue={command.name}
+              />
+            </Form>
+          )}
+          {view.kind === "comments" && progress && (
+            <>
+              {progress.history
+                .filter((x) => x.result.comment.trim())
+                .map((x) => (
+                  <InteractiveCard
+                    key={x.session.id}
+                    onClick={() =>
+                      setView({ kind: "session", id: x.session.id })
+                    }
+                  >
+                    <strong>{fmt(x.session.date)}</strong>
+                    <p className="note">{x.result.comment}</p>
+                  </InteractiveCard>
+                ))}
+              {!progress.history.some((x) => x.result.comment.trim()) && (
+                <p>Комментариев пока нет.</p>
+              )}
+            </>
+          )}
           {view.kind === "edit" && canEdit && (
             <TrainingForm
               pet={pet}
@@ -326,7 +452,9 @@ export default function Training({
                   </h3>
                   <p>
                     {r.performance_score} / 5 —{" "}
-                    {SCORE_LABELS[r.performance_score - 1]}
+                    {r.performance_score === null
+                      ? "Запланировано"
+                      : SCORE_LABELS[r.performance_score - 1]}
                   </p>
                   <small>
                     {
@@ -344,12 +472,46 @@ export default function Training({
               ))}
               <Button
                 disabled={!canEdit}
-                onClick={() => setView({ kind: "edit", session: selected })}
+                onClick={() =>
+                  setView({
+                    kind: selected.status === "planned" ? "plan" : "edit",
+                    session: selected,
+                  })
+                }
                 fullWidth
                 variant="primary"
               >
                 Редактировать тренировку
               </Button>
+              {selected.status === "planned" && canEdit && (
+                <>
+                  <Button
+                    disabled={!canEdit}
+                    fullWidth
+                    variant="primary"
+                    onClick={() => setView({ kind: "edit", session: selected })}
+                  >
+                    Отметить проведённой
+                  </Button>
+                  <Form
+                    label="Отменить тренировку"
+                    variant="destructive"
+                    onSave={async () => {
+                      await onSave({
+                        ...pet,
+                        workouts: pet.workouts.map((s) =>
+                          s.id === selected.id
+                            ? { ...s, status: "cancelled" }
+                            : s,
+                        ),
+                      });
+                      setView(null);
+                    }}
+                  >
+                    <p>Отмена сохранит запись в базе.</p>
+                  </Form>
+                </>
+              )}
             </>
           )}
           {view.kind === "archive" && command && canEdit && (
@@ -398,40 +560,44 @@ export default function Training({
                 Тренировок: {progress.count} · Последняя:{" "}
                 {progress.lastDate ? fmt(progress.lastDate) : "ещё не было"}
               </p>
-              <div className="score-history" aria-label="История оценок">
-                {[...progress.history].reverse().map((x) => (
-                  <div key={x.session.id}>
-                    <meter min={0} max={5} value={x.result.performance_score} />
-                    <span>{fmt(x.session.date)}</span>
-                    <strong>{x.result.performance_score}/5</strong>
-                  </div>
-                ))}
+              <div
+                className="score-history"
+                aria-label="Прогресс · последние 4 тренировки"
+              >
+                {progress.history
+                  .slice(0, 4)
+                  .reverse()
+                  .map((x) => (
+                    <div key={x.session.id}>
+                      <meter
+                        min={0}
+                        max={5}
+                        value={x.result.performance_score ?? 0}
+                      />
+                      <span>{fmt(x.session.date)}</span>
+                      <strong>{x.result.performance_score}/5</strong>
+                    </div>
+                  ))}
               </div>
-              {progress.history.map((x) => (
-                <InteractiveCard
-                  key={x.session.id}
-                  onClick={() => setView({ kind: "session", id: x.session.id })}
-                  className="training-row"
-                >
-                  <strong>
-                    {fmt(x.session.date)} · {x.result.performance_score}/5
-                  </strong>
-                  <p className="note">
-                    {x.result.comment || "Без комментария"}
-                  </p>
-                  <small>Открыть тренировку →</small>
-                </InteractiveCard>
-              ))}
+              <h3>Комментарий к последней тренировке</h3>
+              <p className="note">
+                {progress.history[0]?.result.comment?.trim() ||
+                  "Комментарий к последней тренировке не добавлен."}
+              </p>
               <Button
-                disabled={!canEdit || !!command.archived}
-                onClick={() => {
-                  setView(null);
-                  onPlan("Повторить «" + command.name + "»");
-                }}
                 fullWidth
                 variant="secondary"
+                onClick={() => setView({ kind: "comments", id: command.id })}
               >
-                Запланировать повторение
+                Посмотреть другие комментарии
+              </Button>
+              <Button
+                disabled={!canEdit}
+                fullWidth
+                variant="secondary"
+                onClick={() => setView({ kind: "rename", id: command.id })}
+              >
+                Редактировать команду
               </Button>
               <Button
                 disabled={!canEdit}
@@ -481,7 +647,10 @@ export function TrainingForm({
   }
   function add() {
     try {
-      const name = validateCommandName(newName, commands),
+      const name = validateCommandName(
+          newName,
+          commands.filter((c) => !c.archived),
+        ),
         cid = id();
       setCommands((cs) => [...cs, { id: cid, name }]);
       setResults((rs) => [
@@ -501,7 +670,14 @@ export function TrainingForm({
         setBusy(true);
         try {
           const parsed = trainingSchema.safeParse({
+            ...session,
             id: session?.id ?? id(),
+            status: "completed",
+            completed_at:
+              session?.status !== "planned" && session?.date === text(d, "date")
+                ? (session.completed_at ??
+                  trainingTimestamp(text(d, "date"), ""))
+                : trainingTimestamp(text(d, "date"), ""),
             date: text(d, "date"),
             duration_minutes: text(d, "duration")
               ? Number(text(d, "duration"))
@@ -644,7 +820,11 @@ export function TrainingForm({
                 </Button>
               ))}
             </div>
-            <p>{SCORE_LABELS[r.performance_score - 1]}</p>
+            <p>
+              {r.performance_score === null
+                ? "Выберите оценку"
+                : SCORE_LABELS[r.performance_score - 1]}
+            </p>
             <Textarea
               label="Комментарий к команде"
               maxLength={5000}

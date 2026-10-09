@@ -39,7 +39,7 @@ async function save(p: any, revision: number | null) {
   return (
     await db.query<{ v: any }>(
       "select public.save_shared_state($1::jsonb,'[]'::jsonb,$2) v",
-      [JSON.stringify([{ pet: p, revision }]), p.id],
+      [JSON.stringify([{ pet: { ...p, trainingVersion: 2 }, revision }]), p.id],
     )
   ).rows[0].v.state;
 }
@@ -66,6 +66,8 @@ beforeAll(async () => {
   await db.exec(sql("20261007154510_pet_sharing.sql"));
   await db.exec(sql("20261008092135_training_diary_provenance.sql"));
   await db.exec(sql("20261009140053_command_archiving.sql"));
+  await db.exec(sql("20261009172634_training_planning.sql"));
+  await db.exec(sql("20261009172634_training_planning.sql"));
 }, 30000);
 afterAll(async () => {
   await db.close();
@@ -222,7 +224,7 @@ it("revocation blocks reads and writes including known pet and training IDs", as
     "pets",
     "commands",
     "training_sessions",
-    "training_command_results",
+    "training_session_commands",
   ])
     expect((await db.query("select * from public." + table)).rows).toHaveLength(
       0,
@@ -433,4 +435,157 @@ it("archives commands for editors without losing history and rejects revoked edi
     /отозван|отсутствует/,
   );
   await db.exec("reset role");
+});
+
+it("plans, completes the same session and materializes recurring schedules without duplicates", async () => {
+  await asUser(owner);
+  let p: any = blankPet("График");
+  const cid = crypto.randomUUID();
+  p.commands = [{ id: cid, name: "Ждать" }];
+  const date = (await db.query<{ d: string }>("select current_date::text d"))
+    .rows[0].d;
+  const sid = crypto.randomUUID();
+  p.workouts = [
+    {
+      id: sid,
+      date,
+      status: "planned",
+      scheduled_at: date + "T16:00:00Z",
+      completed_at: null,
+      time: "19:00",
+      name: "Вечер",
+      duration_minutes: null,
+      comment: "План",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      results: [
+        {
+          command_id: cid,
+          performance_score: null,
+          mode: "repeat",
+          comment: "",
+        },
+      ],
+    },
+  ];
+  p = (await save(p, null)).pets.find((x: any) => x.id === p.id);
+  expect(p.workouts[0].id).toBe(sid);
+  expect(p.workouts[0].status).toBe("planned");
+  p.workouts[0] = {
+    ...p.workouts[0],
+    status: "completed",
+    completed_at: date + "T16:35:00Z",
+    duration_minutes: 35,
+    results: [
+      {
+        command_id: cid,
+        performance_score: 4,
+        mode: "repeat",
+        comment: "Получилось",
+      },
+    ],
+  };
+  p = (await save(p, p.revision)).pets.find((x: any) => x.id === p.id);
+  expect(p.workouts).toHaveLength(1);
+  expect(p.workouts[0].id).toBe(sid);
+  const schedule = crypto.randomUUID();
+  p.trainingSchedules = [
+    {
+      id: schedule,
+      name: "График",
+      repeat_type: "daily",
+      weekdays: [],
+      starts_on: date,
+      ends_on: null,
+      time_of_day: "19:00",
+      is_active: true,
+      command_ids: [cid],
+      comment: "Повтор",
+    },
+  ];
+  p = (await save(p, p.revision)).pets.find((x: any) => x.id === p.id);
+  const count = p.workouts.length;
+  expect(count).toBeGreaterThan(60);
+  expect(count).toBeLessThan(94);
+  const ids = p.workouts.map((w: any) => w.id).sort();
+  let again = (await load()).pets.find((x: any) => x.id === p.id);
+  expect(again.workouts.map((w: any) => w.id).sort()).toEqual(ids);
+  let generated = again.workouts.find((w: any) => w.status === "planned");
+  const movedId = generated.id;
+  generated.scheduled_at = generated.date + "T17:30:00Z";
+  generated.time = "20:30";
+  again = (await save(again, again.revision)).pets.find(
+    (x: any) => x.id === p.id,
+  );
+  expect(again.workouts.map((w: any) => w.id).sort()).toEqual(ids);
+  generated = again.workouts.find((w: any) => w.id === movedId);
+  expect(new Date(generated.scheduled_at).toISOString()).toContain("17:30");
+
+  generated.status = "completed";
+  generated.completed_at = generated.scheduled_at;
+  generated.results[0].performance_score = 5;
+  p = (await save(again, again.revision)).pets.find((x: any) => x.id === p.id);
+  const completed = p.workouts.filter((w: any) => w.status === "completed");
+  p.trainingSchedules[0].repeat_type = "weekdays";
+  p.trainingSchedules[0].weekdays = [2, 4];
+  p = (await save(p, p.revision)).pets.find((x: any) => x.id === p.id);
+  expect(p.workouts.filter((w: any) => w.status === "completed")).toEqual(
+    completed,
+  );
+  expect(
+    p.workouts
+      .filter((w: any) => w.status === "planned")
+      .every((w: any) =>
+        [2, 4].includes(new Date(w.date + "T12:00:00Z").getUTCDay()),
+      ),
+  ).toBe(true);
+  p.trainingSchedules[0].is_active = false;
+  p = (await save(p, p.revision)).pets.find((x: any) => x.id === p.id);
+  expect(p.workouts.filter((w: any) => w.status === "planned")).toHaveLength(0);
+  await asUser(third);
+  expect(
+    (
+      await db.query("select * from public.training_schedules where id=$1", [
+        schedule,
+      ])
+    ).rows,
+  ).toHaveLength(0);
+  expect(
+    (
+      await db.query(
+        "select * from public.training_session_commands where training_session_id=$1",
+        [sid],
+      )
+    ).rows,
+  ).toHaveLength(0);
+  await expect(save(p, p.revision)).rejects.toThrow(/отозван|отсутствует/);
+});
+it("rejects null scores for completed sessions and commands belonging to another pet", async () => {
+  await asUser(owner);
+  let p: any = blankPet("Проверка");
+  const cid = crypto.randomUUID();
+  p.commands = [{ id: cid, name: "Сидеть" }];
+  p = (await save(p, null)).pets.find((x: any) => x.id === p.id);
+  p.workouts = [
+    {
+      id: crypto.randomUUID(),
+      date: "2026-10-09",
+      status: "completed",
+      completed_at: "2026-10-09T09:00:00Z",
+      duration_minutes: 10,
+      comment: "",
+      results: [
+        {
+          command_id: cid,
+          performance_score: null,
+          mode: "repeat",
+          comment: "",
+        },
+      ],
+    },
+  ];
+  await expect(save(p, p.revision)).rejects.toThrow(/Оцените/);
+  p.workouts[0].results[0].performance_score = 4;
+  p.workouts[0].results[0].command_id = command;
+  await expect(save(p, p.revision)).rejects.toThrow(/другого питомца/);
 });

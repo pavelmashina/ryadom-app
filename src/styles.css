@@ -938,3 +938,43 @@ dialog::backdrop {
     animation: none;
   }
 }
+
+dialog {
+  width: calc(100vw - 24px);
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.modal-content,
+.modal-content form,
+.form-fields,
+.training-fields,
+main,
+.app {
+  min-width: 0;
+  max-width: 100%;
+}
+.modal-content {
+  overflow-wrap: anywhere;
+}
+.modal-content fieldset {
+  min-inline-size: 0;
+}
+.modal-head .btn {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border-color: transparent;
+  box-shadow: none;
+}
+.field input,
+.field textarea,
+.field select {
+  font-size: 16px;
+}
+.score-buttons {
+  flex-wrap: nowrap;
+}
+.score-buttons .btn {
+  min-width: 0;
+}
+.modal-head .icon-button:focus-visible {outline: 2px solid var(--color-text-muted);outline-offset: 2px;border-radius: 8px;}

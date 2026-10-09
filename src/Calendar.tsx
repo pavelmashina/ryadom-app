@@ -22,6 +22,7 @@ export default function Calendar({
   setSelected,
   setMonth,
   onAdd,
+  onTraining,
   onToggle,
   onDetail,
 }: {
@@ -31,6 +32,7 @@ export default function Calendar({
   setSelected: (s: string) => void;
   setMonth: (s: string) => void;
   onAdd: () => void;
+  onTraining?: (id: string) => void;
   onToggle: (e: PetEvent, s: string) => void;
   onDetail: (e: PetEvent, s: string) => void;
 }) {
@@ -123,7 +125,14 @@ export default function Calendar({
         <div className="dates">
           {cells.map((s) => {
             const ev = eventsFor(pet, s),
-              cats = [...new Set(ev.map((e) => e.category))];
+              cats = [
+                ...new Set([
+                  ...ev.map((e) => e.category),
+                  ...pet.workouts
+                    .filter((w) => w.date === s && w.status !== "cancelled")
+                    .map(() => "training" as const),
+                ]),
+              ];
             return (
               <Button
                 key={s}
@@ -161,14 +170,49 @@ export default function Calendar({
             , {fmt(selected, { day: "numeric", month: "short" })}
           </h2>
           <p>
-            Выполнено {done.length} из {events.length}
+            Выполнено{" "}
+            {done.length +
+              pet.workouts.filter(
+                (w) =>
+                  w.date === selected &&
+                  (w.status ?? "completed") === "completed",
+              ).length}{" "}
+            из{" "}
+            {events.length +
+              pet.workouts.filter(
+                (w) => w.date === selected && w.status !== "cancelled",
+              ).length}
           </p>
         </div>
         <CalendarDays />
       </div>
+      {pet.workouts
+        .filter((w) => w.date === selected && w.status !== "cancelled")
+        .map((w) => (
+          <div
+            className={"task " + (w.status === "completed" ? "done" : "")}
+            key={w.id}
+          >
+            <span className="tag training" />
+            <Button
+              className="task-body"
+              variant="ghost"
+              onClick={() => onTraining?.(w.id)}
+            >
+              <strong>{w.name || "Тренировка"}</strong>
+              <small>
+                {w.time || "Весь день"} ·{" "}
+                {w.status === "planned" ? "Запланирована" : "Проведена"}
+              </small>
+            </Button>
+            <ChevronRight />
+          </div>
+        ))}
       {todo.length ? (
         todo.map(task)
-      ) : (
+      ) : !pet.workouts.some(
+          (w) => w.date === selected && w.status !== "cancelled",
+        ) ? (
         <Empty
           title={done.length ? "Всё на этот день готово" : "Свободный день"}
         >
@@ -176,7 +220,7 @@ export default function Calendar({
             ? "Можно просто побыть рядом."
             : "Добавьте визит, уход или тренировку."}
         </Empty>
-      )}
+      ) : null}
       {done.length > 0 && (
         <details className="completed">
           <summary>Выполнено · {done.length}</summary>

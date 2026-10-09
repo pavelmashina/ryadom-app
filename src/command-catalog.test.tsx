@@ -53,8 +53,8 @@ it("initial form selection keeps a hidden archived score and announces its count
   );
   expect(html).toContain("Выбрано: 1");
   expect(html).toContain("Результат");
-  expect(html).toContain("Показать все (21)");
-  expect(html.match(/class="[^"]*command-choice"/g)).toHaveLength(12);
+  expect(html).not.toContain("Показать все");
+  expect(html.match(/class="[^"]*command-choice"/g)).toHaveLength(21);
   expect(html).toContain("aria-pressed=");
 });
 it("read-only catalog disables editing while retaining browsing and four initial rows", () => {
@@ -69,7 +69,7 @@ it("read-only catalog disables editing while retaining browsing and four initial
   expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Добавить тренировку/);
   expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Добавить команду/);
   expect(html.match(/class="[^"]*interactive-card command-row"/g)).toHaveLength(
-    12,
+    20,
   );
-  expect(html).toContain("Показать все (20)");
+  expect(html).not.toContain("Показать все");
 });

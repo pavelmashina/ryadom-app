@@ -1,4 +1,6 @@
 import { Field, Select, Note, Form, text, Checkbox } from "./components";
+import TrainingPlan from "./TrainingPlan";
+import type { Pet } from "./domain";
 import { useState } from "react";
 import { eventSchema, id, type PetEvent } from "./domain";
 import { categories } from "./Calendar";
@@ -8,15 +10,41 @@ export default function EventForm({
   name = "",
   linkedRecord,
   onSave,
+  pet,
+  onTrainingSave,
 }: {
   selected: string;
+  pet?: Pet;
+  onTrainingSave?: (pet: Pet) => Promise<void>;
   category?: PetEvent["category"];
   name?: string;
   linkedRecord?: string;
   onSave: (e: PetEvent) => void | Promise<void>;
 }) {
+  const [chosen, setChosen] = useState(category);
   const [allDay, setAllDay] = useState(true),
     [repeat, setRepeat] = useState("once");
+  if (chosen === "training" && pet && onTrainingSave)
+    return (
+      <>
+        <Select
+          label="Категория"
+          value={chosen}
+          onChange={(e) => setChosen(e.target.value as typeof chosen)}
+        >
+          {Object.entries(categories).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v}
+            </option>
+          ))}
+        </Select>
+        <TrainingPlan
+          pet={pet}
+          initialDate={selected}
+          onSave={onTrainingSave}
+        />
+      </>
+    );
   return (
     <Form
       label="Добавить в календарь"
@@ -37,7 +65,12 @@ export default function EventForm({
         await onSave(parsed.data);
       }}
     >
-      <Select label="Категория" name="category" defaultValue={category}>
+      <Select
+        label="Категория"
+        name="category"
+        value={chosen}
+        onChange={(e) => setChosen(e.target.value as typeof chosen)}
+      >
         {Object.entries(categories).map(([k, v]) => (
           <option key={k} value={k}>
             {v}

@@ -343,3 +343,64 @@
   outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
+
+.command-list {
+  grid-template-columns: none;
+  grid-template-rows: 60px;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 12px) / 3);
+  overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
+  padding: 2px;
+  overscroll-behavior-x: contain;
+}
+@media (min-width: 600px) {
+  .command-list {
+    grid-template-rows: 48px;
+    grid-auto-columns: calc((100% - 18px) / 4);
+  }
+}
+.training-result-chips {
+  display: grid;
+  grid-template-rows: repeat(2, 28px);
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
+  overscroll-behavior-x: contain;
+  padding-bottom: 4px;
+}
+.training-result-chip {
+  max-width: 200px;
+  white-space: nowrap;
+}
+.training-result-chip > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.training-session-summary.planned {
+  border: 1px dashed var(--color-primary);
+}
+.training-day-planned {
+  position: absolute;
+  bottom: 4px;
+  left: calc(50% + 4px);
+  width: 7px;
+  height: 7px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+.score-history {
+  overflow: hidden;
+}
+.score-history > div {
+  min-width: 0;
+  flex: 1;
+}
+.score-history meter {
+  width: 100%;
+}

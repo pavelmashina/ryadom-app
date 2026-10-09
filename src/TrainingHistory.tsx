@@ -18,7 +18,9 @@ export default function TrainingHistory({
   onEdit: (session: TrainingSession) => void;
 }) {
   const latest =
-    sessions.reduce((d, s) => (s.date > d ? s.date : d), "") || today();
+    sessions
+      .filter((s) => (s.status ?? "completed") === "completed")
+      .reduce((d, s) => (s.date > d ? s.date : d), "") || today();
   const [selection, setSelection] = useState<string | null>(null);
   const selected = selection ?? latest;
   const [shownMonth, setMonth] = useState<string | null>(null);
@@ -26,15 +28,21 @@ export default function TrainingHistory({
   const [list, setList] = useState(false);
   const [limit, setLimit] = useState(10);
   const counts = new Map<string, number>();
-  sessions.forEach((s) => counts.set(s.date, (counts.get(s.date) ?? 0) + 1));
-  const ordered = [...sessions].sort(
-    (a, b) =>
-      b.date.localeCompare(a.date) ||
-      b.created_at.localeCompare(a.created_at) ||
-      b.id.localeCompare(a.id),
-  );
+  sessions
+    .filter((s) => s.status !== "cancelled")
+    .forEach((s) => counts.set(s.date, (counts.get(s.date) ?? 0) + 1));
+  const ordered = sessions
+    .filter((s) => s.status !== "cancelled")
+    .sort(
+      (a, b) =>
+        b.date.localeCompare(a.date) ||
+        b.created_at.localeCompare(a.created_at) ||
+        b.id.localeCompare(a.id),
+    );
   const shown = list
-    ? ordered.slice(0, limit)
+    ? ordered
+        .filter((s) => (s.status ?? "completed") === "completed")
+        .slice(0, limit)
     : sessionsOnDate(ordered, selected);
   function changeMonth(delta: number) {
     const next = shiftMonth(month, delta);
@@ -44,7 +52,15 @@ export default function TrainingHistory({
   return (
     <section className="training-history" aria-label="История тренировок">
       <SectionHeader title={list ? "Все занятия" : "Календарь занятий"}>
-        <span>{sessions.length}</span>
+        <span>
+          {
+            sessions.filter((s) =>
+              list
+                ? (s.status ?? "completed") === "completed"
+                : s.status !== "cancelled",
+            ).length
+          }
+        </span>
       </SectionHeader>
       {!list && (
         <div className="training-calendar">
@@ -92,8 +108,15 @@ export default function TrainingHistory({
                   onClick={() => setSelection(day)}
                 >
                   <span>{Number(day.slice(-2))}</span>
-                  {counts.has(day) && (
-                    <span className="training-day-dot" aria-hidden="true" />
+                  {sessions.some(
+                    (s) =>
+                      s.date === day &&
+                      (s.status ?? "completed") === "completed",
+                  ) && <span className="training-day-dot" aria-hidden="true" />}
+                  {sessions.some(
+                    (s) => s.date === day && s.status === "planned",
+                  ) && (
+                    <span className="training-day-planned" aria-hidden="true" />
                   )}
                 </button>
               ) : (
@@ -102,8 +125,7 @@ export default function TrainingHistory({
             )}
           </div>
           <p className="calendar-key">
-            <span aria-hidden="true" />
-            Дни с тренировками
+            <span aria-hidden="true" />● Проведено · ○ Запланировано
           </p>
         </div>
       )}
@@ -122,13 +144,17 @@ export default function TrainingHistory({
         </Empty>
       )}
       {shown.map((s) => (
-        <Card key={s.id} className="training-session-summary">
+        <Card
+          key={s.id}
+          className={"training-session-summary " + (s.status ?? "completed")}
+        >
           <div className="training-session-heading">
             <strong>
               {fmt(s.date, { day: "numeric", month: "long", year: "numeric" })}
             </strong>
             <span>
-              Команд: {s.results.length}
+              {s.status === "planned" ? "Запланировано · " : "Проведено · "}
+              {s.time || ""} Команд: {s.results.length}
               {s.duration_minutes ? " · " + s.duration_minutes + " мин" : ""}
             </span>
           </div>
@@ -139,7 +165,11 @@ export default function TrainingHistory({
                   {commands.find((c) => c.id === r.command_id)?.name ??
                     "Команда"}
                 </span>
-                <b>{r.performance_score}/5</b>
+                <b>
+                  {r.performance_score === null
+                    ? "План"
+                    : r.performance_score + "/5"}
+                </b>
               </span>
             ))}
           </div>

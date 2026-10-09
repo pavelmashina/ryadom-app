@@ -1,3 +1,4 @@
+import { scheduleSchema } from "./training-planning";
 import { z } from "zod";
 import { trainingSchema } from "./training-domain";
 export const iso = (d: Date) =>
@@ -86,6 +87,7 @@ export const petSchema = z.object({
   ),
   sessions: z.array(sessionSchema),
   workouts: z.array(trainingSchema).default([]),
+  trainingSchedules: z.array(scheduleSchema).optional(),
   trainingDiary: z
     .array(
       z.object({
@@ -148,8 +150,11 @@ export const stateSchema = z
       ctx.addIssue({ code: "custom", message: "Некорректные питомцы" });
     for (const p of s.pets) {
       if (
-        new Set(p.commands.map((c) => c.name.trim().toLowerCase())).size !==
-          p.commands.length ||
+        new Set(
+          p.commands
+            .filter((c) => !c.archived)
+            .map((c) => c.name.trim().toLowerCase()),
+        ).size !== p.commands.filter((c) => !c.archived).length ||
         new Set(p.commands.map((c) => c.id)).size !== p.commands.length
       )
         ctx.addIssue({ code: "custom", message: "Повторяющиеся команды" });

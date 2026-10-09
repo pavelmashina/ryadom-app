@@ -104,6 +104,7 @@ export default function App({
   const loaded = { state: initial, error: "" };
   const saving = useRef(false);
   const epoch = useRef(0);
+  const [openTraining, setOpenTraining] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
   const [state, setState] = useState(loaded.state),
     [storageError, setStorageError] = useState(loaded.error),
@@ -281,6 +282,8 @@ export default function App({
         return (
           <EventForm
             selected={selected}
+            pet={pet}
+            onTrainingSave={(next) => saved(() => update(() => next))}
             category={overlay.category}
             name={overlay.name}
             linkedRecord={overlay.linkedRecord}
@@ -1035,13 +1038,12 @@ export default function App({
           )}{" "}
           {screen === "training" && (
             <Training
+              openSession={openTraining}
+              onOpened={() => setOpenTraining(undefined)}
               canEdit={pet.role === "owner" || pet.role === "editor"}
               key={pet.id}
               pet={pet}
               onSave={(next) => update(() => next)}
-              onPlan={(name) =>
-                setOverlay({ kind: "event", category: "training", name })
-              }
             />
           )}{" "}
           {screen === "health" && (
