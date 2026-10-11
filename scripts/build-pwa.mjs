@@ -1,3 +1,4 @@
+import {serviceWorkerSource} from "./service-worker.mjs";
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { deflateSync } from 'node:zlib';
@@ -42,20 +43,5 @@ const files=readdirSync('dist',{recursive:true,withFileTypes:true}).filter(f=>f.
 const version=createHash('sha256');
 for(const f of files.sort()) version.update(readFileSync(`dist/${f}`));
 const cache=`ryadom-shell-${version.digest('hex').slice(0,16)}`;
-writeFileSync('dist/sw.js',`
-const CACHE=${JSON.stringify(cache)};
-const BASE='/ryadom-app/';
-const FILES=${JSON.stringify(files.map(f=>'/ryadom-app/'+f))};
-self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting())));
-self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('ryadom-shell-')&&k!==CACHE).map(k=>caches.delete(k))))));
-self.addEventListener('fetch',event=>{
-  const url=new URL(event.request.url);
-  if(event.request.method!=='GET'||url.origin!==self.location.origin||!url.pathname.startsWith(BASE))return;
-  if(event.request.mode==='navigate') {
-    event.respondWith(caches.open(CACHE).then(c=>c.match(BASE+'index.html')).then(r=>r||fetch(event.request)));
-  } else if(FILES.includes(url.pathname)) {
-    event.respondWith(caches.open(CACHE).then(c=>c.match(event.request)).then(r=>r||fetch(event.request)));
-  }
-});
-`);
+writeFileSync('dist/sw.js',serviceWorkerSource(cache,files.map(f=>'/ryadom-app/'+f)));
 console.log(`PWA: ${files.length} files, ${cache}`);

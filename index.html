@@ -7,10 +7,7 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <meta name="theme-color" content="#f7f6ee" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="default"
-    />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
     <link rel="icon" type="image/png" href="%BASE_URL%icon-192.png" />
     <link rel="apple-touch-icon" href="%BASE_URL%apple-touch-icon.png" />
@@ -20,9 +17,106 @@
       name="description"
       content="Рядом — календарь заботы, здоровье и занятия вашего питомца"
     />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap"
+      media="print"
+      onload="this.media = 'all'"
+    />
     <title>Рядом — забота о питомце</title>
   </head>
   <body>
+    <div
+      id="startup"
+      role="status"
+      style="
+        max-width: 380px;
+        margin: 15vh auto;
+        padding: 24px;
+        font: 16px/1.5 system-ui;
+        color: #345941;
+      "
+    >
+      <h1 style="font-size: 26px">Рядом</h1>
+      <p id="startup-message">Открываем приложение…</p>
+      <button
+        id="startup-retry"
+        hidden
+        style="
+          font: inherit;
+          padding: 12px 20px;
+          border: 0;
+          border-radius: 12px;
+          background: #345941;
+          color: white;
+        "
+      >
+        Восстановить загрузку
+      </button>
+    </div>
+    <script>
+      (() => {
+        const screen = document.getElementById("startup"),
+          message = document.getElementById("startup-message"),
+          button = document.getElementById("startup-retry");
+        let ready = false;
+        const showError = () => {
+          if (!ready) {
+            message.textContent =
+              "Не удалось открыть приложение. Проверьте интернет и восстановите загрузку.";
+            button.hidden = false;
+          }
+        };
+        const timer = setTimeout(showError, 12000);
+        window.addEventListener(
+          "ryadom:ready",
+          () => {
+            ready = true;
+            clearTimeout(timer);
+            screen.remove();
+          },
+          { once: true },
+        );
+        window.addEventListener("error", showError, true);
+        const repair = async () => {
+          button.disabled = true;
+          message.textContent = "Обновляем файлы приложения…";
+          try {
+            if ("serviceWorker" in navigator) {
+              const registrations =
+                await navigator.serviceWorker.getRegistrations();
+              await Promise.all(
+                registrations
+                  .filter(
+                    (r) =>
+                      r.scope === new URL("/ryadom-app/", location.origin).href,
+                  )
+                  .map((r) => r.unregister()),
+              );
+            }
+            if ("caches" in window) {
+              try {
+                await Promise.all(
+                  (await caches.keys())
+                    .filter((k) => k.startsWith("ryadom-shell-"))
+                    .map((k) => caches.delete(k)),
+                );
+              } catch {}
+            }
+            const url = new URL(location.href);
+            url.searchParams.set("_reload", Date.now());
+            location.replace(url.href);
+          } catch {
+            message.textContent =
+              "Не удалось обновить файлы. Закройте приложение и откройте снова с интернетом.";
+            button.disabled = false;
+          }
+        };
+        button.addEventListener("click", repair);
+        window.addEventListener("ryadom:repair", repair);
+      })();
+    </script>
+    <noscript>Для открытия приложения включите JavaScript.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
