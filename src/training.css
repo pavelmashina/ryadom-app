@@ -427,3 +427,34 @@
   min-width: 44px;
   min-height: 44px;
 }
+
+.training-screen {
+  padding-bottom: 72px;
+}
+.training-fab.btn {
+  position: fixed;
+  right: max(
+    var(--page-gutter),
+    calc((100vw - var(--page-width)) / 2 + var(--page-gutter))
+  );
+  bottom: calc(104px + env(safe-area-inset-bottom));
+  width: 56px;
+  height: 56px;
+  min-height: 56px;
+  padding: 0;
+  margin: 0;
+  border-radius: 50%;
+  z-index: 4;
+  box-shadow: 0 4px 16px #0003;
+}
+.training-fab svg {
+  width: 28px;
+  height: 28px;
+}
+.training-action-choices {
+  display: grid;
+  gap: 12px;
+}
+.training-action-choices .btn {
+  margin: 0;
+}

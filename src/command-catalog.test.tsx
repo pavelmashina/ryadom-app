@@ -66,7 +66,9 @@ it("read-only catalog disables editing while retaining browsing and four initial
       onPlan={() => {}}
     />,
   );
-  expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Добавить тренировку/);
+  expect(html).toMatch(
+    /<button[^>]*aria-label="Добавить или запланировать тренировку"[^>]*disabled=""/,
+  );
   expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Добавить команду/);
   expect(html.match(/class="[^"]*interactive-card command-row"/g)).toHaveLength(
     20,

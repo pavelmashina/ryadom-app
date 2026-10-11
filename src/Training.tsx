@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import {
   SectionHeader,
   Textarea,
@@ -30,6 +31,7 @@ import TrainingHistory from "./TrainingHistory";
 import CommandGrid from "./CommandGrid";
 import { setCommandArchived, selectableCommands } from "./command-catalog";
 type View =
+  | { kind: "actions" }
   | { kind: "plan"; session?: TrainingSession; schedule?: TrainingSchedule }
   | { kind: "rename"; id: string }
   | { kind: "comments"; id: string }
@@ -107,24 +109,8 @@ export default function Training({
     setView(null);
   }
   return (
-    <>
+    <div className="training-screen">
       <PageHeader title="Занятия" />
-      <Button
-        disabled={!canEdit}
-        onClick={() => setView({ kind: "edit" })}
-        fullWidth
-        variant="primary"
-      >
-        Добавить тренировку
-      </Button>
-      <Button
-        disabled={!canEdit}
-        fullWidth
-        variant="secondary"
-        onClick={() => setView({ kind: "plan" })}
-      >
-        Запланировать тренировку
-      </Button>
       <SectionHeader title="Команды">
         <Button
           disabled={!canEdit}
@@ -256,25 +242,55 @@ export default function Training({
           трёх тренировок оценка предварительная. Это ориентир для дневника.
         </p>
       </details>
+      <Button
+        className="training-fab"
+        variant="primary"
+        disabled={!canEdit}
+        aria-label="Добавить или запланировать тренировку"
+        aria-haspopup="dialog"
+        onClick={() => setView({ kind: "actions" })}
+      >
+        <Plus aria-hidden="true" />
+      </Button>
       {view && (
         <Modal
           title={
-            view.kind === "plan"
-              ? "План тренировки"
-              : view.kind === "rename"
-                ? "Редактировать команду"
-                : view.kind === "comments"
-                  ? "Комментарии"
-                  : view.kind === "edit"
-                    ? view.session
-                      ? "Редактировать тренировку"
-                      : "Новая тренировка"
-                    : view.kind === "addCommand"
-                      ? "Новая команда"
-                      : (command?.name ?? "Тренировка")
+            view.kind === "actions"
+              ? "Тренировка"
+              : view.kind === "plan"
+                ? "План тренировки"
+                : view.kind === "rename"
+                  ? "Редактировать команду"
+                  : view.kind === "comments"
+                    ? "Комментарии"
+                    : view.kind === "edit"
+                      ? view.session
+                        ? "Редактировать тренировку"
+                        : "Новая тренировка"
+                      : view.kind === "addCommand"
+                        ? "Новая команда"
+                        : (command?.name ?? "Тренировка")
           }
           onClose={() => setView(null)}
         >
+          {view.kind === "actions" && canEdit && (
+            <div className="training-action-choices">
+              <Button
+                fullWidth
+                variant="primary"
+                onClick={() => setView({ kind: "edit" })}
+              >
+                Добавить тренировку
+              </Button>
+              <Button
+                fullWidth
+                variant="secondary"
+                onClick={() => setView({ kind: "plan" })}
+              >
+                Запланировать тренировку
+              </Button>
+            </div>
+          )}
           {view.kind === "plan" && canEdit && (
             <TrainingPlan
               pet={pet}
@@ -555,7 +571,7 @@ export default function Training({
           )}
         </Modal>
       )}
-    </>
+    </div>
   );
 }
 export function TrainingForm({
@@ -789,4 +805,3 @@ export function TrainingForm({
     </Form>
   );
 }
-
