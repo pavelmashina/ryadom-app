@@ -346,9 +346,9 @@
 
 .command-list {
   grid-template-columns: none;
-  grid-template-rows: 60px;
+  grid-template-rows: repeat(2, 60px);
   grid-auto-flow: column;
-  grid-auto-columns: calc((100% - 12px) / 3);
+  grid-auto-columns: calc((100% - 12px) / 2.8);
   overflow-x: auto;
   max-width: 100%;
   min-width: 0;
@@ -357,8 +357,8 @@
 }
 @media (min-width: 600px) {
   .command-list {
-    grid-template-rows: 48px;
-    grid-auto-columns: calc((100% - 18px) / 4);
+    grid-template-rows: repeat(2, 48px);
+    grid-auto-columns: calc((100% - 18px) / 3.8);
   }
 }
 .training-result-chips {
@@ -403,4 +403,27 @@
 }
 .score-history meter {
   width: 100%;
+}
+
+.command-scroller {
+  min-width: 0;
+  max-width: 100%;
+}
+.command-scroll-guide {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}
+.command-scroll-buttons {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.command-scroll-buttons .icon-button {
+  min-width: 44px;
+  min-height: 44px;
 }

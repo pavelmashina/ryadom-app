@@ -97,7 +97,6 @@ export default function Training({
       : undefined;
   const progress = command ? commandProgress(sessions, command.id) : null;
   const activeCommands = pet.commands.filter((c) => !c.archived);
-  const archivedCommands = pet.commands.filter((c) => c.archived);
   function requireEdit() {
     if (!canEdit) throw new Error("Доступно только чтение");
   }
@@ -182,21 +181,6 @@ export default function Training({
           );
         })}
       </CommandGrid>
-      {!!archivedCommands.length && (
-        <details className="explanation">
-          <summary>Удалённые из списка · {archivedCommands.length}</summary>
-          <p>История и оценки этих команд сохранены.</p>
-          {archivedCommands.map((c) => (
-            <Button
-              key={c.id}
-              variant="ghost"
-              onClick={() => setView({ kind: "command", id: c.id })}
-            >
-              {c.name}
-            </Button>
-          ))}
-        </details>
-      )}
       <Button
         disabled={!canEdit}
         fullWidth
@@ -250,44 +234,6 @@ export default function Training({
           })
         }
       />
-      {!!diary.length && (
-        <details className="explanation">
-          <summary>Исходный дневник · {diary.length} записей</summary>
-          <p>
-            Оценки восстановлены по тексту, а не по числу успешных повторов.
-            Пропуски не влияют на прогресс. Исходные записи сохранены отдельно
-            от редактируемых тренировок.
-          </p>
-          {diary.map((d) => (
-            <details key={d.source_key}>
-              <summary>
-                {fmt(d.date, {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}{" "}
-                ·{" "}
-                {d.status === "skipped"
-                  ? "Пропуск"
-                  : d.status === "linked"
-                    ? "Уже в приложении"
-                    : "Занятие"}
-              </summary>
-              <p className="note">{d.original_text}</p>
-              {d.session_id && sessions.some((s) => s.id === d.session_id) && (
-                <Button
-                  variant="ghost"
-                  onClick={() =>
-                    setView({ kind: "session", id: d.session_id! })
-                  }
-                >
-                  Открыть тренировку
-                </Button>
-              )}
-            </details>
-          ))}
-        </details>
-      )}
       {!!pet.sessions.length && (
         <details className="explanation">
           <summary>Архив занятий с повторами · {pet.sessions.length}</summary>

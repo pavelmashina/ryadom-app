@@ -18,9 +18,6 @@ export default function TrainingPlan({
 }) {
   const [repeat, setRepeat] = useState(schedule?.repeat_type ?? "once");
   const [days, setDays] = useState<number[]>(schedule?.weekdays ?? []);
-  const [commands, setCommands] = useState(
-    schedule?.command_ids ?? session?.results.map((r) => r.command_id) ?? [],
-  );
   return (
     <Form
       onSave={async (d) => {
@@ -44,7 +41,7 @@ export default function TrainingPlan({
             ends_on: get("end") || null,
             is_active: true,
             comment,
-            command_ids: commands,
+            command_ids: schedule?.command_ids ?? [],
           };
           await onSave({
             ...pet,
@@ -67,12 +64,7 @@ export default function TrainingPlan({
             duration_minutes: null,
             created_at: session?.created_at ?? new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            results: commands.map((command_id) => ({
-              command_id,
-              performance_score: null,
-              mode: "repeat",
-              comment: "",
-            })),
+            results: session?.results ?? [],
           };
           await onSave({
             ...pet,
@@ -154,23 +146,6 @@ export default function TrainingPlan({
           </p>
         </>
       )}
-      <h3>Запланированные команды</h3>
-      {pet.commands
-        .filter((c) => !c.archived || commands.includes(c.id))
-        .map((c) => (
-          <Checkbox
-            key={c.id}
-            label={c.name}
-            checked={commands.includes(c.id)}
-            onChange={() =>
-              setCommands((cs) =>
-                cs.includes(c.id)
-                  ? cs.filter((id) => id !== c.id)
-                  : [...cs, c.id],
-              )
-            }
-          />
-        ))}
     </Form>
   );
 }
