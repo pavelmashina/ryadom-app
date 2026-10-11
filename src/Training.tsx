@@ -108,9 +108,7 @@ export default function Training({
   }
   return (
     <>
-      <PageHeader title="Занятия" eyebrow="Учимся вместе">
-        Небольшие шаги, заметный прогресс · {pet.name}
-      </PageHeader>
+      <PageHeader title="Занятия" />
       <Button
         disabled={!canEdit}
         onClick={() => setView({ kind: "edit" })}
@@ -118,6 +116,14 @@ export default function Training({
         variant="primary"
       >
         Добавить тренировку
+      </Button>
+      <Button
+        disabled={!canEdit}
+        fullWidth
+        variant="secondary"
+        onClick={() => setView({ kind: "plan" })}
+      >
+        Запланировать тренировку
       </Button>
       <SectionHeader title="Команды">
         <Button
@@ -181,14 +187,6 @@ export default function Training({
           );
         })}
       </CommandGrid>
-      <Button
-        disabled={!canEdit}
-        fullWidth
-        variant="secondary"
-        onClick={() => setView({ kind: "plan" })}
-      >
-        Запланировать тренировку
-      </Button>
       {!!pet.trainingSchedules?.length && (
         <details className="explanation">
           <summary>Регулярный график</summary>
@@ -791,3 +789,4 @@ export function TrainingForm({
     </Form>
   );
 }
+
