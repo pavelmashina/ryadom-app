@@ -459,18 +459,18 @@
   margin: 0;
 }
 
-/* Compact training layout while keeping touch targets at least 44px. */
+/* Balanced training spacing while retaining compact touch targets. */
 .training-screen > .heading {
-  margin: 0 0 4px;
+  margin: 4px 0 12px;
 }
 .training-screen > .heading h1 {
   font-size: 26px;
 }
 .training-screen .section-title {
-  margin: 8px 0 4px;
+  margin: 16px 0 8px;
 }
 .command-scroll-guide {
-  margin: 0;
+  margin: 0 0 4px;
   min-height: 32px;
   justify-content: flex-end;
 }
@@ -485,20 +485,21 @@
   padding: 4px 6px;
 }
 .training-calendar {
-  padding: 8px;
+  padding: 10px;
 }
 .training-month {
-  margin-bottom: 2px;
+  margin-bottom: 5px;
 }
 .training-days {
-  row-gap: 0;
+  row-gap: 1px;
 }
 .training-weekdays span {
-  padding: 2px 0;
+  padding: 3px 0;
 }
 .calendar-key {
-  margin-top: 4px;
+  margin-top: 6px;
 }
 .training-selected-date {
-  margin: 10px 0 4px;
+  margin: 14px 0 6px;
 }
+
