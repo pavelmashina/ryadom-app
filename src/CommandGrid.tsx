@@ -1,9 +1,14 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { IconButton } from "./components";
-export default function CommandGrid({ children }: { children: ReactNode[] }) {
+export default function CommandGrid({
+  children,
+  title,
+}: {
+  children: ReactNode[];
+  title?: string;
+}) {
   const ref = useRef<HTMLDivElement>(null),
-    hintId = useId(),
     gridId = useId();
   const [scroll, setScroll] = useState({
     overflow: false,
@@ -35,39 +40,40 @@ export default function CommandGrid({ children }: { children: ReactNode[] }) {
   };
   return (
     <div className="command-scroller">
+      {(title || scroll.overflow) && (
+        <div className="command-scroll-guide">
+          {title && <h2>{title}</h2>}
+          {scroll.overflow && (
+            <div className="command-scroll-buttons">
+              <IconButton
+                label="Предыдущие команды"
+                aria-controls={gridId}
+                disabled={!scroll.left}
+                onClick={() => move(-1)}
+              >
+                <ChevronLeft />
+              </IconButton>
+              <IconButton
+                label="Следующие команды"
+                aria-controls={gridId}
+                disabled={!scroll.right}
+                onClick={() => move(1)}
+              >
+                <ChevronRight />
+              </IconButton>
+            </div>
+          )}
+        </div>
+      )}
       <div
         ref={ref}
         id={gridId}
         className="command-list"
         tabIndex={0}
         aria-label="Команды"
-        aria-describedby={scroll.overflow ? hintId : undefined}
       >
         {children}
       </div>
-      {scroll.overflow && (
-        <div className="command-scroll-guide">
-          <span id={hintId}>Листайте команды влево и вправо</span>
-          <div className="command-scroll-buttons">
-            <IconButton
-              label="Предыдущие команды"
-              aria-controls={gridId}
-              disabled={!scroll.left}
-              onClick={() => move(-1)}
-            >
-              <ChevronLeft />
-            </IconButton>
-            <IconButton
-              label="Следующие команды"
-              aria-controls={gridId}
-              disabled={!scroll.right}
-              onClick={() => move(1)}
-            >
-              <ChevronRight />
-            </IconButton>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

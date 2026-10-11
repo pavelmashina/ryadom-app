@@ -69,7 +69,7 @@ it("read-only catalog disables editing while retaining browsing and four initial
   expect(html).toMatch(
     /<button[^>]*aria-label="Добавить или запланировать тренировку"[^>]*disabled=""/,
   );
-  expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Добавить команду/);
+  expect(html).not.toContain("Добавить команду");
   expect(html.match(/class="[^"]*interactive-card command-row"/g)).toHaveLength(
     20,
   );

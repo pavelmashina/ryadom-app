@@ -1,6 +1,5 @@
 import { Plus } from "lucide-react";
 import {
-  SectionHeader,
   Textarea,
   Select,
   PageHeader,
@@ -111,21 +110,12 @@ export default function Training({
   return (
     <div className="training-screen">
       <PageHeader title="Занятия" />
-      <SectionHeader title="Команды">
-        <Button
-          disabled={!canEdit}
-          onClick={() => setView({ kind: "addCommand" })}
-          variant="ghost"
-        >
-          Добавить команду
-        </Button>
-      </SectionHeader>
       {!activeCommands.length && (
         <Empty title="Начните с первой команды">
           Команды принадлежат только этому питомцу.
         </Empty>
       )}
-      <CommandGrid>
+      <CommandGrid title="Команды">
         {activeCommands.map((c) => {
           const p = commandProgress(sessions, c.id);
           return (
@@ -288,6 +278,13 @@ export default function Training({
                 onClick={() => setView({ kind: "plan" })}
               >
                 Запланировать тренировку
+              </Button>
+              <Button
+                fullWidth
+                variant="secondary"
+                onClick={() => setView({ kind: "addCommand" })}
+              >
+                Добавить команду
               </Button>
             </div>
           )}
