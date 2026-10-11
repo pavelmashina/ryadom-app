@@ -460,8 +460,11 @@
 }
 
 /* Balanced training spacing while retaining compact touch targets. */
+.app main:has(> .training-screen) {
+  padding-top: 8px;
+}
 .training-screen > .heading {
-  margin: 4px 0 12px;
+  margin: 0 0 4px;
 }
 .training-screen > .heading h1 {
   font-size: 26px;
