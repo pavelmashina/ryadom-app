@@ -30,3 +30,40 @@ it("does not claim success on network failure",async()=>{
  vi.stubGlobal("fetch",vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
  const api=await import("./backend");await expect(api.signIn("a@example.com","password")).rejects.toThrow("Нет связи");
 });
+
+it("retries an interrupted account response body with a fresh signal",async()=>{
+ const broken=new Response(new ReadableStream({start(c){c.error(new DOMException("Fetch is aborted","AbortError"));}}));
+ const fetcher=vi.fn().mockResolvedValueOnce(new Response(JSON.stringify(token())))
+ .mockResolvedValueOnce(broken).mockResolvedValueOnce(new Response(JSON.stringify({state:{pets:[]}})));
+ vi.stubGlobal("fetch",fetcher);const api=await import("./backend");
+ const s=await api.signIn("a@example.com","password");
+ await expect(api.rpc(s,"load_shared_state",{})).resolves.toEqual({state:{pets:[]}});
+ expect(fetcher).toHaveBeenCalledTimes(3);
+ expect(fetcher.mock.calls[1][1].signal).not.toBe(fetcher.mock.calls[2][1].signal);
+});
+it("does not retry a write if its response stream fails",async()=>{
+ const fetcher=vi.fn().mockResolvedValueOnce(new Response(JSON.stringify(token())))
+ .mockResolvedValueOnce(new Response(new ReadableStream({start(c){c.error(new DOMException("Fetch is aborted","AbortError"));}})));
+ vi.stubGlobal("fetch",fetcher);const api=await import("./backend");
+ const s=await api.signIn("a@example.com","password");
+ await expect(api.rpc(s,"save_shared_state",{})).rejects.toThrow("Нет связи");
+ expect(fetcher).toHaveBeenCalledTimes(2);
+});
+it("bounds retries and preserves the account when offline",async()=>{
+ const fetcher=vi.fn().mockResolvedValueOnce(new Response(JSON.stringify(token()))).mockRejectedValue(new TypeError("Failed to fetch"));
+ vi.stubGlobal("fetch",fetcher);const api=await import("./backend");
+ const s=await api.signIn("a@example.com","password");
+ await expect(api.rpc(s,"load_shared_state",{})).rejects.toThrow("Повторить");
+ expect(fetcher).toHaveBeenCalledTimes(3);expect(api.readStoredSession()?.user.id).toBe("a");
+});
+it("clears the timeout after reading the body",async()=>{
+ vi.useFakeTimers();
+ try {
+ const fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify(token())));
+ vi.stubGlobal("fetch",fetcher);const api=await import("./backend");
+ await api.signIn("a@example.com","password");
+ expect(vi.getTimerCount()).toBe(0);
+ await vi.advanceTimersByTimeAsync(61000);
+ expect(fetcher.mock.calls[0][1].signal.aborted).toBe(false);
+ }finally{vi.useRealTimers();}
+});

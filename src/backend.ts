@@ -218,13 +218,26 @@ async function authorizedSession(session: AuthSession) {
   return refreshed;
 }
 
-async function request(url: string, options: RequestInit) {
-  try {
-    return await fetch(url, { ...options, signal: AbortSignal.timeout(25000) });
-  } catch {
-    throw new Error(
-      "Нет связи с сервером. Проверьте интернет и повторите. Данные не сохранены.",
-    );
+async function request(url: string, options: RequestInit, retryLoad = false) {
+  for (let attempt = 0; ; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 60000);
+    try {
+      const response = await fetch(url, { ...options, signal: controller.signal });
+      // Fetch resolves at headers. Read the entire body inside the timeout/error
+      // boundary so Safari body-stream aborts cannot escape to the UI.
+      const body = await response.arrayBuffer();
+      return new Response([204, 205, 304].includes(response.status) ? null : body, {
+        status: response.status, statusText: response.statusText, headers: response.headers,
+      });
+    } catch {
+      if (!retryLoad || attempt >= 1)
+        throw new Error("Нет связи с сервером. Проверьте интернет и нажмите «Повторить».");
+    } finally {
+      clearTimeout(timer);
+    }
+    // Only the idempotent account load may retry, never a save or auth mutation.
+    await new Promise(resolve => setTimeout(resolve, 1000));
   }
 }
 export async function rpc(
@@ -243,7 +256,7 @@ export async function rpc(
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
-  });
+  }, name === "load_shared_state");
   if (!response.ok) throw new Error(await parseError(response));
   return response.json();
 }
