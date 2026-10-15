@@ -48,7 +48,9 @@ import {
   type State,
 } from "./domain";
 import { parseBackup, download } from "./storage";
+import { recurrenceText, previousDay } from "./recurrence";
 type Screen = "day" | "health" | "training" | "stock" | "profile" | "account";
+type EventScope = "single" | "future" | "all";
 type Overlay =
   | {
       kind: "event";
@@ -64,6 +66,12 @@ type Overlay =
   | {
       kind: "session";
       command: string;
+    }
+  | {
+      kind: "modifyEvent";
+      eventId: string;
+      on: string;
+      action: "edit" | "delete";
     }
   | {
       kind:
@@ -105,6 +113,7 @@ export default function App({
   const saving = useRef(false);
   const epoch = useRef(0);
   const [openTraining, setOpenTraining] = useState<string | undefined>();
+  const [eventScope, setEventScope] = useState<EventScope>("single");
   const [busy, setBusy] = useState(false);
   const [state, setState] = useState(loaded.state),
     [storageError, setStorageError] = useState(loaded.error),
@@ -222,6 +231,95 @@ export default function App({
     setMonth(e.date.slice(0, 7) + "-01");
     setScreen("day");
   }
+  function modifyEvent(e: PetEvent, on: string, action: "edit" | "delete") {
+    setEventScope(e.repeat === "once" ? "all" : "single");
+    setOverlay({ kind: "modifyEvent", eventId: e.id, on, action });
+  }
+  async function saveEventEdit(e: PetEvent, on: string, scope: EventScope, next: PetEvent) {
+    await saved(() =>
+      update((p) => {
+        if (e.repeat === "once" || scope === "all")
+          return {
+            ...p,
+            events: p.events.map((x) => x.id === e.id ? { ...next, id: e.id } : x),
+          };
+        const events = p.events.map((x) => x.id === e.id ? x : x);
+        if (scope === "single") {
+          const cancelled = {
+            ...e,
+            exceptions: [
+              ...(e.exceptions ?? []).filter((x) => x.on !== on),
+              { on, cancelled: true },
+            ],
+          };
+          return {
+            ...p,
+            events: [
+              ...events.map((x) => x.id === e.id ? cancelled : x),
+              {
+                ...next,
+                id: id(),
+                repeat: "once" as const,
+                end: "",
+                repeatEndType: undefined,
+                repeatCount: undefined,
+                exceptions: undefined,
+              },
+            ],
+          };
+        }
+        const past = {
+          ...e,
+          end: previousDay(on),
+          repeatEndType: "date" as const,
+          repeatCount: undefined,
+          exceptions: (e.exceptions ?? []).filter((x) => x.on < on),
+        };
+        return {
+          ...p,
+          events: [
+            ...events.filter((x) => x.id !== e.id),
+            ...(on === e.date ? [] : [past]),
+            { ...next, id: id(), exceptions: undefined },
+          ],
+        };
+      }),
+    );
+    setSelected(next.date);
+    setMonth(next.date.slice(0, 7) + "-01");
+  }
+  async function deleteEvent(e: PetEvent, on: string, scope: EventScope) {
+    await saved(() =>
+      update((p) => {
+        if (e.repeat === "once" || scope === "all" || (scope === "future" && on === e.date)) {
+          return {
+            ...p,
+            events: p.events.filter((x) => x.id !== e.id),
+            done: Object.fromEntries(Object.entries(p.done).filter(([key]) => !key.startsWith(e.id + ":"))),
+          };
+        }
+        const altered = scope === "single"
+          ? {
+              ...e,
+              exceptions: [
+                ...(e.exceptions ?? []).filter((x) => x.on !== on),
+                { on, cancelled: true },
+              ],
+            }
+          : {
+              ...e,
+              end: previousDay(on),
+              repeatEndType: "date" as const,
+              repeatCount: undefined,
+              exceptions: (e.exceptions ?? []).filter((x) => x.on < on),
+            };
+        return {
+          ...p,
+          events: p.events.map((x) => x.id === e.id ? altered : x),
+        };
+      }),
+    );
+  }
   function toggle(e: PetEvent, s: string) {
     safe(() =>
       update((p) => ({
@@ -251,6 +349,8 @@ export default function App({
       ? "Новое событие"
       : overlay?.kind === "detail"
         ? overlay.event.name
+        : overlay?.kind === "modifyEvent"
+          ? overlay.action === "edit" ? "Редактировать событие" : "Удалить событие"
         : overlay?.kind === "session"
           ? `Занятие · ${pet.commands.find((c) => c.id === overlay.command)?.name}`
           : (
@@ -290,6 +390,52 @@ export default function App({
             onSave={addEvent}
           />
         );
+      case "modifyEvent": {
+        const current = pet.events.find((e) => e.id === overlay.eventId);
+        if (!current) return <p>Событие больше недоступно.</p>;
+        const scope = current.repeat === "once" ? "all" : eventScope;
+        const editSource: PetEvent = scope === "all"
+          ? current
+          : {
+              ...current,
+              date: overlay.on,
+              ...(scope === "single"
+                ? { repeat: "once" as const, end: "", repeatEndType: undefined, repeatCount: undefined }
+                : {}),
+              exceptions: undefined,
+            };
+        return (
+          <>
+            {current.repeat !== "once" && (
+              <Select
+                label={overlay.action === "edit" ? "Изменить" : "Удалить"}
+                value={scope}
+                onChange={(e) => setEventScope(e.target.value as EventScope)}
+              >
+                <option value="single">Только это событие</option>
+                <option value="future">Это и последующие</option>
+                <option value="all">Все события серии</option>
+              </Select>
+            )}
+            {overlay.action === "edit" ? (
+              <EventForm
+                key={scope}
+                selected={overlay.on}
+                existing={editSource}
+                onSave={(next) => saveEventEdit(current, overlay.on, scope, next)}
+              />
+            ) : (
+              <div>
+                <p>Выбранные события будут удалены из календаря.</p>
+                <Button fullWidth variant="primary"
+                  onClick={() => safe(() => deleteEvent(current, overlay.on, scope))}>
+                  Удалить
+                </Button>
+              </div>
+            )}
+          </>
+        );
+      }
       case "detail": {
         const e = pet.events.find((e) => e.id === overlay.event.id)!;
         const done = pet.done[completionKey(e, overlay.on)];
@@ -306,22 +452,14 @@ export default function App({
               <h3>
                 {e.time || "Весь день"} · {done ? "Выполнено" : "Запланировано"}
               </h3>
-              <p>
-                {
-                  {
-                    once: "Однократно",
-                    daily: "Каждый день",
-                    weekly: "Каждую неделю",
-                  }[e.repeat]
-                }
-                {e.end ? ` · по ${fmt(e.end)}` : ""}
-              </p>
+              <p>{e.kind === "reminder" ? "Напоминание" : "Событие"} · {recurrenceText(e)}</p>
               <p className="note">{e.note || "Заметка не добавлена"}</p>
               <p className="hint">
                 Напоминание:{" "}
-                {e.reminder === "0"
+                {e.reminderEnabled === false || (!e.reminderEnabled && e.reminder === "0")
                   ? "выключено"
-                  : `за ${e.reminder} мин · только настройка, доставка не подключена`}
+                  : e.reminder === "0" ? "в момент события · доставка не подключена"
+                  : `за ${e.reminder} мин · доставка не подключена`}
               </p>
             </Card>
             <Button
@@ -331,6 +469,14 @@ export default function App({
             >
               {done ? "Снять отметку о выполнении" : "Отметить выполненным"}
             </Button>
+            <div className="fields">
+              <Button onClick={() => modifyEvent(e, overlay.on, "edit")} variant="secondary">
+                Изменить
+              </Button>
+              <Button onClick={() => modifyEvent(e, overlay.on, "delete")} variant="ghost">
+                Удалить
+              </Button>
+            </div>
             {e.repeat === "once" && !done && (
               <Form
                 label="Перенести"
