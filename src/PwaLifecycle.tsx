@@ -1,3 +1,4 @@
+import { appScope, appUrl } from "./app-paths";
 import { useEffect, useState, Component, type ReactNode } from "react";
 export function repairApp() {
   window.dispatchEvent(new Event("ryadom:repair"));
@@ -49,8 +50,8 @@ export function PwaLifecycle() {
       }
     };
     void navigator.serviceWorker
-      .register("/ryadom-app/sw.js", {
-        scope: "/ryadom-app/",
+      .register(appUrl("sw.js").href, {
+        scope: appScope(),
         updateViaCache: "none",
       })
       .then((r) => {
