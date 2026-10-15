@@ -978,3 +978,39 @@ main,
   min-width: 0;
 }
 .modal-head .icon-button:focus-visible {outline: 2px solid var(--color-text-muted);outline-offset: 2px;border-radius: 8px;}
+
+/* Compact recurrence controls inside event modal. */
+.recurrence-fields {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.recurrence-fields > .btn {
+  justify-self: start;
+}
+.recurrence-options {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.recurrence-options h3 {
+  font-size: var(--font-size-small);
+  margin: 0;
+}
+.weekdays-picker p {
+  font-size: var(--font-size-small);
+  margin: 0 0 var(--space-2);
+}
+.weekdays-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.weekdays-picker-row .checkbox {
+  flex: 0 0 auto;
+  font-size: var(--font-size-small);
+}
