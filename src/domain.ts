@@ -1,4 +1,5 @@
 import { scheduleSchema } from "./training-planning";
+import { occursOn } from "./recurrence";
 import { z } from "zod";
 import { trainingSchema } from "./training-domain";
 export const iso = (d: Date) =>
@@ -23,17 +24,36 @@ export const eventSchema = z
     id: z.string(),
     name: nameSchema,
     category: z.enum(["health", "training", "care"]),
+    kind: z.enum(["event", "reminder"]).optional(),
     date: daySchema,
-    time: z.string().regex(/^$|^([01]\d|2[0-3]):[0-5]\d$/),
-    repeat: z.enum(["once", "daily", "weekly"]),
+    time: z.string().regex(/^$|^([01]\\d|2[0-3]):[0-5]\\d$/),
+    repeat: z.enum(["once", "daily", "weekly", "monthly", "yearly"]),
+    repeatInterval: z.number().int().min(1).max(366).optional(),
+    repeatWeekdays: z.array(z.number().int().min(1).max(7)).max(7).optional(),
+    repeatMonthday: z.number().int().min(1).max(31).optional(),
+    repeatEndType: z.enum(["never", "date", "count"]).optional(),
+    repeatCount: z.number().int().min(1).max(10000).optional(),
+    exceptions: z.array(z.object({
+      on: daySchema,
+      newDate: daySchema.optional(),
+      cancelled: z.boolean().optional(),
+    })).optional(),
     end: z.union([z.literal(""), daySchema]),
-    reminder: z.enum(["0", "15", "60", "1440"]),
+    reminder: z.string().regex(/^\\d+$/).refine((v) => Number(v) <= 525600, "Слишком раннее напоминание"),
     note: z.string().max(5000),
     linkedRecord: z.string().optional(),
   })
   .refine(
     (e) => !e.end || e.end >= e.date,
     "Окончание должно быть не раньше начала",
+  )
+  .refine(
+    (e) => e.repeatEndType !== "date" || !!e.end,
+    "Укажите дату завершения повторений",
+  )
+  .refine(
+    (e) => e.repeatEndType !== "count" || !!e.repeatCount,
+    "Укажите количество повторений",
   );
 export type PetEvent = z.infer<typeof eventSchema>;
 export const sessionSchema = z
@@ -200,14 +220,7 @@ export const initialState = (): State => {
   return { version: 1, selectedPet: p.id, pets: [p] };
 };
 export function occurs(e: PetEvent, s: string) {
-  if (s < e.date || (e.end && s > e.end)) return false;
-  if (e.repeat === "once") return s === e.date;
-  if (e.repeat === "daily") return true;
-  const utc = (s: string) => {
-    const [y, m, d] = s.split("-").map(Number);
-    return Date.UTC(y, m - 1, d);
-  };
-  return ((utc(s) - utc(e.date)) / 86400000) % 7 === 0;
+  return occursOn(e, s);
 }
 export const eventsFor = (p: Pet, s: string) =>
   p.events
