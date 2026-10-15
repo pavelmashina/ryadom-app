@@ -122,13 +122,10 @@ export function PushSettings({ session }: { session: AuthSession }) {
       });
       debug(current ? "existing subscription reused" : "subscription created");
       stage = "save";
-      try {
-        await saveSubscription(session, sub);
-      } catch (cause) {
-        // Never leave a fresh orphan subscription when saving failed.
-        if (!current) await sub.unsubscribe().catch(() => {});
-        throw cause;
-      }
+      // Preserve the browser subscription even if the network response fails:
+      // PostgREST might have committed the row already. Retrying with the same
+      // endpoint is idempotent and prevents a new orphan row on every tap.
+      await saveSubscription(session, sub);
       debug("subscription saved");
       setEnabled(true);
       setNotice("Уведомления включены для этого устройства.");
