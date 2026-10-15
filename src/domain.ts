@@ -26,7 +26,7 @@ export const eventSchema = z
     category: z.enum(["health", "training", "care"]),
     kind: z.enum(["event", "reminder"]).optional(),
     date: daySchema,
-    time: z.string().regex(/^$|^([01]\\d|2[0-3]):[0-5]\\d$/),
+    time: z.string().regex(/^$|^([01]\d|2[0-3]):[0-5]\d$/),
     repeat: z.enum(["once", "daily", "weekly", "monthly", "yearly"]),
     repeatInterval: z.number().int().min(1).max(366).optional(),
     repeatWeekdays: z.array(z.number().int().min(1).max(7)).max(7).optional(),
@@ -39,7 +39,8 @@ export const eventSchema = z
       cancelled: z.boolean().optional(),
     })).optional(),
     end: z.union([z.literal(""), daySchema]),
-    reminder: z.string().regex(/^\\d+$/).refine((v) => Number(v) <= 525600, "Слишком раннее напоминание"),
+    reminder: z.string().regex(/^\d+$/).refine((v) => Number(v) <= 525600, "Слишком раннее напоминание"),
+    reminderEnabled: z.boolean().optional(),
     note: z.string().max(5000),
     linkedRecord: z.string().optional(),
   })
