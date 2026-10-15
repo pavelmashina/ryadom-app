@@ -47,10 +47,17 @@ export default function EventForm({
     : ["10", "30", "60", "1440"].includes(existing.reminder) ? existing.reminder
     : "custom";
   const [reminderMode, setReminderMode] = useState(initialReminder);
+  const oldOffset = Number(existing?.reminder ?? "0");
+  const oldUnit = oldOffset >= 10080 && oldOffset % 10080 === 0 ? "weeks"
+    : oldOffset >= 1440 && oldOffset % 1440 === 0 ? "days"
+    : oldOffset >= 60 && oldOffset % 60 === 0 ? "hours" : "minutes";
+  const minuteMultipliers: Record<string, number> = {
+    minutes: 1, hours: 60, days: 1440, weeks: 10080,
+  };
+  const [customUnit, setCustomUnit] = useState(initialReminder === "custom" ? oldUnit : "days");
   const [customAmount, setCustomAmount] = useState(
-    initialReminder === "custom" ? Number(existing?.reminder) : 3,
+    initialReminder === "custom" ? oldOffset / minuteMultipliers[oldUnit] : 3,
   );
-  const [customUnit, setCustomUnit] = useState(initialReminder === "custom" ? "minutes" : "days");
   if (chosen === "training" && pet && onTrainingSave && !existing)
     return (
       <>
@@ -79,12 +86,10 @@ export default function EventForm({
         if (recurrence.endType === "date" &&
             (!recurrence.endDate || recurrence.endDate < startDate))
           throw new Error("Дата окончания должна быть не раньше начала");
-        const reminders: Record<string, number> = {
-          minutes: 1, hours: 60, days: 1440, weeks: 10080,
-        };
+
         const minutes = reminderMode === "none" || reminderMode === "now" ? 0
           : reminderMode === "custom"
-            ? customAmount * reminders[customUnit]
+            ? customAmount * minuteMultipliers[customUnit]
             : Number(reminderMode);
         const parsed = eventSchema.safeParse({
           ...existing,
@@ -188,7 +193,7 @@ export default function EventForm({
             label="За сколько"
             type="number"
             min={1}
-            max={365}
+            max={customUnit === "minutes" ? 525600 : customUnit === "hours" ? 8760 : customUnit === "days" ? 365 : 52}
             value={customAmount}
             onChange={(e) => setCustomAmount(Number(e.target.value) || 1)}
           />
