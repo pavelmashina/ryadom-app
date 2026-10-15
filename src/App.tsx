@@ -33,6 +33,8 @@ import Training from "./Training";
 import Health from "./Health";
 import Stock from "./Stock";
 import EventForm from "./EventForm";
+import ReminderSettings from "./ReminderSettings";
+import { setPersonalReminder } from "./push-api";
 import {
   blankPet,
   demoPet,
@@ -113,6 +115,7 @@ export default function App({
   const saving = useRef(false);
   const epoch = useRef(0);
   const [openTraining, setOpenTraining] = useState<string | undefined>();
+  const handledPushLink = useRef(false);
   const [eventScope, setEventScope] = useState<EventScope>("single");
   const [busy, setBusy] = useState(false);
   const [state, setState] = useState(loaded.state),
@@ -124,6 +127,26 @@ export default function App({
     [month, setMonth] = useState(today().slice(0, 7) + "-01"),
     [restore, setRestore] = useState<State | null>(null);
   const pet = state.pets.find((p) => p.id === state.selectedPet)!;
+  useEffect(() => {
+    if (handledPushLink.current) return;
+    const params = new URLSearchParams(location.search);
+    const eventId = params.get("event");
+    if (!eventId) return;
+    const matchedPet = state.pets.find((p) => p.events.some((e) => e.id === eventId));
+    const event = matchedPet?.events.find((e) => e.id === eventId);
+    if (!matchedPet || !event) return;
+    const day = /^\\d{4}-\\d{2}-\\d{2}$/.test(params.get("date") || "")
+      ? params.get("date")! : event.date;
+    handledPushLink.current = true;
+    if (matchedPet.id !== state.selectedPet) setState((previous) => ({
+      ...previous, selectedPet: matchedPet.id,
+    }));
+    setSelected(day);
+    setMonth(day.slice(0, 7) + "-01");
+    setScreen("day");
+    setOverlay({ kind: "detail", event, on: day });
+    history.replaceState(null, "", location.pathname + location.hash);
+  }, [state]);
   const overlayRef = useRef(overlay);
   overlayRef.current = overlay;
   const refreshRef = useRef(onRefresh);
@@ -227,6 +250,13 @@ export default function App({
   }
   async function addEvent(e: PetEvent) {
     await saved(() => update((p) => ({ ...p, events: [...p.events, e] })));
+    if (e.reminderEnabled) {
+      try {
+        await setPersonalReminder(session, pet.id, e.id, Number(e.reminder), true);
+      } catch {
+        setNotice("Событие сохранено, но личное напоминание не настроено. Откройте карточку события.");
+      }
+    }
     setSelected(e.date);
     setMonth(e.date.slice(0, 7) + "-01");
     setScreen("day");
@@ -454,13 +484,7 @@ export default function App({
               </h3>
               <p>{e.kind === "reminder" ? "Напоминание" : "Событие"} · {recurrenceText(e)}</p>
               <p className="note">{e.note || "Заметка не добавлена"}</p>
-              <p className="hint">
-                Напоминание:{" "}
-                {e.reminderEnabled === false || (!e.reminderEnabled && e.reminder === "0")
-                  ? "выключено"
-                  : e.reminder === "0" ? "в момент события · доставка не подключена"
-                  : `за ${e.reminder} мин · доставка не подключена`}
-              </p>
+              <p className="hint">Личные уведомления настраиваются ниже.</p>
             </Card>
             <Button
               onClick={() => toggle(e, overlay.on)}
@@ -469,6 +493,11 @@ export default function App({
             >
               {done ? "Снять отметку о выполнении" : "Отметить выполненным"}
             </Button>
+            <ReminderSettings
+              session={session}
+              petId={pet.id}
+              eventId={e.id}
+            />
             <div className="fields">
               <Button onClick={() => modifyEvent(e, overlay.on, "edit")} variant="secondary">
                 Изменить
