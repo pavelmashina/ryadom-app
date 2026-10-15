@@ -28,7 +28,7 @@ async function rest(
 }
 
 export async function getVapidPublicKey(session: AuthSession) {
-  const rows = await rest(session, "push_public_config?select=public_key&id=eq.true")
+  const rows = (await rest(session, "push_public_config?select=public_key&id=eq.true"))
     as { public_key: string }[];
   if (!rows?.[0]?.public_key) throw new Error("Сервер уведомлений не настроен");
   return rows[0].public_key;
