@@ -52,6 +52,15 @@ describe("shared calendar recurrence calculations", () => {
     expect(occursOn(e, "2026-07-14")).toBe(true);
     expect(occursOn(e, "2026-02-14")).toBe(false);
   });
+  it("counted monthly occurrences start at the first eligible date, not an earlier day", () => {
+    const e = event({ date: "2026-01-20", repeat: "monthly",
+      repeatMonthday: 14, repeatEndType: "count", repeatCount: 2 });
+    expect(occursOn(e, "2026-01-14")).toBe(false);
+    expect(occurrenceIndex(e, "2026-02-14")).toBe(1);
+    expect(occursOn(e, "2026-02-14")).toBe(true);
+    expect(occursOn(e, "2026-03-14")).toBe(true);
+    expect(occursOn(e, "2026-04-14")).toBe(false);
+  });
   it("honors end date inclusively", () => {
     const e = event({ repeat: "daily", repeatEndType: "date", end: "2026-01-17" });
     expect(occursOn(e, "2026-01-17")).toBe(true);
