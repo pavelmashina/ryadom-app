@@ -80,7 +80,11 @@ export function occurrenceIndex(e: RecurrenceEvent, on: string): number | null {
     const months = (year - y0) * 12 + month - m0;
     if (months < 0 || months % step !== 0) return null;
     const target = Math.min(e.repeatMonthday ?? d0, endDay(year, month));
-    return day === target ? months / step + 1 : null;
+    // When the configured day falls before the series start in its first
+    // month, the first real occurrence is in the next interval.
+    const originalMonthDay = Math.min(e.repeatMonthday ?? d0, endDay(y0, m0));
+    const skippedFirstMonth = originalMonthDay < d0 ? 1 : 0;
+    return day === target ? months / step + 1 - skippedFirstMonth : null;
   }
   if (month !== m0 || (year - y0) % step !== 0) return null;
   return day === Math.min(d0, endDay(year, month))
