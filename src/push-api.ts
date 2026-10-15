@@ -1,3 +1,4 @@
+import { appScope } from "./app-paths";
 import { getValidSession, type AuthSession } from "./backend";
 
 const apiRoot = import.meta.env.VITE_SUPABASE_URL?.replace(/\/+$/, "");
@@ -12,7 +13,7 @@ async function rest(
   const active = await getValidSession();
   if (!active || active.user.id !== session.user.id)
     throw new Error("Авторизуйтесь повторно для настройки уведомлений");
-  const response = await fetch(apiRoot + "/rest/v1/" + path, {
+  const response = await fetch(new URL("rest/v1/" + path, apiRoot + "/").href, {
     ...init,
     cache: "no-store",
     headers: {
@@ -122,7 +123,7 @@ export async function setPersonalReminder(
 /** Drop this device's push subscription before signing out on shared devices. */
 export async function revokeDevicePushOnLogout(session: AuthSession) {
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
-  const registration = await navigator.serviceWorker.getRegistration("/ryadom-app/");
+  const registration = await navigator.serviceWorker.getRegistration(appScope());
   const sub = await registration?.pushManager.getSubscription();
   if (!sub) return;
   try {
