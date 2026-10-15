@@ -46,11 +46,7 @@ describe("VAPID validation before PushManager.subscribe", () => {
   });
   it.each(["", " " + validKey, validKey + "\n", validKey.slice(0, 80), "x".repeat(87)])(
     "rejects invalid Base64URL key %s", (s) => {
-      if (s === "x".repeat(87)) {
-        expect(parseVapidPublicKey(s)[0]).not.toBe(4);
-      } else {
-        expect(() => parseVapidPublicKey(s)).toThrow();
-      }
+      expect(() => parseVapidPublicKey(s)).toThrow();
     },
   );
   it("sets app-relative worker and manifest paths", () => {
