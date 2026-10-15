@@ -10,6 +10,7 @@ import {
 } from "./components";
 import { useEffect, useState, type ReactNode } from "react";
 import { Mail, LockKeyhole, LogOut, UserRound } from "lucide-react";
+import { PushSettings } from "./PushSettings";
 import {
   changeEmail,
   changePassword,
@@ -147,6 +148,9 @@ export default function Account({
             Изменить пароль
           </Button>
         </div>
+      </AccountSection>
+      <AccountSection title="Уведомления">
+        <PushSettings session={session} />
       </AccountSection>
       <AccountSection title="Сеанс">
         <p>

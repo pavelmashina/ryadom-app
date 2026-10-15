@@ -12,6 +12,37 @@ self.addEventListener('activate',event=>event.waitUntil((async()=>{
  const keep=new Set([CACHE,...keys.filter(k=>k!==CACHE).slice(-2)]);
  await Promise.all(keys.filter(k=>!keep.has(k)).map(k=>caches.delete(k)));
 })()));
+// Web Push works while the PWA is closed; the browser launches this worker.
+self.addEventListener('push',event=>{
+ event.waitUntil((async()=>{
+  let data={};
+  try{data=event.data?event.data.json():{};}catch{}
+  const title=String(data.title||'Напоминание · Рядом').slice(0,120);
+  const body=String(data.body||'Запланированное событие').slice(0,300);
+  const link=new URL(typeof data.url==='string'?data.url:BASE,self.location.origin);
+  const url=link.origin===self.location.origin&&link.pathname.startsWith(BASE)
+    ?link.href:new URL(BASE,self.location.origin).href;
+  await self.registration.showNotification(title,{
+   body,icon:BASE+'icon-192.png',badge:BASE+'icon-192.png',
+   tag: 'pet-event-'+String(data.eventId||'')+'-'+String(data.at||''),
+   data:{url},renotify:false,
+  });
+ })());
+});
+self.addEventListener('notificationclick',event=>{
+ event.notification.close();
+ event.waitUntil((async()=>{
+  const link=event.notification.data?.url||new URL(BASE,self.location.origin).href;
+  const target=new URL(link,self.location.origin);
+  if(target.origin!==self.location.origin||!target.pathname.startsWith(BASE))return;
+  const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});
+  const opened=windows.find(client=>new URL(client.url).pathname.startsWith(BASE));
+  if(opened){
+   if('navigate' in opened) await opened.navigate(target.href);
+   await opened.focus();
+  }else await self.clients.openWindow(target.href);
+ })());
+});
 async function network(request){
  const abort=new AbortController();const timer=setTimeout(()=>abort.abort(),10000);
  try{return await fetch(request,{signal:abort.signal});}finally{clearTimeout(timer);}
