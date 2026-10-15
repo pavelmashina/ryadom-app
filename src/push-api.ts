@@ -118,3 +118,17 @@ export async function setPersonalReminder(
     });
   }
 }
+
+/** Drop this device's push subscription before signing out on shared devices. */
+export async function revokeDevicePushOnLogout(session: AuthSession) {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+  const registration = await navigator.serviceWorker.getRegistration("/ryadom-app/");
+  const sub = await registration?.pushManager.getSubscription();
+  if (!sub) return;
+  try {
+    await deleteSubscription(session, sub.endpoint);
+  } finally {
+    // Never keep receiving private pet notifications after local logout.
+    await sub.unsubscribe();
+  }
+}
