@@ -1,3 +1,4 @@
+import { parsePushApiResponse } from "./push-response";
 import { appScope } from "./app-paths";
 import { getValidSession, type AuthSession } from "./backend";
 
@@ -26,9 +27,7 @@ async function rest(
       ...init.headers,
     },
   });
-  if (!response.ok)
-    throw new Error("Не удалось сохранить настройки уведомлений (" + response.status + ")");
-  return response.status === 204 ? null : response.json();
+  return parsePushApiResponse(response);
 }
 
 export async function getVapidPublicKey(session: AuthSession) {
