@@ -50,7 +50,7 @@ export default function EventForm({
   const [customAmount, setCustomAmount] = useState(
     initialReminder === "custom" ? Number(existing?.reminder) : 3,
   );
-  const [customUnit, setCustomUnit] = useState("days");
+  const [customUnit, setCustomUnit] = useState(initialReminder === "custom" ? "minutes" : "days");
   if (chosen === "training" && pet && onTrainingSave && !existing)
     return (
       <>
