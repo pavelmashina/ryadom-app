@@ -1,6 +1,7 @@
 import { Field, Button } from "./components";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import App from "./App";
+import { revokeDevicePushOnLogout } from "./push-api";
 import Account from "./Account";
 import { PawPrint } from "lucide-react";
 import {
@@ -129,6 +130,13 @@ export default function CloudGate() {
     setAccount(null);
     setPhase("auth");
     setMessage("");
+    if (s) {
+      try {
+        await revokeDevicePushOnLogout(s);
+      } catch {
+        // Continue with sign-out even when offline; local sign-out is essential.
+      }
+    }
     try {
       await signOut(s);
     } catch {
