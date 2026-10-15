@@ -1,85 +1,152 @@
 import { useEffect, useState } from "react";
 import { Button } from "./components";
 import type { AuthSession } from "./backend";
+import { appScope, appUrl } from "./app-paths";
+import { validateVapidKey } from "./vapid";
 import {
   deleteSubscription, getSubscriptions, getVapidPublicKey, saveSubscription,
 } from "./push-api";
 
-function base64Key(value: string) {
-  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
-  const decoded = atob(base64 + "=".repeat((4 - base64.length % 4) % 4));
-  return Uint8Array.from(decoded, (ch) => ch.charCodeAt(0));
+function browserSupportsPush() {
+  return "Notification" in window &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window &&
+    window.isSecureContext;
 }
+function sameKey(actual: ArrayBuffer | null | undefined, expected: Uint8Array) {
+  if (!actual) return false;
+  const a = new Uint8Array(actual);
+  return a.length === expected.length && a.every((x, i) => x === expected[i]);
+}
+async function readyRegistration(): Promise<ServiceWorkerRegistration> {
+  const registration = await navigator.serviceWorker.register(appUrl("sw.js").href, {
+    scope: appScope(),
+    updateViaCache: "none",
+  });
+  const ready = await Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<never>((_, reject) => setTimeout(
+      () => reject(new Error("Service worker activation timeout")), 15000,
+    )),
+  ]);
+  if (!ready.active || ready.scope !== registration.scope)
+    throw new Error("Service worker did not activate for the app scope");
+  return ready;
+}
+function friendlyError(stage: string, permission: NotificationPermission) {
+  if (permission === "denied") return "Разрешение на уведомления отключено в настройках браузера.";
+  if (stage === "key") return "Не удалось проверить ключ уведомлений. Попробуйте обновить приложение.";
+  if (stage === "worker") return "Не удалось запустить уведомления приложения. Перезапустите приложение и попробуйте ещё раз.";
+  if (stage === "save") return "Не удалось сохранить подписку. Проверьте интернет и войдите в аккаунт повторно.";
+  return "Не удалось включить уведомления. Проверьте разрешения браузера и попробуйте ещё раз.";
+}
+function debug(stage: string) {
+  console.info("[push] " + stage);
+}
+
 export function PushSettings({ session }: { session: AuthSession }) {
   const [enabled, setEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const supportsPush = "serviceWorker" in navigator &&
-    "PushManager" in window && "Notification" in window;
+  const supportsPush = browserSupportsPush();
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const installed = window.matchMedia("(display-mode: standalone)").matches ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true;
+  const allowedHere = supportsPush && (!ios || installed);
 
   useEffect(() => {
-    if (!supportsPush) return;
-    let active = true;
+    if (!allowedHere || Notification.permission !== "granted") return;
+    let alive = true;
     void (async () => {
       try {
-        const registration = await navigator.serviceWorker.ready;
-        const [subscription, saved] = await Promise.all([
+        const registration = await readyRegistration();
+        const [sub, saved] = await Promise.all([
           registration.pushManager.getSubscription(), getSubscriptions(session),
         ]);
-        if (active) setEnabled(
-          !!subscription && saved.some((x) => x.endpoint === subscription.endpoint),
+        if (alive) setEnabled(
+          !!sub && saved.some((x) => x.endpoint === sub.endpoint),
         );
-      } catch {
-        if (active) setEnabled(false);
+      } catch (cause) {
+        console.warn("[push] subscription state check failed", cause);
+        if (alive) setEnabled(false);
       }
     })();
-    return () => { active = false; };
-  }, [session.user.id]);
+    return () => { alive = false; };
+  }, [allowedHere, session.user.id]);
 
   async function subscribe() {
-    if (!supportsPush) return;
+    if (!allowedHere) {
+      setError("Уведомления не поддерживаются в этом браузере.");
+      return;
+    }
     setBusy(true);
     setError("");
     setNotice("");
+    let stage = "permission";
     try {
-      // This call must follow a direct button click, never a page-load effect.
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") throw Error(
-        "Разрешение не предоставлено. Его можно изменить в настройках устройства.",
-      );
-      const publicKey = await getVapidPublicKey(session);
-      const registration = await navigator.serviceWorker.ready;
-      const current = await registration.pushManager.getSubscription();
+      if (Notification.permission === "denied") {
+        setError("Разрешение на уведомления отключено в настройках браузера.");
+        return;
+      }
+      if (Notification.permission !== "granted") {
+        debug("permission requested");
+        // The native permission dialog must be called directly from the click.
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          setError(permission === "denied"
+            ? "Разрешение на уведомления отключено в настройках браузера."
+            : "Разрешение на уведомления не предоставлено.");
+          return;
+        }
+      }
+      debug("permission granted");
+      stage = "worker";
+      const registration = await readyRegistration();
+      debug("service worker ready");
+      stage = "key";
+      const key = await validateVapidKey(await getVapidPublicKey(session));
+      debug("vapid key parsed");
+      stage = "subscribe";
+      let current = await registration.pushManager.getSubscription();
+      if (current && !sameKey(current.options?.applicationServerKey, key)) {
+        // A stale subscription registered with a different VAPID key cannot
+        // reliably receive pushes signed by this backend.
+        await deleteSubscription(session, current.endpoint);
+        await current.unsubscribe();
+        current = null;
+      }
       const sub = current ?? await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: base64Key(publicKey),
+        applicationServerKey: key,
       });
+      debug(current ? "existing subscription reused" : "subscription created");
+      stage = "save";
       try {
         await saveSubscription(session, sub);
-      } catch (e) {
-        // Roll back a new browser subscription if the server rejected it.
-        if (!current) await sub.unsubscribe();
-        throw e;
+      } catch (cause) {
+        // Never leave a fresh orphan subscription when saving failed.
+        if (!current) await sub.unsubscribe().catch(() => {});
+        throw cause;
       }
+      debug("subscription saved");
       setEnabled(true);
       setNotice("Уведомления включены для этого устройства.");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Не удалось включить уведомления");
+    } catch (cause) {
+      console.error("[push] enable failed at stage: " + stage, cause);
+      setError(friendlyError(stage, Notification.permission));
     } finally {
       setBusy(false);
     }
   }
 
   async function unsubscribe() {
+    if (!allowedHere) return;
     setBusy(true);
     setError("");
     setNotice("");
     try {
-      const registration = await navigator.serviceWorker.ready;
+      const registration = await readyRegistration();
       const sub = await registration.pushManager.getSubscription();
       if (sub) {
         await deleteSubscription(session, sub.endpoint);
@@ -87,8 +154,9 @@ export function PushSettings({ session }: { session: AuthSession }) {
       }
       setEnabled(false);
       setNotice("Уведомления выключены на этом устройстве.");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Не удалось выключить уведомления");
+    } catch (cause) {
+      console.error("[push] unsubscribe failed", cause);
+      setError("Не удалось выключить уведомления. Проверьте интернет и повторите попытку.");
     } finally {
       setBusy(false);
     }
@@ -97,20 +165,20 @@ export function PushSettings({ session }: { session: AuthSession }) {
   return (
     <div className="push-settings">
       <p className="hint">
-        Получайте напоминания о событиях питомца. Настройки относятся только
-        к вашему аккаунту и этому устройству.
+        Напоминания о событиях питомца. Подписка относится только к вашему
+        аккаунту и этому устройству.
       </p>
       {!supportsPush && (
-        <p className="hint">Этот браузер не поддерживает Web Push.</p>
+        <p className="hint">Уведомления не поддерживаются в этом браузере.</p>
       )}
       {ios && !installed && (
         <p className="hint">
-          На iPhone и iPad установите приложение на экран «Домой», затем откройте
-          его оттуда, чтобы включить push-уведомления.
+          На iPhone и iPad добавьте приложение на экран «Домой» и запустите
+          оттуда, чтобы включить уведомления.
         </p>
       )}
       <Button
-        disabled={!supportsPush || (ios && !installed) || busy}
+        disabled={!allowedHere || busy}
         loading={busy}
         onClick={() => void (enabled ? unsubscribe() : subscribe())}
       >

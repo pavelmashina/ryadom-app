@@ -34,9 +34,17 @@ body {
 html,
 body,
 #root {
+  width: 100%;
+  max-width: 100%;
   min-height: 100%;
+  overflow-x: hidden;
   background: var(--color-background);
 }
+html, body {
+  /* Keep one-finger vertical panning, but not pinch / double-tap zoom. */
+  touch-action: pan-x pan-y;
+}
+#root { min-width: 0; }
 button,
 input,
 select,
@@ -800,7 +808,7 @@ dialog::backdrop {
   margin: 0;
 }
 .field input[type="file"] {
-  font-size: var(--font-size-small);
+  font-size: 16px;
 }
 .field input::placeholder,
 .field textarea::placeholder {
@@ -1013,4 +1021,32 @@ main,
 .weekdays-picker-row .checkbox {
   flex: 0 0 auto;
   font-size: var(--font-size-small);
+}
+
+/* Fixed 1:1 mobile viewport without shrinking form controls or hiding
+   the intentional horizontal scrollers inside training components. */
+input, textarea, select {
+  font-size: max(16px, 1rem);
+}
+.app, .app main, .calendar, .modal-content, .modal-content form {
+  min-width: 0;
+  max-width: 100%;
+}
+dialog {
+  max-width: min(var(--modal-width), calc(100vw - 24px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+.command-list, .training-result-chips, .score-history {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 390px) {
+  .calendar { min-width: 0; }
+  .date.btn { min-height: 44px; }
 }

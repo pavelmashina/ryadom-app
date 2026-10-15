@@ -1,6 +1,6 @@
-export function serviceWorkerSource(cache,files){return `
+export function serviceWorkerSource(cache,files,base="/ryadom-app/"){return `
 const CACHE=${JSON.stringify(cache)};
-const BASE='/ryadom-app/';
+const BASE=${JSON.stringify(base)};
 const FILES=${JSON.stringify(files)};
 self.addEventListener('install',event=>event.waitUntil(
  caches.open(CACHE).then(c=>c.addAll(FILES.map(url=>new Request(url,{cache:'reload'}))))

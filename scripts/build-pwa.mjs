@@ -29,11 +29,18 @@ function icon(size) {
   const header=Buffer.alloc(13);header.writeUInt32BE(size);header.writeUInt32BE(size,4);header[8]=8;header[9]=2;
   return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',deflateSync(raw)),chunk('IEND',Buffer.alloc(0))]);
 }
+// The generated HTML already contains Vite's resolved base path.
+const manifestLink = readFileSync('dist/index.html','utf8').match(
+  /<link[^>]+rel="manifest"[^>]+href="([^"]+\/?)manifest\.webmanifest"/
+);
+if(!manifestLink) throw Error("Vite manifest base path could not be determined");
+const base = new URL(manifestLink[1], "https://example.invalid").pathname;
+if(!base.startsWith("/") || !base.endsWith("/")) throw Error("Invalid Vite base path");
 for(const size of [192,512]) writeFileSync(`dist/icon-${size}.png`,icon(size));
 writeFileSync('dist/apple-touch-icon.png',icon(180));
 writeFileSync('dist/manifest.webmanifest',JSON.stringify({
-  id:'/ryadom-app/',name:'Рядом — забота о питомце',short_name:'Рядом',lang:'ru',
-  start_url:'/ryadom-app/',scope:'/ryadom-app/',display:'standalone',
+  id:base,name:'Рядом — забота о питомце',short_name:'Рядом',lang:'ru',
+  start_url:base,scope:base,display:'standalone',
   background_color:'#f7f6ee',theme_color:'#f7f6ee',
   icons:[192,512].map(size=>({src:`icon-${size}.png`,sizes:`${size}x${size}`,type:'image/png',purpose:'any maskable'}))
 },null,2));
@@ -43,5 +50,5 @@ const files=readdirSync('dist',{recursive:true,withFileTypes:true}).filter(f=>f.
 const version=createHash('sha256');
 for(const f of files.sort()) version.update(readFileSync(`dist/${f}`));
 const cache=`ryadom-shell-${version.digest('hex').slice(0,16)}`;
-writeFileSync('dist/sw.js',serviceWorkerSource(cache,files.map(f=>'/ryadom-app/'+f)));
+writeFileSync('dist/sw.js',serviceWorkerSource(cache,files.map(f=>base+f),base));
 console.log(`PWA: ${files.length} files, ${cache}`);
