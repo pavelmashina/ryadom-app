@@ -98,7 +98,9 @@ async function deliver(job: Job, server: webpush.ApplicationServer) {
       at: job.occurrence_at,
       icon: "/ryadom-app/icon-192.png",
       url: "/ryadom-app/?event=" + encodeURIComponent(job.event_id) +
-        "&date=" + encodeURIComponent(job.occurrence_at.slice(0, 10)),
+        "&date=" + encodeURIComponent(new Date(job.occurrence_at).toLocaleDateString("sv-SE", {
+          timeZone: job.timezone,
+        })),
     });
     try {
       await server.subscribe({
@@ -152,6 +154,10 @@ Deno.serve(async (request: Request) => {
   try {
     const valid = await rpc("push_worker_verify", { token });
     if (valid !== true) return new Response("Unauthorized", { status: 401 });
+    if (new URL(request.url).searchParams.get("selftest") === "1") {
+      await sender();
+      return Response.json({ vapid: "ready", authenticated: true });
+    }
     const queued = await rpc("enqueue_due_push");
     const jobs = await rpc("claim_due_push", { max_jobs: 25 }) as Job[];
     if (!jobs.length) return Response.json({ queued, processed: 0 });
