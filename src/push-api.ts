@@ -10,6 +10,9 @@ async function rest(
   init: RequestInit = {},
 ): Promise<unknown> {
   if (!apiRoot || !apiKey) throw new Error("Supabase не настроен");
+  const server = new URL(apiRoot);
+  if (server.protocol !== "https:" && server.hostname !== "localhost")
+    throw new Error("Некорректный адрес сервера");
   const active = await getValidSession();
   if (!active || active.user.id !== session.user.id)
     throw new Error("Авторизуйтесь повторно для настройки уведомлений");
@@ -51,6 +54,18 @@ export async function saveSubscription(
   const json = subscription.toJSON();
   if (!json.endpoint || !json.keys?.p256dh || !json.keys.auth)
     throw new Error("Браузер не предоставил данные подписки");
+  let endpointUrl: URL;
+  try {
+    endpointUrl = new URL(json.endpoint);
+  } catch {
+    throw new Error("Браузер вернул некорректный адрес push-сервиса");
+  }
+  if (endpointUrl.protocol !== "https:" || !endpointUrl.hostname ||
+      endpointUrl.username || endpointUrl.password ||
+      !/^[A-Za-z0-9_-]+={0,2}$/.test(json.keys.p256dh) ||
+      !/^[A-Za-z0-9_-]+={0,2}$/.test(json.keys.auth)) {
+    throw new Error("Браузер вернул некорректные данные push-подписки");
+  }
   const device_name = /iPad/i.test(navigator.userAgent) ? "iPad"
     : /iPhone/i.test(navigator.userAgent) ? "iPhone"
     : /Android/i.test(navigator.userAgent) ? "Android"
