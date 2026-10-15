@@ -89,7 +89,7 @@
                 registrations
                   .filter(
                     (r) =>
-                      r.scope === new URL("/ryadom-app/", location.origin).href,
+                      r.scope === new URL("%BASE_URL%", location.origin).href,
                   )
                   .map((r) => r.unregister()),
               );
