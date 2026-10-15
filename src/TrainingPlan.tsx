@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Form, Field, Select, Textarea, Checkbox } from "./components";
+import { Form, Field, Textarea } from "./components";
+import RecurrenceFields, { draftForDate, type RecurrenceDraft } from "./RecurrenceFields";
 import { id, today, type Pet } from "./domain";
 import { trainingTimestamp, type TrainingSchedule } from "./training-planning";
 import type { TrainingSession } from "./training-domain";
+
 export default function TrainingPlan({
   pet,
   session,
@@ -16,29 +18,52 @@ export default function TrainingPlan({
   schedule?: TrainingSchedule;
   onSave: (pet: Pet) => Promise<void>;
 }) {
-  const [repeat, setRepeat] = useState(schedule?.repeat_type ?? "once");
-  const [days, setDays] = useState<number[]>(schedule?.weekdays ?? []);
+  const initial = schedule?.starts_on ?? session?.date ?? initialDate ?? today();
+  const [startDate, setStartDate] = useState(initial);
+  const [recurrence, setRecurrence] = useState<RecurrenceDraft>(() => ({
+    ...draftForDate(initial),
+    frequency:
+      schedule?.recurrence_frequency ??
+      (schedule?.repeat_type === "weekdays" ? "weekly" : schedule?.repeat_type ?? "once"),
+    interval: schedule?.recurrence_interval ?? 1,
+    weekdays: schedule?.weekdays?.length ? schedule.weekdays
+      : [new Date(initial + "T12:00:00").getDay() || 7],
+    monthday: schedule?.recurrence_monthday ?? Number(initial.slice(-2)),
+    endType: schedule?.recurrence_end_type ??
+      (schedule?.ends_on ? "date" : "never"),
+    endDate: schedule?.ends_on ?? "",
+    count: schedule?.recurrence_count ?? 10,
+  }));
   return (
     <Form
+      label={schedule || session ? "Сохранить изменения" : "Запланировать"}
       onSave={async (d) => {
-        const get = (k: string) => String(d.get(k) ?? "").trim(),
-          day = get("date"),
-          time = get("time"),
-          name = get("name"),
-          comment = get("comment");
-        if (repeat === "weekdays" && !days.length)
-          throw Error("Выберите дни недели");
-        if (get("end") && get("end") < day)
+        const get = (k: string) => String(d.get(k) ?? "").trim();
+        const day = get("date");
+        const time = get("time");
+        const name = get("name");
+        const comment = get("comment");
+        if (recurrence.frequency === "weekly" && recurrence.weekdays.length === 0)
+          throw Error("Выберите хотя бы один день недели");
+        if (recurrence.frequency !== "once" && recurrence.endType === "date" &&
+            (!recurrence.endDate || recurrence.endDate < day))
           throw Error("Конец графика раньше начала");
-        if (repeat !== "once") {
+        if (recurrence.frequency !== "once") {
           const next: TrainingSchedule = {
             id: schedule?.id ?? id(),
             name,
             time_of_day: time || null,
-            repeat_type: repeat as TrainingSchedule["repeat_type"],
-            weekdays: days,
+            // Keep the legacy repeat_type compatible with existing clients.
+            repeat_type: recurrence.frequency === "weekly" ? "weekdays" : "daily",
+            weekdays: recurrence.frequency === "weekly" ? recurrence.weekdays : [],
             starts_on: day,
-            ends_on: get("end") || null,
+            ends_on: recurrence.endType === "date" ? recurrence.endDate : null,
+            recurrence_frequency: recurrence.frequency,
+            recurrence_interval: recurrence.interval,
+            recurrence_end_type: recurrence.endType,
+            recurrence_count: recurrence.endType === "count" ? recurrence.count : null,
+            recurrence_monthday: recurrence.frequency === "monthly"
+              ? recurrence.monthday : null,
             is_active: true,
             comment,
             command_ids: schedule?.command_ids ?? [],
@@ -78,9 +103,16 @@ export default function TrainingPlan({
         name="date"
         type="date"
         required
-        defaultValue={
-          schedule?.starts_on ?? session?.date ?? initialDate ?? today()
-        }
+        defaultValue={initial}
+        onChange={(e) => {
+          const day = e.target.value;
+          setStartDate(day);
+          if (day) setRecurrence((x) => ({
+            ...x,
+            weekdays: [new Date(day + "T12:00:00").getDay() || 7],
+            monthday: Number(day.slice(-2)),
+          }));
+        }}
       />
       <Field
         label="Время · необязательно"
@@ -101,50 +133,13 @@ export default function TrainingPlan({
         defaultValue={schedule?.comment ?? session?.comment ?? ""}
       />
       {!session && (
-        <Select
-          label="Повторение"
-          value={repeat}
-          onChange={(e) => setRepeat(e.target.value)}
-        >
-          <option value="once" disabled={!!schedule}>
-            Однократно
-          </option>
-          <option value="daily">Каждый день</option>
-          <option value="weekly">Каждую неделю</option>
-          <option value="weekdays">По дням недели</option>
-        </Select>
+        <RecurrenceFields date={startDate} value={recurrence} onChange={setRecurrence} />
       )}
-      {repeat === "weekdays" && (
-        <div>
-          {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].map((day, i) => (
-            <Checkbox
-              key={day}
-              label={day}
-              checked={days.includes(i + 1)}
-              onChange={() =>
-                setDays((ds) =>
-                  ds.includes(i + 1)
-                    ? ds.filter((d) => d !== i + 1)
-                    : [...ds, i + 1],
-                )
-              }
-            />
-          ))}
-        </div>
-      )}
-      {repeat !== "once" && (
-        <>
-          <Field
-            label="Повторять до · необязательно"
-            name="end"
-            type="date"
-            defaultValue={schedule?.ends_on ?? ""}
-          />
-          <p className="hint">
-            Тренировки создаются на 90 дней вперёд. Проведённые занятия
-            сохраняются при изменении графика.
-          </p>
-        </>
+      {recurrence.frequency !== "once" && !session && (
+        <p className="hint">
+          Плановые занятия формируются на ближайшие 90 дней. Проведённые занятия
+          и оценки сохраняются при изменении графика.
+        </p>
       )}
     </Form>
   );
