@@ -27,11 +27,21 @@ const keyedArrays: Record<string, string> = {
   results: "command_id",
 };
 
-function same(a: unknown, b: unknown): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
-}
 function record(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+/** Equality is independent of JSON object property order (Postgres normalizes keys). */
+export function sameData(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  if (Array.isArray(a) && Array.isArray(b))
+    return a.length === b.length && a.every((item, i) => sameData(item, b[i]));
+  if (record(a) && record(b)) {
+    const ak = Object.keys(a), bk = Object.keys(b);
+    return ak.length === bk.length &&
+      ak.every((key) => Object.prototype.hasOwnProperty.call(b, key) &&
+        sameData(a[key], b[key]));
+  }
+  return false;
 }
 function identity(value: unknown, key: string, path: string): string {
   if (!record(value) || typeof value[key] !== "string" || !value[key])
@@ -68,8 +78,8 @@ function mergeArray(
 }
 
 function mergeValue(base: unknown, local: unknown, remote: unknown, path: string): unknown {
-  if (same(local, base)) return remote;
-  if (same(remote, base) || same(local, remote)) return local;
+  if (sameData(local, base)) return remote;
+  if (sameData(remote, base) || sameData(local, remote)) return local;
   // Two sides created the same key differently, or one deleted an edited key.
   if (Array.isArray(local) && Array.isArray(remote) &&
       (Array.isArray(base) || base === undefined))
