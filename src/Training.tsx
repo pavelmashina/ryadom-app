@@ -27,11 +27,13 @@ import {
 } from "./training-domain";
 import "./training.css";
 import TrainingHistory from "./TrainingHistory";
+import { reschedulePlannedTraining } from "./training-actions";
 import CommandGrid from "./CommandGrid";
 import { setCommandArchived, selectableCommands } from "./command-catalog";
 type View =
   | { kind: "actions" }
   | { kind: "plan"; session?: TrainingSession; schedule?: TrainingSchedule }
+  | { kind: "reschedule"; session: TrainingSession }
   | { kind: "rename"; id: string }
   | { kind: "comments"; id: string }
   | { kind: "archive"; id: string }
@@ -207,6 +209,7 @@ export default function Training({
             session,
           })
         }
+        onReschedule={(session) => setView({ kind: "reschedule", session })}
       />
       {!!pet.sessions.length && (
         <details className="explanation">
@@ -249,6 +252,8 @@ export default function Training({
               ? "Тренировка"
               : view.kind === "plan"
                 ? "План тренировки"
+              : view.kind === "reschedule"
+                ? "Перенести тренировку"
                 : view.kind === "rename"
                   ? "Редактировать команду"
                   : view.kind === "comments"
@@ -287,6 +292,26 @@ export default function Training({
                 Добавить команду
               </Button>
             </div>
+          )}
+          {view.kind === "reschedule" && canEdit && (
+            <Form label="Перенести тренировку"
+              onSave={async (data) => {
+                requireEdit();
+                await onSave(reschedulePlannedTraining(
+                  pet,
+                  view.session.id,
+                  text(data, "date"),
+                  text(data, "time"),
+                ));
+                setView(null);
+              }}
+            >
+              <Field label="Новая дата" name="date" type="date"
+                defaultValue={view.session.date} required />
+              <Field label="Новое время · необязательно" name="time" type="time"
+                defaultValue={view.session.time || ""} />
+              <p className="hint">Меняется только это разовое занятие. Проведённые тренировки остаются без изменений.</p>
+            </Form>
           )}
           {view.kind === "plan" && canEdit && (
             <TrainingPlan
@@ -442,6 +467,14 @@ export default function Training({
               </Button>
               {selected.status === "planned" && canEdit && (
                 <>
+                  {!selected.schedule_id ? (
+                    <Button fullWidth variant="secondary"
+                      onClick={() => setView({ kind: "reschedule", session: selected })}>
+                      Перенести тренировку
+                    </Button>
+                  ) : (
+                    <p className="hint">Это занятие создано регулярным графиком. Для изменения даты откройте «Регулярный график».</p>
+                  )}
                   <Button
                     disabled={!canEdit}
                     fullWidth
