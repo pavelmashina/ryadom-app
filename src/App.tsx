@@ -793,85 +793,105 @@ export default function App({
           </Form>
         );
       case "weight":
+      case "editWeight": {
+        const existing = overlay.kind === "editWeight"
+          ? pet.weights.find((w) => w.id === overlay.entryId) : undefined;
+        if (overlay.kind === "editWeight" && !existing)
+          return <p role="alert">Измерение больше недоступно.</p>;
         return (
-          <Form
-            onSave={async (d) =>
-              await saved(() =>
-                update((p) => ({
-                  ...p,
-                  weights: [
-                    ...p.weights,
-                    {
-                      id: id(),
-                      date: text(d, "date"),
-                      value: number(d, "value"),
-                    },
-                  ],
-                })),
-              )
-            }
-          >
-            <Field
-              label="Вес, кг"
-              name="value"
-              type="number"
-              min="0.01"
-              max="300"
-              step="0.01"
-              required
-            />
-            <Field
-              label="Дата измерения"
-              name="date"
-              type="date"
-              defaultValue={today()}
-              max={today()}
-              required
-            />
-          </Form>
+          <>
+            <Form label={existing ? "Сохранить вес" : "Добавить измерение"}
+              onSave={async (d) => {
+                await saved(() => update((p) => saveWeight(p, {
+                  id: existing?.id ?? id(),
+                  date: text(d, "date"),
+                  value: number(d, "value"),
+                })));
+              }}
+            >
+              <Field label="Вес, кг" name="value" type="number" min="0.01"
+                max="300" step="0.01" defaultValue={existing?.value ?? ""} required />
+              <Field label="Дата измерения" name="date" type="date"
+                defaultValue={existing?.date ?? today()} max={today()} required />
+            </Form>
+            {existing && (
+              <Button fullWidth variant="ghost" onClick={() =>
+                setOverlay({ kind: "deleteWeight", entryId: existing.id })
+              }>Удалить измерение</Button>
+            )}
+          </>
         );
+      }
       case "record":
+      case "editRecord": {
+        const existing = overlay.kind === "editRecord"
+          ? pet.records.find((r) => r.id === overlay.entryId) : undefined;
+        if (overlay.kind === "editRecord" && !existing)
+          return <p role="alert">Медицинская запись больше недоступна.</p>;
         return (
-          <Form
-            onSave={async (d) =>
-              await saved(() =>
-                update((p) => ({
-                  ...p,
-                  records: [
-                    ...p.records,
-                    {
-                      id: id(),
-                      name: text(d, "name"),
-                      date: text(d, "date"),
-                      type: text(d, "type") as Pet["records"][number]["type"],
-                      note: text(d, "note"),
-                    },
-                  ],
-                })),
-              )
-            }
+          <>
+            <Form label={existing ? "Сохранить изменения" : "Добавить запись"}
+              onSave={async (d) => {
+                await saved(() => update((p) => saveMedicalRecord(p, {
+                  id: existing?.id ?? id(),
+                  name: text(d, "name"),
+                  date: text(d, "date"),
+                  type: text(d, "type") as Pet["records"][number]["type"],
+                  note: text(d, "note"),
+                })));
+              }}
+            >
+              <Select label="Тип записи" name="type" defaultValue={existing?.type ?? "Визит"}>
+                {["Визит", "Анализы / УЗИ", "Прививка", "Назначение"].map((x) => (
+                  <option key={x}>{x}</option>
+                ))}
+              </Select>
+              <Field label="Название" name="name" defaultValue={existing?.name ?? ""}
+                required maxLength={120} />
+              <Field label="Дата" name="date" type="date"
+                defaultValue={existing?.date ?? today()} max={today()} required />
+              <Note label="Результат или назначение" value={existing?.note ?? ""} />
+              <p className="hint">После сохранения запись можно связать с событием. Файлы добавляются в документы профиля.</p>
+            </Form>
+            {existing && (
+              <Button fullWidth variant="ghost" onClick={() =>
+                setOverlay({ kind: "deleteRecord", entryId: existing.id })
+              }>Удалить медицинскую запись</Button>
+            )}
+          </>
+        );
+      }
+      case "deleteWeight":
+      case "deleteRecord":
+      case "deleteDocument": {
+        const kind = overlay.kind;
+        const entryId = overlay.entryId;
+        const record = pet.records.find((r) => r.id === entryId);
+        const documentEntry = pet.documents.find((d) => d.id === entryId);
+        const exists = kind === "deleteWeight"
+          ? pet.weights.some((w) => w.id === entryId)
+          : kind === "deleteRecord" ? !!record : !!documentEntry;
+        if (!exists) return <p role="alert">Запись больше недоступна.</p>;
+        return (
+          <Form label="Да, удалить" variant="destructive"
+            onSave={async () => {
+              await saved(() => update((p) => kind === "deleteWeight"
+                ? deleteWeight(p, entryId)
+                : kind === "deleteRecord"
+                  ? deleteMedicalRecord(p, entryId)
+                  : deletePetDocument(p, entryId)));
+            }}
           >
-            <Select label="Тип записи" name="type">
-              {["Визит", "Анализы / УЗИ", "Прививка", "Назначение"].map((x) => (
-                <option key={x}>{x}</option>
-              ))}
-            </Select>
-            <Field label="Название" name="name" required maxLength={120} />
-            <Field
-              label="Дата"
-              name="date"
-              type="date"
-              defaultValue={today()}
-              max={today()}
-              required
-            />
-            <Note label="Результат или назначение" />
-            <p className="hint">
-              После сохранения запись можно связать с новым событием. Файлы
-              добавляются в документы профиля.
-            </p>
+            <p>Подтвердите удаление. Это действие нельзя отменить.</p>
+            {kind === "deleteRecord" && pet.events.some((e) => e.linkedRecord === entryId) && (
+              <p className="hint">Связанные события останутся в календаре, но связь с записью будет удалена.</p>
+            )}
+            {kind === "deleteDocument" && (
+              <p className="hint">Файл «{documentEntry?.name}» будет удалён из карточки питомца и общей истории.</p>
+            )}
           </Form>
         );
+      }
       case "summary":
         return (
           <>
