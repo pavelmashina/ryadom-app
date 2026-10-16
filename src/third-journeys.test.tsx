@@ -68,6 +68,7 @@ describe("R3: purchase-to-stock checkout", () => {
     expect(updated.stock).toBe(5);
     expect(updated.stockDate).toBe("2026-10-16");
     expect(updated.shopping[0].done).toBe(true);
+    expect(updated.shopping[0].stockCreditedKg).toBe(3);
     expect(updated.shopping[1].done).toBe(false);
     expect(pet.stock).toBe(2);
     expect(pet.shopping[0].done).toBe(false);
@@ -85,7 +86,8 @@ describe("R3: purchase-to-stock checkout", () => {
     const restored = restoreShoppingItem(pet, "food");
     expect(restored.stock).toBe(3.5);
     expect(restored.shopping[0].done).toBe(false);
-    expect(() => completeShoppingItem(restored, "food", 1.5, "2026-10-16")).not.toThrow();
+    expect(() => completeShoppingItem(restored, "food", 1.5, "2026-10-16")).toThrow(/уже внесён/);
+    expect(completeShoppingItem(restored, "food", 0, "2026-10-16").stock).toBe(3.5);
   });
   it.each([-1, NaN, Infinity, 101, 1.2345])(
     "rejects invalid food amounts %s", (amount) => {
