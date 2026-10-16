@@ -303,7 +303,7 @@ export default function Training({
                   text(data, "date"),
                   text(data, "time"),
                 ));
-                setView(null);
+                setView({ kind: "session", id: view.session.id });
               }}
             >
               <Field label="Новая дата" name="date" type="date"
