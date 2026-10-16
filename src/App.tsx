@@ -34,6 +34,9 @@ import Health from "./Health";
 import Stock from "./Stock";
 import EventForm from "./EventForm";
 import ReminderSettings from "./ReminderSettings";
+import FirstPetSetup from "./FirstPetSetup";
+import { needsFirstPetSetup, type PetBasics } from "./first-pet-setup";
+import { saveWeight, deleteWeight, saveMedicalRecord, deleteMedicalRecord, deletePetDocument } from "./health-actions";
 import { setPersonalReminder } from "./push-api";
 import {
   blankPet,
@@ -76,6 +79,10 @@ type Overlay =
       action: "edit" | "delete";
     }
   | {
+      kind: "editWeight" | "editRecord" | "deleteWeight" | "deleteRecord" | "deleteDocument";
+      entryId: string;
+    }
+  | {
       kind:
         | "pets"
         | "sharing"
@@ -115,6 +122,7 @@ export default function App({
   const saving = useRef(false);
   const epoch = useRef(0);
   const [openTraining, setOpenTraining] = useState<string | undefined>();
+  const [showFirstPetSetup, setShowFirstPetSetup] = useState(() => needsFirstPetSetup(initial));
   const handledPushLink = useRef(false);
   const [eventScope, setEventScope] = useState<EventScope>("single");
   const [busy, setBusy] = useState(false);
@@ -213,18 +221,24 @@ export default function App({
     saving.current = true;
     ++epoch.current;
     setBusy(true);
+    setNotice("Сохраняем в облаке…");
     try {
       const stored = await onPersist(next, state);
       setState(stored);
       setStorageError("");
       setNotice("Сохранено в облаке");
     } catch (e) {
-      setNotice(e instanceof Error ? e.message : "Не удалось сохранить");
+      setNotice("Не удалось сохранить: " + (e instanceof Error ? e.message : "ошибка связи"));
       throw e;
     } finally {
       saving.current = false;
       setBusy(false);
     }
+  }
+  async function finishFirstPetSetup(details?: PetBasics) {
+    await update((p) => petSchema.parse({ ...p, ...details, onboardingCompleted: true }));
+    setShowFirstPetSetup(false);
+    setScreen("day");
   }
   function update(fn: (p: Pet) => Pet) {
     return commit({
@@ -370,6 +384,7 @@ export default function App({
   function choose(p: Pet) {
     safe(async () => {
       await commit({ ...state, selectedPet: p.id });
+      setShowFirstPetSetup(false);
       close();
       setScreen("day");
       setSelected(today());
@@ -398,7 +413,12 @@ export default function App({
                 editpet: "Данные питомца",
                 command: "Новая команда",
                 weight: "Записать вес",
+                editWeight: "Редактировать вес",
+                deleteWeight: "Удалить измерение",
                 record: "Медицинская запись",
+                editRecord: "Редактировать медицинскую запись",
+                deleteRecord: "Удалить медицинскую запись",
+                deleteDocument: "Удалить документ",
                 summary: "Сводка для ветеринара",
                 stock: "Пополнить корм",
                 ration: "Расход и остаток",
@@ -773,85 +793,105 @@ export default function App({
           </Form>
         );
       case "weight":
+      case "editWeight": {
+        const existing = overlay.kind === "editWeight"
+          ? pet.weights.find((w) => w.id === overlay.entryId) : undefined;
+        if (overlay.kind === "editWeight" && !existing)
+          return <p role="alert">Измерение больше недоступно.</p>;
         return (
-          <Form
-            onSave={async (d) =>
-              await saved(() =>
-                update((p) => ({
-                  ...p,
-                  weights: [
-                    ...p.weights,
-                    {
-                      id: id(),
-                      date: text(d, "date"),
-                      value: number(d, "value"),
-                    },
-                  ],
-                })),
-              )
-            }
-          >
-            <Field
-              label="Вес, кг"
-              name="value"
-              type="number"
-              min="0.01"
-              max="300"
-              step="0.01"
-              required
-            />
-            <Field
-              label="Дата измерения"
-              name="date"
-              type="date"
-              defaultValue={today()}
-              max={today()}
-              required
-            />
-          </Form>
+          <>
+            <Form label={existing ? "Сохранить вес" : "Добавить измерение"}
+              onSave={async (d) => {
+                await saved(() => update((p) => saveWeight(p, {
+                  id: existing?.id ?? id(),
+                  date: text(d, "date"),
+                  value: number(d, "value"),
+                })));
+              }}
+            >
+              <Field label="Вес, кг" name="value" type="number" min="0.01"
+                max="300" step="0.01" defaultValue={existing?.value ?? ""} required />
+              <Field label="Дата измерения" name="date" type="date"
+                defaultValue={existing?.date ?? today()} max={today()} required />
+            </Form>
+            {existing && (
+              <Button fullWidth variant="ghost" onClick={() =>
+                setOverlay({ kind: "deleteWeight", entryId: existing.id })
+              }>Удалить измерение</Button>
+            )}
+          </>
         );
+      }
       case "record":
+      case "editRecord": {
+        const existing = overlay.kind === "editRecord"
+          ? pet.records.find((r) => r.id === overlay.entryId) : undefined;
+        if (overlay.kind === "editRecord" && !existing)
+          return <p role="alert">Медицинская запись больше недоступна.</p>;
         return (
-          <Form
-            onSave={async (d) =>
-              await saved(() =>
-                update((p) => ({
-                  ...p,
-                  records: [
-                    ...p.records,
-                    {
-                      id: id(),
-                      name: text(d, "name"),
-                      date: text(d, "date"),
-                      type: text(d, "type") as Pet["records"][number]["type"],
-                      note: text(d, "note"),
-                    },
-                  ],
-                })),
-              )
-            }
+          <>
+            <Form label={existing ? "Сохранить изменения" : "Добавить запись"}
+              onSave={async (d) => {
+                await saved(() => update((p) => saveMedicalRecord(p, {
+                  id: existing?.id ?? id(),
+                  name: text(d, "name"),
+                  date: text(d, "date"),
+                  type: text(d, "type") as Pet["records"][number]["type"],
+                  note: text(d, "note"),
+                })));
+              }}
+            >
+              <Select label="Тип записи" name="type" defaultValue={existing?.type ?? "Визит"}>
+                {["Визит", "Анализы / УЗИ", "Прививка", "Назначение"].map((x) => (
+                  <option key={x}>{x}</option>
+                ))}
+              </Select>
+              <Field label="Название" name="name" defaultValue={existing?.name ?? ""}
+                required maxLength={120} />
+              <Field label="Дата" name="date" type="date"
+                defaultValue={existing?.date ?? today()} max={today()} required />
+              <Note label="Результат или назначение" value={existing?.note ?? ""} />
+              <p className="hint">После сохранения запись можно связать с событием. Файлы добавляются в документы профиля.</p>
+            </Form>
+            {existing && (
+              <Button fullWidth variant="ghost" onClick={() =>
+                setOverlay({ kind: "deleteRecord", entryId: existing.id })
+              }>Удалить медицинскую запись</Button>
+            )}
+          </>
+        );
+      }
+      case "deleteWeight":
+      case "deleteRecord":
+      case "deleteDocument": {
+        const kind = overlay.kind;
+        const entryId = overlay.entryId;
+        const record = pet.records.find((r) => r.id === entryId);
+        const documentEntry = pet.documents.find((d) => d.id === entryId);
+        const exists = kind === "deleteWeight"
+          ? pet.weights.some((w) => w.id === entryId)
+          : kind === "deleteRecord" ? !!record : !!documentEntry;
+        if (!exists) return <p role="alert">Запись больше недоступна.</p>;
+        return (
+          <Form label="Да, удалить" variant="destructive"
+            onSave={async () => {
+              await saved(() => update((p) => kind === "deleteWeight"
+                ? deleteWeight(p, entryId)
+                : kind === "deleteRecord"
+                  ? deleteMedicalRecord(p, entryId)
+                  : deletePetDocument(p, entryId)));
+            }}
           >
-            <Select label="Тип записи" name="type">
-              {["Визит", "Анализы / УЗИ", "Прививка", "Назначение"].map((x) => (
-                <option key={x}>{x}</option>
-              ))}
-            </Select>
-            <Field label="Название" name="name" required maxLength={120} />
-            <Field
-              label="Дата"
-              name="date"
-              type="date"
-              defaultValue={today()}
-              max={today()}
-              required
-            />
-            <Note label="Результат или назначение" />
-            <p className="hint">
-              После сохранения запись можно связать с новым событием. Файлы
-              добавляются в документы профиля.
-            </p>
+            <p>Подтвердите удаление. Это действие нельзя отменить.</p>
+            {kind === "deleteRecord" && pet.events.some((e) => e.linkedRecord === entryId) && (
+              <p className="hint">Связанные события останутся в календаре, но связь с записью будет удалена.</p>
+            )}
+            {kind === "deleteDocument" && (
+              <p className="hint">Файл «{documentEntry?.name}» будет удалён из карточки питомца и общей истории.</p>
+            )}
           </Form>
         );
+      }
       case "summary":
         return (
           <>
@@ -1200,12 +1240,17 @@ export default function App({
             </Button>
           </div>
         )}
-        <div className="save-status" role="status" aria-live="polite">
+        <div className="save-status" role="status" aria-live="polite" aria-atomic="true">
           {notice}
         </div>
         <main>
           {screen === "account" && accountContent}
-          {screen === "day" && (
+          {screen === "day" && (showFirstPetSetup ? (
+            <FirstPetSetup
+              onSave={(details) => finishFirstPetSetup(details)}
+              onSkip={() => finishFirstPetSetup()}
+            />
+          ) : (
             <Calendar
               pet={pet}
               selected={selected}
@@ -1224,7 +1269,7 @@ export default function App({
                 setOverlay({ kind: "detail", event, on })
               }
             />
-          )}{" "}
+          ))}{" "}
           {screen === "training" && (
             <Training
               openSession={openTraining}
@@ -1240,6 +1285,8 @@ export default function App({
               pet={pet}
               onWeight={() => setOverlay({ kind: "weight" })}
               onRecord={() => setOverlay({ kind: "record" })}
+              onEditWeight={(entryId) => setOverlay({ kind: "editWeight", entryId })}
+              onEditRecord={(entryId) => setOverlay({ kind: "editRecord", entryId })}
               onSummary={() => setOverlay({ kind: "summary" })}
               onPlan={(name, linkedRecord) =>
                 setOverlay({
@@ -1347,6 +1394,10 @@ export default function App({
                     >
                       Скачать документ
                     </a>
+                    <Button size="sm" variant="ghost"
+                      onClick={() => setOverlay({ kind: "deleteDocument", entryId: d.id })}>
+                      Удалить документ
+                    </Button>
                   </Card>
                 ))
               ) : (
@@ -1371,7 +1422,7 @@ export default function App({
             </>
           )}
         </main>
-        <nav className="bottom-nav" aria-label="Разделы приложения">
+        {!showFirstPetSetup && <nav className="bottom-nav" aria-label="Разделы приложения">
           {nav.map(([key, label, Icon]) => (
             <Button
               key={key}
@@ -1387,7 +1438,7 @@ export default function App({
               <span>{label}</span>
             </Button>
           ))}
-        </nav>
+        </nav>}
         {overlay && (
           <Modal title={title} onClose={close}>
             {modalBody()}

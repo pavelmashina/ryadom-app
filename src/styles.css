@@ -1050,3 +1050,9 @@ dialog {
   .calendar { min-width: 0; }
   .date.btn { min-height: 44px; }
 }
+
+/* Second user-journey release: readable inline history actions and setup. */
+.first-pet-setup { display: grid; gap: var(--space-4, 16px); max-width: 680px; margin: 0 auto; }
+.health-history-row, .health-record-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.health-history-row { padding: 8px 0; border-bottom: 1px solid var(--border, rgba(0,0,0,.08)); }
+.health-record-actions { justify-content: flex-start; margin-top: 10px; }

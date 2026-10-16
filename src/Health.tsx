@@ -5,12 +5,16 @@ export default function Health({
   pet,
   onWeight,
   onRecord,
+  onEditWeight,
+  onEditRecord,
   onSummary,
   onPlan,
 }: {
   pet: Pet;
   onWeight: () => void;
   onRecord: () => void;
+  onEditWeight: (id: string) => void;
+  onEditRecord: (id: string) => void;
   onSummary: () => void;
   onPlan: (name: string, id?: string) => void;
 }) {
@@ -41,14 +45,10 @@ export default function Health({
             <details>
               <summary>Вся история · {weights.length}</summary>
               {weights.map((w) => (
-                <p key={w.id}>
-                  {fmt(w.date, {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}{" "}
-                  · {w.value} кг
-                </p>
+                <div key={w.id} className="health-history-row">
+                  <span>{fmt(w.date, { day: "numeric", month: "long", year: "numeric" })} · {w.value} кг</span>
+                  <Button size="sm" variant="ghost" onClick={() => onEditWeight(w.id)} aria-label={"Изменить вес от " + fmt(w.date)}>Изменить</Button>
+                </div>
               ))}
             </details>
           </>
@@ -72,9 +72,14 @@ export default function Health({
               </span>
               <h3>{r.name}</h3>
               <p className="note">{r.note || "Без заметки"}</p>
-              <Button onClick={() => onPlan(r.name, r.id)} variant="ghost">
-                Связать с новым событием
-              </Button>
+              <div className="health-record-actions">
+                <Button onClick={() => onEditRecord(r.id)} variant="secondary" size="sm">
+                  Изменить
+                </Button>
+                <Button onClick={() => onPlan(r.name, r.id)} variant="ghost" size="sm">
+                  Связать с новым событием
+                </Button>
+              </div>
               {pet.events.some((e) => e.linkedRecord === r.id) && (
                 <p className="hint">
                   Связано событий:{" "}
