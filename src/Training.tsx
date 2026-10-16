@@ -595,7 +595,7 @@ export function TrainingForm({
             ...rs,
             {
               command_id: cid,
-              performance_score: 3,
+              performance_score: null,
               mode: "repeat",
               comment: "",
             },
@@ -612,7 +612,7 @@ export function TrainingForm({
       setCommands((cs) => [...cs, { id: cid, name }]);
       setResults((rs) => [
         ...rs,
-        { command_id: cid, performance_score: 3, mode: "new", comment: "" },
+        { command_id: cid, performance_score: null, mode: "new", comment: "" },
       ]);
       setNewName("");
       setError("");
@@ -675,6 +675,7 @@ export function TrainingForm({
           defaultValue={session?.comment ?? ""}
         />
         <h3>Выберите команды</h3>
+        <p className="hint">Выберите команды, затем поставьте оценку каждой. Оценки не выставляются автоматически.</p>
         <p aria-live="polite">Выбрано: {results.length}</p>
         <CommandGrid>
           {selectableCommands(commands, session).map((c) => (
