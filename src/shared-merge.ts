@@ -71,11 +71,11 @@ function mergeValue(base: unknown, local: unknown, remote: unknown, path: string
   if (same(local, base)) return remote;
   if (same(remote, base) || same(local, remote)) return local;
   // Two sides created the same key differently, or one deleted an edited key.
-  if (base === undefined || local === undefined || remote === undefined)
-    throw new SharedEditConflict(path);
   if (Array.isArray(local) && Array.isArray(remote) &&
       (Array.isArray(base) || base === undefined))
-    return mergeArray(base as unknown[], local, remote, path);
+    return mergeArray(base as unknown[] | undefined, local, remote, path);
+  if (base === undefined || local === undefined || remote === undefined)
+    throw new SharedEditConflict(path);
   if (record(base) && record(local) && record(remote)) {
     const output: [string, unknown][] = [];
     for (const field of new Set([...Object.keys(base), ...Object.keys(remote), ...Object.keys(local)])) {
