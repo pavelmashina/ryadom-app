@@ -91,6 +91,9 @@ create policy training_deliveries_self_read on public.training_notification_deli
 revoke all on public.training_notification_deliveries,
   public.training_notification_device_deliveries from public,anon,authenticated;
 grant select on public.training_notification_deliveries to authenticated;
+grant select,insert,update,delete on public.training_reminders,
+  public.training_notification_deliveries,
+  public.training_notification_device_deliveries to service_role;
 -- device-level status must remain service-role only.
 
 create function public.enqueue_due_training_push() returns integer
