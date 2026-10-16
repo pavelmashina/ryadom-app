@@ -1,6 +1,7 @@
 import { initialState, stateSchema, type State, type Pet } from "./domain";
 import { rpc, type AuthSession } from "./backend";
 export type CloudSnapshot = { state: State; revision: number; tag?: string };
+export type PersistOutcome = { state: State; combined: boolean };
 function petData(p: Pet) {
   const { shareCode, role, revision, pendingRequests, ...data } = p;
   return data;
