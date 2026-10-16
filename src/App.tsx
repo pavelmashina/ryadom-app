@@ -1240,12 +1240,17 @@ export default function App({
             </Button>
           </div>
         )}
-        <div className="save-status" role="status" aria-live="polite">
+        <div className="save-status" role="status" aria-live="polite" aria-atomic="true">
           {notice}
         </div>
         <main>
           {screen === "account" && accountContent}
-          {screen === "day" && (
+          {screen === "day" && (showFirstPetSetup ? (
+            <FirstPetSetup
+              onSave={(details) => finishFirstPetSetup(details)}
+              onSkip={() => finishFirstPetSetup()}
+            />
+          ) : (
             <Calendar
               pet={pet}
               selected={selected}
@@ -1264,7 +1269,7 @@ export default function App({
                 setOverlay({ kind: "detail", event, on })
               }
             />
-          )}{" "}
+          ))}{" "}
           {screen === "training" && (
             <Training
               openSession={openTraining}
@@ -1280,6 +1285,8 @@ export default function App({
               pet={pet}
               onWeight={() => setOverlay({ kind: "weight" })}
               onRecord={() => setOverlay({ kind: "record" })}
+              onEditWeight={(entryId) => setOverlay({ kind: "editWeight", entryId })}
+              onEditRecord={(entryId) => setOverlay({ kind: "editRecord", entryId })}
               onSummary={() => setOverlay({ kind: "summary" })}
               onPlan={(name, linkedRecord) =>
                 setOverlay({
@@ -1387,6 +1394,10 @@ export default function App({
                     >
                       Скачать документ
                     </a>
+                    <Button size="sm" variant="ghost"
+                      onClick={() => setOverlay({ kind: "deleteDocument", entryId: d.id })}>
+                      Удалить документ
+                    </Button>
                   </Card>
                 ))
               ) : (
@@ -1411,7 +1422,7 @@ export default function App({
             </>
           )}
         </main>
-        <nav className="bottom-nav" aria-label="Разделы приложения">
+        {!showFirstPetSetup && <nav className="bottom-nav" aria-label="Разделы приложения">
           {nav.map(([key, label, Icon]) => (
             <Button
               key={key}
@@ -1427,7 +1438,7 @@ export default function App({
               <span>{label}</span>
             </Button>
           ))}
-        </nav>
+        </nav>}
         {overlay && (
           <Modal title={title} onClose={close}>
             {modalBody()}
