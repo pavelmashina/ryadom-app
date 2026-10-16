@@ -15,6 +15,11 @@ export function sharedChanges(next: State, before?: State) {
         {
           pet: { ...petData(p), trainingVersion: 2 },
           revision: old?.revision ?? null,
+          // Preserve the full snapshot for revision checks, but only reconcile
+          // normalized child tables whose contents actually changed.
+          updateWorkouts: !old || JSON.stringify(old.workouts) !== JSON.stringify(p.workouts),
+          updateCommands: !old || JSON.stringify(old.commands) !== JSON.stringify(p.commands),
+          updateSchedules: !old || JSON.stringify(old.trainingSchedules ?? []) !== JSON.stringify(p.trainingSchedules ?? []),
         },
       ];
     }),
@@ -33,7 +38,10 @@ export async function loadAccount(
   session: AuthSession,
   previous?: CloudSnapshot,
 ): Promise<CloudSnapshot> {
-  void previous;
+  if (previous?.tag && previous.state.pets.length) {
+    const currentTag = await rpc(session, "shared_state_tag", {});
+    if (currentTag === previous.tag) return previous;
+  }
   const result = (await rpc(session, "load_shared_state", {})) as {
     state: { pets: unknown[] };
   };
