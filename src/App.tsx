@@ -130,6 +130,7 @@ export default function App({
   const [openTraining, setOpenTraining] = useState<string | undefined>();
   const [showFirstPetSetup, setShowFirstPetSetup] = useState(() => needsFirstPetSetup(initial));
   const handledPushLink = useRef(false);
+  const handledTrainingLink = useRef(false);
   const handledJoinLink = useRef(false);
   const [joinCode, setJoinCode] = useState<string | null>(() => joinCodeFromUrl(location.search));
   const [eventScope, setEventScope] = useState<EventScope>("single");
@@ -143,6 +144,27 @@ export default function App({
     [month, setMonth] = useState(today().slice(0, 7) + "-01"),
     [restore, setRestore] = useState<State | null>(null);
   const pet = state.pets.find((p) => p.id === state.selectedPet)!;
+  useEffect(() => {
+    if (handledTrainingLink.current) return;
+    const params = new URLSearchParams(location.search);
+    const trainingId = params.get("training");
+    if (!trainingId || !/^[0-9a-f-]{36}$/i.test(trainingId)) return;
+    handledTrainingLink.current = true;
+    const matchingPet = state.pets.find((p) => p.workouts.some((w) => w.id === trainingId));
+    if (matchingPet) {
+      if (matchingPet.id !== state.selectedPet) setState((current) => ({
+        ...current, selectedPet: matchingPet.id,
+      }));
+      setOpenTraining(trainingId);
+      setScreen("training");
+      setOverlay(null);
+    } else {
+      setNotice("Тренировка из уведомления больше недоступна. Откройте календарь занятий.");
+      setScreen("training");
+    }
+    params.delete("training");
+    history.replaceState(null, "", location.pathname + (params.toString() ? "?" + params.toString() : "") + location.hash);
+  }, [state]);
   useEffect(() => {
     if (handledJoinLink.current) return;
     const code = joinCodeFromUrl(location.search);
@@ -1316,6 +1338,7 @@ export default function App({
           ))}{" "}
           {screen === "training" && (
             <Training
+              session={session}
               openSession={openTraining}
               onOpened={() => setOpenTraining(undefined)}
               canEdit={pet.role === "owner" || pet.role === "editor"}
