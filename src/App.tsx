@@ -250,13 +250,7 @@ export default function App({
   }
   async function addEvent(e: PetEvent) {
     await saved(() => update((p) => ({ ...p, events: [...p.events, e] })));
-    if (e.reminderEnabled) {
-      try {
-        await setPersonalReminder(session, pet.id, e.id, Number(e.reminder), true);
-      } catch {
-        setNotice("Событие сохранено, но личное напоминание не настроено. Откройте карточку события.");
-      }
-    }
+    if (e.reminderEnabled) await syncPersonalReminder(e.id, e);
     setSelected(e.date);
     setMonth(e.date.slice(0, 7) + "-01");
     setScreen("day");
@@ -265,7 +259,18 @@ export default function App({
     setEventScope(e.repeat === "once" ? "all" : "single");
     setOverlay({ kind: "modifyEvent", eventId: e.id, on, action });
   }
+  async function syncPersonalReminder(eventId: string, event: PetEvent) {
+    try {
+      await setPersonalReminder(session, pet.id, eventId, Number(event.reminder), !!event.reminderEnabled);
+    } catch (error) {
+      console.warn("[reminder] event saved but personal reminder sync failed", error);
+      setNotice("Событие сохранено, но личное напоминание не обновилось. Откройте карточку события и сохраните напоминание повторно.");
+    }
+  }
   async function saveEventEdit(e: PetEvent, on: string, scope: EventScope, next: PetEvent) {
+    // Editing one occurrence or a future series creates a distinct event ID.
+    // Attach the current user's reminder to that new ID, not the old series.
+    const targetId = e.repeat !== "once" && scope !== "all" ? id() : e.id;
     await saved(() =>
       update((p) => {
         if (e.repeat === "once" || scope === "all")
@@ -288,7 +293,7 @@ export default function App({
               ...events.map((x) => x.id === e.id ? cancelled : x),
               {
                 ...next,
-                id: id(),
+                id: targetId,
                 repeat: "once" as const,
                 end: "",
                 repeatEndType: undefined,
@@ -310,11 +315,12 @@ export default function App({
           events: [
             ...events.filter((x) => x.id !== e.id),
             ...(on === e.date ? [] : [past]),
-            { ...next, id: id(), exceptions: undefined },
+            { ...next, id: targetId, exceptions: undefined },
           ],
         };
       }),
     );
+    await syncPersonalReminder(targetId, next);
     setSelected(next.date);
     setMonth(next.date.slice(0, 7) + "-01");
   }
@@ -412,6 +418,7 @@ export default function App({
         return (
           <EventForm
             selected={selected}
+            session={session}
             pet={pet}
             onTrainingSave={(next) => saved(() => update(() => next))}
             category={overlay.category}
@@ -452,6 +459,7 @@ export default function App({
                 key={scope}
                 selected={overlay.on}
                 existing={editSource}
+                session={session}
                 onSave={(next) => saveEventEdit(current, overlay.on, scope, next)}
               />
             ) : (
@@ -1205,6 +1213,12 @@ export default function App({
               setSelected={setSelected}
               setMonth={setMonth}
               onAdd={() => setOverlay({ kind: "event" })}
+              onTraining={(id) => {
+                setOpenTraining(id);
+                setScreen("training");
+                setNotice("");
+                window.scrollTo({ top: 0 });
+              }}
               onToggle={toggle}
               onDetail={(event, on) =>
                 setOverlay({ kind: "detail", event, on })
