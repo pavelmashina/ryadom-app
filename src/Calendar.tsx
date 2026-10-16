@@ -32,7 +32,7 @@ export default function Calendar({
   setSelected: (s: string) => void;
   setMonth: (s: string) => void;
   onAdd: () => void;
-  onTraining?: (id: string) => void;
+  onTraining: (id: string) => void;
   onToggle: (e: PetEvent, s: string) => void;
   onDetail: (e: PetEvent, s: string) => void;
 }) {
@@ -197,7 +197,7 @@ export default function Calendar({
             <Button
               className="task-body"
               variant="ghost"
-              onClick={() => onTraining?.(w.id)}
+              onClick={() => onTraining(w.id)}
             >
               <strong>{w.name || "Тренировка"}</strong>
               <small>
