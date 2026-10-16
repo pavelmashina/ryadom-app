@@ -6,7 +6,7 @@ export function completeShoppingItem(pet: Pet, itemId: string, addedKg: number, 
   if (!item) throw new Error("Покупка не найдена.");
   if (item.done) throw new Error("Покупка уже отмечена. Повторное пополнение запрещено.");
   if (!Number.isFinite(addedKg) || addedKg < 0 || addedKg > 100 ||
-      Math.round(addedKg * 1000) !== addedKg * 1000) {
+      Math.abs(Math.round(addedKg * 1000) - addedKg * 1000) > 0.0000001) {
     throw new Error("Укажите количество корма от 0 до 100 кг с точностью до грамма.");
   }
   const stock = Math.round((pet.stock + addedKg) * 1000) / 1000;
