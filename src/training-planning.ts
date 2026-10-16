@@ -18,5 +18,8 @@ export const scheduleSchema = z.object({
 });
 export type TrainingSchedule = z.infer<typeof scheduleSchema>;
 export function trainingTimestamp(day: string, time: string) {
-  return new Date(day + "T" + (time || "12:00") + ":00").toISOString();
+  // The database stores recurring workout times in Europe/Moscow.
+  // Moscow observes UTC+03 throughout the year; parse a fixed offset rather
+  // than using the device timezone (which shifts planned reminders).
+  return new Date(day + "T" + (time || "12:00") + ":00+03:00").toISOString();
 }

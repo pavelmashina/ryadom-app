@@ -241,7 +241,7 @@ export default function App({
         running = false;
       }
     }
-    const timer = setInterval(refresh, 3000);
+    const timer = setInterval(refresh, 20000);
     window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", refresh);
     return () => {

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Form, Field, Textarea } from "./components";
 import RecurrenceFields, { draftForDate, type RecurrenceDraft } from "./RecurrenceFields";
 import { id, today, type Pet } from "./domain";
-import { trainingTimestamp, type TrainingSchedule } from "./training-planning";
-import type { TrainingSession } from "./training-domain";
+import { trainingTimestamp, scheduleSchema, type TrainingSchedule } from "./training-planning";
+import { trainingSchema, type TrainingSession } from "./training-domain";
 
 export default function TrainingPlan({
   pet,
@@ -41,7 +41,7 @@ export default function TrainingPlan({
         const get = (k: string) => String(d.get(k) ?? "").trim();
         const day = get("date");
         const time = get("time");
-        const name = get("name");
+        const name = get("name") || "Тренировка";
         const comment = get("comment");
         if (recurrence.frequency === "weekly" && recurrence.weekdays.length === 0)
           throw Error("Выберите хотя бы один день недели");
@@ -68,11 +68,14 @@ export default function TrainingPlan({
             comment,
             command_ids: schedule?.command_ids ?? [],
           };
+          const valid = scheduleSchema.safeParse(next);
+          if (!valid.success)
+            throw new Error("Проверьте график: " + valid.error.issues[0]?.message);
           await onSave({
             ...pet,
             trainingSchedules: [
               ...(pet.trainingSchedules ?? []).filter((x) => x.id !== next.id),
-              next,
+              valid.data,
             ],
           });
         } else {
@@ -91,9 +94,12 @@ export default function TrainingPlan({
             updated_at: new Date().toISOString(),
             results: session?.results ?? [],
           };
+          const valid = trainingSchema.safeParse(next);
+          if (!valid.success)
+            throw new Error("Проверьте тренировку: " + valid.error.issues[0]?.message);
           await onSave({
             ...pet,
-            workouts: [...pet.workouts.filter((s) => s.id !== next.id), next],
+            workouts: [...pet.workouts.filter((s) => s.id !== next.id), valid.data],
           });
         }
       }}
