@@ -147,3 +147,63 @@ export async function revokeDevicePushOnLogout(session: AuthSession) {
     await sub.unsubscribe();
   }
 }
+
+export type TrainingReminderTarget =
+  | { sessionId: string; scheduleId?: never }
+  | { scheduleId: string; sessionId?: never };
+export type TrainingReminder = {
+  id: string;
+  user_id: string;
+  pet_id: string;
+  session_id: string | null;
+  schedule_id: string | null;
+  offset_value: number;
+  offset_unit: "minutes" | "hours" | "days" | "weeks";
+  enabled: boolean;
+};
+function trainingReminderPath(session: AuthSession, petId: string, target: TrainingReminderTarget) {
+  if (!!target.sessionId === !!target.scheduleId)
+    throw new Error("Выберите одно занятие или один график для напоминания.");
+  const field = target.sessionId ? "session_id" : "schedule_id";
+  const targetId = target.sessionId ?? target.scheduleId!;
+  if (!/^[0-9a-f-]{36}$/i.test(targetId))
+    throw new Error("Некорректный ID занятия.");
+  return "training_reminders?select=id,user_id,pet_id,session_id,schedule_id,offset_value,offset_unit,enabled" +
+    "&user_id=eq." + encodeURIComponent(session.user.id) +
+    "&pet_id=eq." + encodeURIComponent(petId) +
+    "&" + field + "=eq." + encodeURIComponent(targetId);
+}
+export async function getTrainingReminder(
+  session: AuthSession, petId: string, target: TrainingReminderTarget,
+): Promise<TrainingReminder | null> {
+  const rows = await rest(session, trainingReminderPath(session, petId, target)) as TrainingReminder[];
+  return rows[0] ?? null;
+}
+export async function setTrainingReminder(
+  session: AuthSession, petId: string, target: TrainingReminderTarget,
+  minutes: number, enabled: boolean,
+): Promise<void> {
+  if (!Number.isSafeInteger(minutes) || minutes < 0 || minutes > 525600)
+    throw new Error("Некорректное время напоминания.");
+  const existing = await getTrainingReminder(session, petId, target);
+  if (existing) {
+    await rest(session, "training_reminders?id=eq." + encodeURIComponent(existing.id), {
+      method: "PATCH",
+      body: JSON.stringify({
+        offset_value: minutes, offset_unit: "minutes", enabled,
+        updated_at: new Date().toISOString(),
+      }),
+    });
+  } else if (enabled) {
+    await rest(session, "training_reminders", {
+      method: "POST",
+      body: JSON.stringify({
+        user_id: session.user.id,
+        pet_id: petId,
+        session_id: target.sessionId ?? null,
+        schedule_id: target.scheduleId ?? null,
+        offset_value: minutes, offset_unit: "minutes", enabled: true,
+      }),
+    });
+  }
+}

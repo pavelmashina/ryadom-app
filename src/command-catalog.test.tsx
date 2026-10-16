@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import Training, { TrainingForm } from "./Training";
+import type { AuthSession } from "./backend";
 import { blankPet } from "./domain";
 import { setCommandArchived, selectableCommands } from "./command-catalog";
 function fixture() {
@@ -61,6 +62,7 @@ it("read-only catalog disables editing while retaining browsing and four initial
   const html = renderToStaticMarkup(
     <Training
       pet={fixture()}
+      session={{ user: { id: "test" } } as AuthSession}
       canEdit={false}
       onSave={async () => {}}
       onPlan={() => {}}
