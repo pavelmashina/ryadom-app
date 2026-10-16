@@ -64,7 +64,7 @@ export default function TrainingPlan({
             recurrence_count: recurrence.endType === "count" ? recurrence.count : null,
             recurrence_monthday: recurrence.frequency === "monthly"
               ? recurrence.monthday : null,
-            is_active: true,
+            is_active: schedule?.is_active ?? true,
             comment,
             command_ids: schedule?.command_ids ?? [],
           };

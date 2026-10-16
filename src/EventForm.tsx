@@ -2,7 +2,10 @@ import { Field, Select, Note, Form, text, Checkbox } from "./components";
 import TrainingPlan from "./TrainingPlan";
 import RecurrenceFields, { draftForDate, type RecurrenceDraft } from "./RecurrenceFields";
 import type { Pet } from "./domain";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import type { AuthSession } from "./backend";
+import { getPersonalReminders } from "./push-api";
+import { reminderChoice, savedReminderChoice, reminderOffsetMinutes, type ReminderUnit } from "./reminder-choice";
 import { eventSchema, id, type PetEvent } from "./domain";
 import { categories } from "./Calendar";
 
@@ -15,6 +18,7 @@ export default function EventForm({
   pet,
   onTrainingSave,
   existing,
+  session,
 }: {
   selected: string;
   pet?: Pet;
@@ -23,6 +27,7 @@ export default function EventForm({
   name?: string;
   linkedRecord?: string;
   existing?: PetEvent;
+  session?: AuthSession;
   onSave: (e: PetEvent) => void | Promise<void>;
 }) {
   const initialDate = existing?.date ?? selected;
@@ -41,23 +46,33 @@ export default function EventForm({
     endDate: existing?.end ?? "",
     count: existing?.repeatCount ?? 10,
   }));
-  const initialReminder = !existing?.reminder || (existing.reminder === "0" && !existing.reminderEnabled)
-    ? "none"
-    : existing.reminder === "0" ? "now"
-    : ["10", "30", "60", "1440"].includes(existing.reminder) ? existing.reminder
-    : "custom";
-  const [reminderMode, setReminderMode] = useState(initialReminder);
-  const oldOffset = Number(existing?.reminder ?? "0");
-  const oldUnit = oldOffset >= 10080 && oldOffset % 10080 === 0 ? "weeks"
-    : oldOffset >= 1440 && oldOffset % 1440 === 0 ? "days"
-    : oldOffset >= 60 && oldOffset % 60 === 0 ? "hours" : "minutes";
-  const minuteMultipliers: Record<string, number> = {
-    minutes: 1, hours: 60, days: 1440, weeks: 10080,
-  };
-  const [customUnit, setCustomUnit] = useState(initialReminder === "custom" ? oldUnit : "days");
-  const [customAmount, setCustomAmount] = useState(
-    initialReminder === "custom" ? oldOffset / minuteMultipliers[oldUnit] : 3,
-  );
+  const initialChoice = reminderChoice(Number(existing?.reminder || "0"), !!existing?.reminderEnabled);
+  const [reminderMode, setReminderMode] = useState(initialChoice.mode);
+  const [customUnit, setCustomUnit] = useState<ReminderUnit>(initialChoice.unit);
+  const [customAmount, setCustomAmount] = useState(initialChoice.amount);
+  const [reminderReady, setReminderReady] = useState(!existing || !session);
+  const [reminderError, setReminderError] = useState("");
+  useEffect(() => {
+    if (!existing || !session) return;
+    let alive = true;
+    setReminderReady(false);
+    setReminderError("");
+    void getPersonalReminders(session, existing.id)
+      .then((rows) => {
+        if (!alive) return;
+        const choice = savedReminderChoice(rows);
+        setReminderMode(choice.mode);
+        setCustomAmount(choice.amount);
+        setCustomUnit(choice.unit);
+        setReminderReady(true);
+      })
+      .catch((error) => {
+        if (!alive) return;
+        console.warn("[reminder] failed to load personal reminder for event edit", error);
+        setReminderError("Не удалось загрузить личное напоминание. Проверьте соединение и откройте событие снова.");
+      });
+    return () => { alive = false; };
+  }, [existing?.id, session?.user.id]);
   if (chosen === "training" && pet && onTrainingSave && !existing)
     return (
       <>
@@ -81,16 +96,14 @@ export default function EventForm({
     <Form
       label={existing ? "Сохранить изменения" : "Добавить в календарь"}
       onSave={async (d) => {
+        if (!reminderReady) throw new Error(reminderError || "Загружаем личное напоминание. Повторите сохранение.");
         if (recurrence.frequency === "weekly" && recurrence.weekdays.length === 0)
           throw new Error("Выберите хотя бы один день недели");
         if (recurrence.endType === "date" &&
             (!recurrence.endDate || recurrence.endDate < startDate))
           throw new Error("Дата окончания должна быть не раньше начала");
 
-        const minutes = reminderMode === "none" || reminderMode === "now" ? 0
-          : reminderMode === "custom"
-            ? customAmount * minuteMultipliers[customUnit]
-            : Number(reminderMode);
+        const minutes = reminderOffsetMinutes(reminderMode, customAmount, customUnit);
         const parsed = eventSchema.safeParse({
           ...existing,
           id: existing?.id ?? id(),
@@ -197,7 +210,7 @@ export default function EventForm({
             value={customAmount}
             onChange={(e) => setCustomAmount(Number(e.target.value) || 1)}
           />
-          <Select label="Единицы" value={customUnit} onChange={(e) => setCustomUnit(e.target.value)}>
+          <Select label="Единицы" value={customUnit} onChange={(e) => setCustomUnit(e.target.value as ReminderUnit)}>
             <option value="minutes">Минут</option>
             <option value="hours">Часов</option>
             <option value="days">Дней</option>
@@ -205,8 +218,11 @@ export default function EventForm({
           </Select>
         </div>
       )}
+      {existing && !reminderReady && (
+        <p className="hint" role="status">{reminderError || "Загружаем ваше личное напоминание…"}</p>
+      )}
       <p className="hint">
-        Время напоминания сохраняется. Отправка push-уведомлений будет подключена отдельно.
+        Напоминание сохраняется лично для вашего аккаунта. Для доставки push включите уведомления в разделе «Аккаунт».
       </p>
       <Note label="Комментарий" value={existing?.note ?? ""} />
     </Form>
