@@ -153,6 +153,7 @@ export const petSchema = z.object({
       name: nameSchema,
       quantity: z.string(),
       done: z.boolean(),
+      stockCreditedKg: z.number().min(0).max(100).optional(),
     }),
   ),
   documents: z.array(docSchema),

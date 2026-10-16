@@ -8,21 +8,32 @@ import {
 } from "./sharing-api";
 import type { AuthSession } from "./backend";
 import type { Pet } from "./domain";
+import { inviteLink, invitationMailto } from "./share-invitation";
 
 export function JoinPet({
   session,
   onChanged,
+  initialCode,
 }: {
   session: AuthSession;
   onChanged: () => Promise<void>;
+  initialCode?: string | null;
 }) {
-  const [code, setCode] = useState(""),
+  const [code, setCode] = useState(initialCode ?? ""),
     [found, setFound] = useState<AccessResult | null>(null),
     [requests, setRequests] = useState<OutgoingRequest[]>([]),
     [error, setError] = useState("");
   async function refresh() {
     setRequests(await petAccess(session, "outgoing"));
   }
+  useEffect(() => {
+    if (!initialCode) return;
+    let alive = true;
+    void petAccess<AccessResult>(session, "lookup", { code: initialCode })
+      .then((result) => { if (alive) { setCode(initialCode); setFound(result); } })
+      .catch((err) => { if (alive) setError(err instanceof Error ? err.message : "Приглашение недоступно."); });
+    return () => { alive = false; };
+  }, [initialCode, session.user.id]);
   useEffect(() => {
     let stopped = false;
     const read = () =>
@@ -58,6 +69,7 @@ export function JoinPet({
           label="ID питомца"
           name="code"
           placeholder="RYD-…"
+          defaultValue={initialCode ?? ""}
           required
           maxLength={30}
           autoCapitalize="characters"
@@ -144,6 +156,8 @@ export function Sharing({
     }),
     [error, setError] = useState(""),
     [message, setMessage] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteUrl, setInviteUrl] = useState("");
   const [confirm, setConfirm] = useState<{
       action: string;
       subject?: string;
@@ -227,6 +241,40 @@ export function Sharing({
       )}
       {pet.role === "owner" ? (
         <>
+          <Card>
+            <h3>Пригласить по email</h3>
+            <p className="hint">Сформируйте письмо со ссылкой. Получатель войдёт в аккаунт и отправит запрос; вы подтвердите доступ. Письмо отправляется через вашу почтовую программу, не автоматически.</p>
+            <Form label="Подготовить приглашение"
+              onSave={async (data) => {
+                const email = text(data, "email");
+                const url = inviteLink(location.origin, import.meta.env.BASE_URL, pet.shareCode || "");
+                invitationMailto(email, pet.name, url);
+                setInviteEmail(email);
+                setInviteUrl(url);
+                setMessage("Приглашение готово. Откройте письмо или скопируйте ссылку.");
+              }}
+            >
+              <Field label="Email получателя" name="email" type="email" required
+                maxLength={254} placeholder="email@example.com" autoComplete="email"
+                onChange={() => { setInviteEmail(""); setInviteUrl(""); }} />
+            </Form>
+            {inviteUrl && (
+              <div className="invitation-actions">
+                <Button variant="primary" fullWidth
+                  onClick={() => {
+                    window.location.href = invitationMailto(inviteEmail, pet.name, inviteUrl);
+                  }}>Открыть письмо</Button>
+                <Button fullWidth onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(inviteUrl);
+                    setMessage("Ссылка скопирована. Отправьте её человеку, которому хотите открыть доступ.");
+                  } catch {
+                    setError("Не удалось скопировать ссылку. Попробуйте открыть письмо.");
+                  }
+                }}>Скопировать ссылку</Button>
+              </div>
+            )}
+          </Card>
           <SectionHeader
             title={`Запросы на доступ · ${details.requests.length}`}
           />
