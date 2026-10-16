@@ -54,6 +54,8 @@ import {
 } from "./domain";
 import { parseBackup, download } from "./storage";
 import { recurrenceText, previousDay } from "./recurrence";
+import { joinCodeFromUrl } from "./share-invitation";
+import { completeShoppingItem, restoreShoppingItem } from "./shopping-checkout";
 type Screen = "day" | "health" | "training" | "stock" | "profile" | "account";
 type EventScope = "single" | "future" | "all";
 type Overlay =
@@ -77,6 +79,10 @@ type Overlay =
       eventId: string;
       on: string;
       action: "edit" | "delete";
+    }
+  | {
+      kind: "finishShopping";
+      itemId: string;
     }
   | {
       kind: "editWeight" | "editRecord" | "deleteWeight" | "deleteRecord" | "deleteDocument";
@@ -124,6 +130,8 @@ export default function App({
   const [openTraining, setOpenTraining] = useState<string | undefined>();
   const [showFirstPetSetup, setShowFirstPetSetup] = useState(() => needsFirstPetSetup(initial));
   const handledPushLink = useRef(false);
+  const handledJoinLink = useRef(false);
+  const [joinCode, setJoinCode] = useState<string | null>(() => joinCodeFromUrl(location.search));
   const [eventScope, setEventScope] = useState<EventScope>("single");
   const [busy, setBusy] = useState(false);
   const [state, setState] = useState(loaded.state),
@@ -135,6 +143,17 @@ export default function App({
     [month, setMonth] = useState(today().slice(0, 7) + "-01"),
     [restore, setRestore] = useState<State | null>(null);
   const pet = state.pets.find((p) => p.id === state.selectedPet)!;
+  useEffect(() => {
+    if (handledJoinLink.current) return;
+    const code = joinCodeFromUrl(location.search);
+    if (!code) return;
+    handledJoinLink.current = true;
+    setJoinCode(code);
+    setOverlay({ kind: "join" });
+    const params = new URLSearchParams(location.search);
+    params.delete("join");
+    history.replaceState(null, "", location.pathname + (params.size ? "?" + params.toString() : "") + location.hash);
+  }, []);
   useEffect(() => {
     if (handledPushLink.current) return;
     const params = new URLSearchParams(location.search);
@@ -423,6 +442,7 @@ export default function App({
                 stock: "Пополнить корм",
                 ration: "Расход и остаток",
                 shopping: "Новая покупка",
+                finishShopping: "Покупка выполнена",
                 document: "Добавить документ",
                 backup: "Резервные копии",
               } as Record<string, string>
@@ -433,7 +453,7 @@ export default function App({
       case "sharing":
         return <Sharing session={session} pet={pet} onChanged={refreshNow} />;
       case "join":
-        return <JoinPet session={session} onChanged={refreshNow} />;
+        return <JoinPet session={session} onChanged={refreshNow} initialCode={joinCode} />;
       case "event":
         return (
           <EventForm
@@ -1015,6 +1035,25 @@ export default function App({
             </p>
           </Form>
         );
+      case "finishShopping": {
+        const item = pet.shopping.find((x) => x.id === overlay.itemId);
+        if (!item || item.done) return <p role="alert">Покупка уже выполнена или удалена.</p>;
+        return (
+          <Form label="Подтвердить покупку"
+            onSave={async (data) => {
+              const raw = text(data, "addedKg");
+              const amount = raw ? Number(raw) : 0;
+              await saved(() => update((p) => completeShoppingItem(p, item.id, amount, today())));
+            }}
+          >
+            <p><strong>{item.name}</strong>{item.quantity ? " · " + item.quantity : ""}</p>
+            <Field label="Сколько корма добавить в запас, кг · необязательно"
+              name="addedKg" type="number" min={0} max={100} step={0.001}
+              placeholder="Например, 2.5" />
+            <p className="hint">Если купили не корм, оставьте поле пустым: покупка отметится выполненной, а запас не изменится. Повторное нажатие не добавит корм дважды.</p>
+          </Form>
+        );
+      }
       case "shopping":
         return (
           <Form
@@ -1304,16 +1343,12 @@ export default function App({
               onEdit={() => setOverlay({ kind: "ration" })}
               onAdd={() => setOverlay({ kind: "stock" })}
               onShop={() => setOverlay({ kind: "shopping" })}
-              onToggle={(item) =>
-                safe(() =>
-                  update((p) => ({
-                    ...p,
-                    shopping: p.shopping.map((s) =>
-                      s.id === item ? { ...s, done: !s.done } : s,
-                    ),
-                  })),
-                )
-              }
+              onToggle={(itemId) => {
+                const item = pet.shopping.find((s) => s.id === itemId);
+                if (!item) return;
+                if (!item.done) setOverlay({ kind: "finishShopping", itemId });
+                else safe(() => update((p) => restoreShoppingItem(p, itemId)));
+              }}
             />
           )}{" "}
           {screen === "profile" && (
