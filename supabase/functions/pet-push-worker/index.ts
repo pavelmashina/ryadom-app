@@ -1,9 +1,11 @@
 import * as webpush from "jsr:@negrel/webpush@0.5.0";
 
 type Job = {
+  kind: "event" | "training";
   id: string;
   user_id: string;
-  event_id: string;
+  event_id?: string;
+  session_id?: string;
   reminder_id: string;
   occurrence_at: string;
   title: string;
@@ -66,7 +68,8 @@ async function sender() {
   });
 }
 async function updateDelivery(job: Job, status: string, attempts = 1, error = "") {
-  await api("/notification_deliveries?id=eq." + q(job.id), {
+  const table = job.kind === "training" ? "training_notification_deliveries" : "notification_deliveries";
+  await api("/" + table + "?id=eq." + q(job.id), {
     method: "PATCH",
     body: JSON.stringify({
       status,
@@ -83,8 +86,10 @@ async function deliver(job: Job, server: webpush.ApplicationServer) {
     await updateDelivery(job, "failed", 1, "No subscribed devices");
     return false;
   }
+  const deviceTable = job.kind === "training"
+    ? "training_notification_device_deliveries" : "notification_device_deliveries";
   const completed = await api(
-    "/notification_device_deliveries?select=subscription_id&delivery_id=eq." +
+    "/" + deviceTable + "?select=subscription_id&delivery_id=eq." +
     q(job.id) + "&sent_at=not.is.null",
   ) as { subscription_id: string }[];
   const sent = new Set(completed.map((x) => x.subscription_id));
@@ -92,22 +97,25 @@ async function deliver(job: Job, server: webpush.ApplicationServer) {
   for (const sub of subs) {
     if (sent.has(sub.id)) continue;
     const message = JSON.stringify({
-      title: job.title,
-      body: job.comment?.slice(0, 240) || "Запланированное событие",
-      eventId: job.event_id,
+      title: job.kind === "training" ? "Тренировка · " + job.title : job.title,
+      body: job.comment?.slice(0, 240) ||
+        (job.kind === "training" ? "Запланирована тренировка" : "Запланированное событие"),
+      ...(job.kind === "training" ? { trainingId: job.session_id } : { eventId: job.event_id }),
       at: job.occurrence_at,
       icon: "/ryadom-app/icon-192.png",
-      url: "/ryadom-app/?event=" + encodeURIComponent(job.event_id) +
-        "&date=" + encodeURIComponent(new Date(job.occurrence_at).toLocaleDateString("sv-SE", {
-          timeZone: job.timezone,
-        })),
+      url: job.kind === "training"
+        ? "/ryadom-app/?training=" + encodeURIComponent(job.session_id || "")
+        : "/ryadom-app/?event=" + encodeURIComponent(job.event_id || "") +
+          "&date=" + encodeURIComponent(new Date(job.occurrence_at).toLocaleDateString("sv-SE", {
+            timeZone: job.timezone,
+          })),
     });
     try {
       await server.subscribe({
         endpoint: sub.endpoint,
         keys: { p256dh: sub.p256dh, auth: sub.auth },
       }).pushTextMessage(message, { ttl: 3600 });
-      await api("/notification_device_deliveries?on_conflict=delivery_id,subscription_id", {
+      await api("/" + deviceTable + "?on_conflict=delivery_id,subscription_id", {
         method: "POST",
         headers: { Prefer: "resolution=merge-duplicates" },
         body: JSON.stringify({
@@ -126,7 +134,7 @@ async function deliver(job: Job, server: webpush.ApplicationServer) {
         continue;
       }
       failed = true;
-      await api("/notification_device_deliveries?on_conflict=delivery_id,subscription_id", {
+      await api("/" + deviceTable + "?on_conflict=delivery_id,subscription_id", {
         method: "POST",
         headers: { Prefer: "resolution=merge-duplicates" },
         body: JSON.stringify({
@@ -159,8 +167,14 @@ Deno.serve(async (request: Request) => {
       return Response.json({ vapid: "ready", authenticated: true });
     }
     const queued = await rpc("enqueue_due_push");
-    const jobs = await rpc("claim_due_push", { max_jobs: 25 }) as Job[];
-    if (!jobs.length) return Response.json({ queued, processed: 0 });
+    const trainingQueued = await rpc("enqueue_due_training_push");
+    const events = await rpc("claim_due_push", { max_jobs: 25 }) as Omit<Job, "kind">[];
+    const trainings = await rpc("claim_due_training_push", { max_jobs: 25 }) as Omit<Job, "kind">[];
+    const jobs: Job[] = [
+      ...events.map((job) => ({ ...job, kind: "event" as const })),
+      ...trainings.map((job) => ({ ...job, kind: "training" as const })),
+    ];
+    if (!jobs.length) return Response.json({ queued, trainingQueued, processed: 0 });
     const server = await sender();
     let sent = 0;
     for (const job of jobs) {
@@ -170,7 +184,7 @@ Deno.serve(async (request: Request) => {
         await updateDelivery(job, "failed", 2, "Push processing failure");
       }
     }
-    return Response.json({ queued, processed: jobs.length, sent });
+    return Response.json({ queued, trainingQueued, processed: jobs.length, sent });
   } catch {
     return Response.json({ error: "Push worker unavailable" }, { status: 503 });
   }
