@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { blankPet, initialState, stateSchema, type Pet, type State } from "./domain";
 import { sharedChanges } from "./cloud-data";
-import { mergeSharedState, SharedEditConflict } from "./shared-merge";
+import { mergeSharedState, sameData, SharedEditConflict } from "./shared-merge";
 
 function states(): [State, State, State] {
   const base = initialState();
@@ -26,6 +26,23 @@ const schedule = (id: string) => ({
   recurrence_end_type: "never" as const, recurrence_count: null,
   recurrence_monthday: null, is_active: true, comment: "",
   command_ids: [],
+});
+
+describe("Structural equality for cloud snapshots", () => {
+  it("does not resubmit records when Postgres reorders object keys", () => {
+    const [base, local] = states();
+    const wid = crypto.randomUUID();
+    const record = workout(wid, "Без изменений");
+    base.pets[0].workouts = [record];
+    const reversed = Object.fromEntries(Object.entries(record).reverse()) as typeof record;
+    local.pets[0].workouts = [reversed];
+    expect(sameData(record, reversed)).toBe(true);
+    expect(sharedChanges(local, base).changes).toHaveLength(0);
+  });
+  it("detects real nested differences even with different object key order", () => {
+    expect(sameData({ a: { x: 1 }, b: 2 }, { b: 2, a: { x: 2 } })).toBe(false);
+    expect(sameData([1, 2], [2, 1])).toBe(false);
+  });
 });
 
 describe("R4: safe three-way reconciliation for shared pets", () => {
