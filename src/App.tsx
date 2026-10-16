@@ -1049,8 +1049,13 @@ export default function App({
             <p><strong>{item.name}</strong>{item.quantity ? " · " + item.quantity : ""}</p>
             <Field label="Сколько корма добавить в запас, кг · необязательно"
               name="addedKg" type="number" min={0} max={100} step={0.001}
+              disabled={(item.stockCreditedKg ?? 0) > 0}
               placeholder="Например, 2.5" />
-            <p className="hint">Если купили не корм, оставьте поле пустым: покупка отметится выполненной, а запас не изменится. Повторное нажатие не добавит корм дважды.</p>
+            {(item.stockCreditedKg ?? 0) > 0 ? (
+              <p className="hint">По этой покупке ранее уже добавлено {item.stockCreditedKg} кг корма. Повторное пополнение отключено.</p>
+            ) : (
+              <p className="hint">Если купили не корм, оставьте поле пустым: покупка отметится выполненной, а запас не изменится.</p>
+            )}
           </Form>
         );
       }
