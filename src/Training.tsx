@@ -14,6 +14,8 @@ import {
   text,
 } from "./components";
 import TrainingPlan from "./TrainingPlan";
+import TrainingReminderSettings from "./TrainingReminderSettings";
+import type { AuthSession } from "./backend";
 import type { TrainingSchedule } from "./training-planning";
 import { trainingTimestamp } from "./training-planning";
 import { useEffect, useState } from "react";
@@ -34,6 +36,7 @@ type View =
   | { kind: "actions" }
   | { kind: "plan"; session?: TrainingSession; schedule?: TrainingSchedule }
   | { kind: "reschedule"; session: TrainingSession }
+  | { kind: "reminder"; training?: TrainingSession; schedule?: TrainingSchedule }
   | { kind: "rename"; id: string }
   | { kind: "comments"; id: string }
   | { kind: "archive"; id: string }
@@ -55,12 +58,14 @@ type View =
   | null;
 export default function Training({
   pet,
+  session,
   onSave,
   openSession,
   onOpened,
   canEdit = false,
 }: {
   pet: Pet;
+  session: AuthSession;
   canEdit?: boolean;
   onSave: (pet: Pet) => Promise<void>;
   onPlan?: (name: string) => void;
@@ -182,6 +187,12 @@ export default function Training({
               </Button>
               <Button
                 disabled={!canEdit}
+                onClick={() => setView({ kind: "reminder", schedule: sc })}
+              >
+                Напоминание о тренировках
+              </Button>
+              <Button
+                disabled={!canEdit}
                 onClick={async () => {
                   await onSave({
                     ...pet,
@@ -252,6 +263,8 @@ export default function Training({
               ? "Тренировка"
               : view.kind === "plan"
                 ? "План тренировки"
+              : view.kind === "reminder"
+                ? "Напоминание о тренировке"
               : view.kind === "reschedule"
                 ? "Перенести тренировку"
                 : view.kind === "rename"
@@ -268,6 +281,16 @@ export default function Training({
           }
           onClose={() => setView(null)}
         >
+          {view.kind === "reminder" && canEdit &&
+            (view.schedule || view.training) && (
+              <TrainingReminderSettings
+                session={session}
+                petId={pet.id}
+                target={view.schedule
+                  ? { scheduleId: view.schedule.id }
+                  : { sessionId: view.training!.id }}
+              />
+          )}
           {view.kind === "actions" && canEdit && (
             <div className="training-action-choices">
               <Button
@@ -467,6 +490,15 @@ export default function Training({
               </Button>
               {selected.status === "planned" && canEdit && (
                 <>
+                  <Button fullWidth variant="secondary"
+                    onClick={() => {
+                      const schedule = pet.trainingSchedules?.find((sc) => sc.id === selected.schedule_id);
+                      setView(schedule
+                        ? { kind: "reminder", schedule }
+                        : { kind: "reminder", training: selected });
+                    }}>
+                    Настроить моё напоминание
+                  </Button>
                   {!selected.schedule_id ? (
                     <Button fullWidth variant="secondary"
                       onClick={() => setView({ kind: "reschedule", session: selected })}>
