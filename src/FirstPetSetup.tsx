@@ -1,6 +1,7 @@
 import { Button, Card, Field, Form, PageHeader, Select, text } from "./components";
 import { today } from "./domain";
 import type { PetBasics } from "./first-pet-setup";
+import { useState } from "react";
 
 export default function FirstPetSetup({
   onSave,
@@ -9,6 +10,8 @@ export default function FirstPetSetup({
   onSave: (details: PetBasics) => Promise<void>;
   onSkip: () => Promise<void>;
 }) {
+  const [skipping, setSkipping] = useState(false);
+  const [skipError, setSkipError] = useState("");
   return (
     <div className="first-pet-setup">
       <PageHeader title="Давайте познакомимся" eyebrow="Первый шаг">
@@ -38,7 +41,19 @@ export default function FirstPetSetup({
           <p className="hint">Все сведения, кроме имени, можно добавить позже в профиле.</p>
         </Form>
       </Card>
-      <Button variant="ghost" fullWidth onClick={() => void onSkip()}>
+      {skipError && <p role="alert" className="notice notice-error">{skipError}</p>}
+      <Button variant="ghost" fullWidth loading={skipping}
+        onClick={async () => {
+          setSkipping(true);
+          setSkipError("");
+          try {
+            await onSkip();
+          } catch (error) {
+            setSkipError(error instanceof Error ? error.message : "Не удалось сохранить пропуск");
+          } finally {
+            setSkipping(false);
+          }
+        }}>
         Заполнить позже
       </Button>
     </div>
