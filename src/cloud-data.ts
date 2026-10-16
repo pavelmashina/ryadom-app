@@ -1,6 +1,8 @@
 import { initialState, stateSchema, type State, type Pet } from "./domain";
 import { rpc, type AuthSession } from "./backend";
+import { sameData } from "./shared-merge";
 export type CloudSnapshot = { state: State; revision: number; tag?: string };
+export type PersistOutcome = { state: State; combined: boolean };
 function petData(p: Pet) {
   const { shareCode, role, revision, pendingRequests, ...data } = p;
   return data;
@@ -9,7 +11,7 @@ export function sharedChanges(next: State, before?: State) {
   return {
     changes: next.pets.flatMap((p) => {
       const old = before?.pets.find((x) => x.id === p.id);
-      if (old && JSON.stringify(petData(old)) === JSON.stringify(petData(p)))
+      if (old && sameData(petData(old), petData(p)))
         return [];
       return [
         {
@@ -17,9 +19,9 @@ export function sharedChanges(next: State, before?: State) {
           revision: old?.revision ?? null,
           // Preserve the full snapshot for revision checks, but only reconcile
           // normalized child tables whose contents actually changed.
-          updateWorkouts: !old || JSON.stringify(old.workouts) !== JSON.stringify(p.workouts),
-          updateCommands: !old || JSON.stringify(old.commands) !== JSON.stringify(p.commands),
-          updateSchedules: !old || JSON.stringify(old.trainingSchedules ?? []) !== JSON.stringify(p.trainingSchedules ?? []),
+          updateWorkouts: !old || !sameData(old.workouts, p.workouts),
+          updateCommands: !old || !sameData(old.commands, p.commands),
+          updateSchedules: !old || !sameData(old.trainingSchedules ?? [], p.trainingSchedules ?? []),
         },
       ];
     }),

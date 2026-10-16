@@ -63,7 +63,7 @@ describe("Fast cloud saves", () => {
     const app = source("./App.tsx");
     expect(cloud).toContain('rpc(session, "shared_state_tag", {})');
     expect(cloud).toContain("currentTag === previous.tag");
-    expect(app).toContain("setInterval(refresh, 20000)");
+    expect(app).toContain("setInterval(refresh, 10000)");
   });
 });
 describe("Planning regressions", () => {

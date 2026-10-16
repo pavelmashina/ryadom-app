@@ -240,6 +240,13 @@ async function request(url: string, options: RequestInit, retryLoad = false) {
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
 }
+export class RevisionConflictError extends Error {
+  constructor() {
+    super("Данные питомца изменены другим участником.");
+    this.name = "RevisionConflictError";
+  }
+}
+
 export async function rpc(
   session: AuthSession,
   name: string,
@@ -257,7 +264,19 @@ export async function rpc(
     },
     body: JSON.stringify(body),
   }, name === "load_shared_state");
-  if (!response.ok) throw new Error(await parseError(response));
+  if (!response.ok) {
+    // Retry only an actual revision conflict, not access denial, invalid
+    // calendars, and other PT409 errors that require user intervention.
+    if (name === "save_shared_state") {
+      const body = await response.clone().json().catch(() => null) as {
+        code?: string; message?: string;
+      } | null;
+      if (body?.code === "PT409" &&
+          body.message?.includes("Питомец изменён другим участником"))
+        throw new RevisionConflictError();
+    }
+    throw new Error(await parseError(response));
+  }
   return response.json();
 }
 

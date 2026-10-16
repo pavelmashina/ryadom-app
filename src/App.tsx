@@ -16,6 +16,7 @@ import {
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Sharing, JoinPet } from "./Sharing";
 import type { AuthSession } from "./backend";
+import type { PersistOutcome } from "./cloud-data";
 import {
   PawPrint,
   Dog,
@@ -119,7 +120,7 @@ export default function App({
   onRefresh,
 }: {
   initial: State;
-  onPersist: (next: State, before: State) => Promise<State>;
+  onPersist: (next: State, before: State) => Promise<PersistOutcome>;
   accountContent: ReactNode;
   session: AuthSession;
   onRefresh: () => Promise<State>;
@@ -241,13 +242,15 @@ export default function App({
         running = false;
       }
     }
-    const timer = setInterval(refresh, 20000);
+    const timer = setInterval(refresh, 10000);
     window.addEventListener("focus", refresh);
+    window.addEventListener("online", refresh);
     document.addEventListener("visibilitychange", refresh);
     return () => {
       stopped = true;
       clearInterval(timer);
       window.removeEventListener("focus", refresh);
+      window.removeEventListener("online", refresh);
       document.removeEventListener("visibilitychange", refresh);
     };
   }, []);
@@ -265,9 +268,11 @@ export default function App({
     setNotice("Сохраняем в облаке…");
     try {
       const stored = await onPersist(next, state);
-      setState(stored);
+      setState(stored.state);
       setStorageError("");
-      setNotice("Сохранено в облаке");
+      setNotice(stored.combined
+        ? "Сохранено в облаке. Изменения другого участника тоже сохранены."
+        : "Сохранено в облаке");
     } catch (e) {
       setNotice("Не удалось сохранить: " + (e instanceof Error ? e.message : "ошибка связи"));
       throw e;

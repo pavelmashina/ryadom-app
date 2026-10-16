@@ -11,9 +11,11 @@ import {
   signOut,
   signUp,
   type AuthSession,
+  RevisionConflictError,
 } from "./backend";
 import PasswordRecovery from "./PasswordRecovery";
-import { loadAccount, saveAccount, type CloudSnapshot } from "./cloud-data";
+import { loadAccount, saveAccount, type CloudSnapshot, type PersistOutcome } from "./cloud-data";
+import { mergeSharedState } from "./shared-merge";
 import type { State } from "./domain";
 export default function CloudGate() {
   const [phase, setPhase] = useState<
@@ -102,7 +104,7 @@ export default function CloudGate() {
       window.removeEventListener("hashchange", recoveryLink);
     };
   }, []);
-  async function persist(next: State, before: State) {
+  async function persist(next: State, before: State): Promise<PersistOutcome> {
     const s = active.current;
     if (!s) throw new Error("Войдите в аккаунт");
     if (saving.current) throw new Error("Дождитесь завершения сохранения");
@@ -110,12 +112,26 @@ export default function CloudGate() {
     setBusy(true);
     const epoch = generation.current;
     try {
-      const saved = await saveAccount(s, next, before);
+      let saved: CloudSnapshot;
+      let combined = false;
+      try {
+        saved = await saveAccount(s, next, before);
+      } catch (cause) {
+        if (!(cause instanceof RevisionConflictError)) throw cause;
+        // The first save was atomically rejected by the database. Fetch a
+        // FRESH snapshot, merge only non-overlapping edits, and retry ONCE.
+        const fresh = await loadAccount(s);
+        if (epoch !== generation.current)
+          throw new Error("Аккаунт изменился. Войдите снова.");
+        const rebased = mergeSharedState(before, next, fresh.state);
+        saved = await saveAccount(s, rebased, fresh.state);
+        combined = true;
+      }
       if (epoch !== generation.current)
         throw new Error("Аккаунт изменился. Войдите снова.");
       revision.current = saved.revision;
       latestSnapshot.current = saved;
-      return saved.state;
+      return { state: saved.state, combined };
     } finally {
       saving.current = false;
       setBusy(false);
@@ -296,7 +312,9 @@ export default function CloudGate() {
         const epoch = generation.current;
         const result = await loadAccount(s, latestSnapshot.current);
         if (epoch !== generation.current) throw new Error("Аккаунт изменился");
-        latestSnapshot.current = result;
+        // A slower background request must not replace a newer successful
+        // write's revision/tag while the write is in flight.
+        if (!saving.current) latestSnapshot.current = result;
         return result.state;
       }}
       onPersist={persist}
