@@ -34,6 +34,9 @@ import Health from "./Health";
 import Stock from "./Stock";
 import EventForm from "./EventForm";
 import ReminderSettings from "./ReminderSettings";
+import FirstPetSetup from "./FirstPetSetup";
+import { needsFirstPetSetup, type PetBasics } from "./first-pet-setup";
+import { saveWeight, deleteWeight, saveMedicalRecord, deleteMedicalRecord, deletePetDocument } from "./health-actions";
 import { setPersonalReminder } from "./push-api";
 import {
   blankPet,
@@ -76,6 +79,10 @@ type Overlay =
       action: "edit" | "delete";
     }
   | {
+      kind: "editWeight" | "editRecord" | "deleteWeight" | "deleteRecord" | "deleteDocument";
+      entryId: string;
+    }
+  | {
       kind:
         | "pets"
         | "sharing"
@@ -115,6 +122,7 @@ export default function App({
   const saving = useRef(false);
   const epoch = useRef(0);
   const [openTraining, setOpenTraining] = useState<string | undefined>();
+  const [showFirstPetSetup, setShowFirstPetSetup] = useState(() => needsFirstPetSetup(initial));
   const handledPushLink = useRef(false);
   const [eventScope, setEventScope] = useState<EventScope>("single");
   const [busy, setBusy] = useState(false);
@@ -213,18 +221,24 @@ export default function App({
     saving.current = true;
     ++epoch.current;
     setBusy(true);
+    setNotice("Сохраняем в облаке…");
     try {
       const stored = await onPersist(next, state);
       setState(stored);
       setStorageError("");
       setNotice("Сохранено в облаке");
     } catch (e) {
-      setNotice(e instanceof Error ? e.message : "Не удалось сохранить");
+      setNotice("Не удалось сохранить: " + (e instanceof Error ? e.message : "ошибка связи"));
       throw e;
     } finally {
       saving.current = false;
       setBusy(false);
     }
+  }
+  async function finishFirstPetSetup(details?: PetBasics) {
+    await update((p) => petSchema.parse({ ...p, ...details, onboardingCompleted: true }));
+    setShowFirstPetSetup(false);
+    setScreen("day");
   }
   function update(fn: (p: Pet) => Pet) {
     return commit({
@@ -370,6 +384,7 @@ export default function App({
   function choose(p: Pet) {
     safe(async () => {
       await commit({ ...state, selectedPet: p.id });
+      setShowFirstPetSetup(false);
       close();
       setScreen("day");
       setSelected(today());
@@ -398,7 +413,12 @@ export default function App({
                 editpet: "Данные питомца",
                 command: "Новая команда",
                 weight: "Записать вес",
+                editWeight: "Редактировать вес",
+                deleteWeight: "Удалить измерение",
                 record: "Медицинская запись",
+                editRecord: "Редактировать медицинскую запись",
+                deleteRecord: "Удалить медицинскую запись",
+                deleteDocument: "Удалить документ",
                 summary: "Сводка для ветеринара",
                 stock: "Пополнить корм",
                 ration: "Расход и остаток",
