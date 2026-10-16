@@ -24,7 +24,7 @@ describe("R3: email invitation links", () => {
   it("formats mailto without automatic approval or leaking email to arbitrary endpoint", () => {
     const mailto = invitationMailto(" friend@example.com ", "Бублик", url + "?join=" + code);
     expect(mailto).toContain("mailto:friend%40example.com");
-    expect(decodeURIComponent(mailto)).toContain("после подтверждения мной");
+    expect(decodeURIComponent(mailto)).toContain("После подтверждения мной");
     expect(decodeURIComponent(mailto)).toContain("?join=" + code);
     expect(() => invitationMailto("not-an-email", "Бублик", url)).toThrow();
   });
