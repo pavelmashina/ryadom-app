@@ -242,13 +242,15 @@ export default function App({
         running = false;
       }
     }
-    const timer = setInterval(refresh, 20000);
+    const timer = setInterval(refresh, 10000);
     window.addEventListener("focus", refresh);
+    window.addEventListener("online", refresh);
     document.addEventListener("visibilitychange", refresh);
     return () => {
       stopped = true;
       clearInterval(timer);
       window.removeEventListener("focus", refresh);
+      window.removeEventListener("online", refresh);
       document.removeEventListener("visibilitychange", refresh);
     };
   }, []);
