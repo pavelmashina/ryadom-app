@@ -152,7 +152,7 @@ export default function App({
     setOverlay({ kind: "join" });
     const params = new URLSearchParams(location.search);
     params.delete("join");
-    history.replaceState(null, "", location.pathname + (params.size ? "?" + params.toString() : "") + location.hash);
+    history.replaceState(null, "", location.pathname + (params.toString() ? "?" + params.toString() : "") + location.hash);
   }, []);
   useEffect(() => {
     if (handledPushLink.current) return;
