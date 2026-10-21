@@ -415,3 +415,141 @@
   .stock-fields-two {grid-template-columns: 1fr;}
   .stock-overview .badge {max-width:100%;}
 }
+
+
+/* Keep the whole Stock flow on PET APP's Manrope family and five type tokens. */
+.stock-screen,
+.stock-screen :is(button, input, select, textarea) {
+  font-family: var(--font-family-base);
+}
+.stock-screen :is(.checkbox, .stock-gear-panel, .stock-add-modes) {
+  font-size: var(--font-size-sm);
+}
+.stock-eyebrow-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-compact-3);
+}
+.stock-screen .stock-featured .stock-eyebrow-row .eyebrow {
+  margin: 0;
+  min-width: 0;
+  font-size: var(--font-size-xs);
+}
+.stock-gear {
+  display: grid;
+  place-items: center;
+  flex: 0 0 var(--button-height-sm);
+  width: var(--button-height-sm);
+  height: var(--button-height-sm);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-primary);
+}
+.stock-gear:hover,
+.stock-gear[aria-expanded="true"] {
+  background: var(--color-surface);
+}
+.stock-gear svg {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+}
+.stock-gear-panel {
+  display: grid;
+  gap: var(--space-compact-2);
+  padding: var(--space-compact-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.stock-gear-panel > button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-3);
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+}
+.stock-gear-panel > button:hover {
+  background: var(--color-surface-secondary);
+}
+.stock-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-compact-3);
+  min-height: var(--button-height-sm);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-caption);
+}
+.stock-switch {
+  position: relative;
+  appearance: none;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 26px;
+  margin: 0;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-full);
+  background: var(--color-border);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.stock-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast);
+}
+.stock-switch:checked {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+.stock-switch:checked::after {
+  transform: translateX(18px);
+}
+.stock-switch:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.stock-add-modes {
+  display: flex;
+  gap: var(--space-compact-3);
+  flex-wrap: wrap;
+  margin: 0 0 var(--stock-heading-gap);
+}
+.stock-add-modes label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-compact-2);
+  padding: var(--space-compact-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+.stock-add-modes input {
+  accent-color: var(--color-primary);
+}
+@media (prefers-reduced-motion: reduce) {
+  .stock-switch, .stock-switch::after {
+    transition: none;
+  }
+}
