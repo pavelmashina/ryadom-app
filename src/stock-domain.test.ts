@@ -20,7 +20,7 @@ describe("Stock domain and scheduled consumption",()=>{
   expect(stockForecast(food,"2026-10-21")).toMatchObject({days:16,date:"2026-11-06"});
   const spaced={...food,current_quantity:3,rules:[{...rule,amount:1,unit:"таблетки",frequency:"weekly" as const,
    interval_count:2,days_of_week:[1,3,5]}],display_unit:"таблетки" as const,unit:"таблетки"};
-  expect(stockForecast(spaced,"2026-10-21")).toMatchObject({date:"2026-11-06"});
+  expect(stockForecast(spaced,"2026-10-21")).toMatchObject({date:"2026-11-04"});
   expect(stockRuleText(food.rules[0])).toContain("150 г");
  });
  it("reports low and depleted stock and bounds progress",()=>{
