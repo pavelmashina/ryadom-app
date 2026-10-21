@@ -81,7 +81,7 @@ export default function Stock({
  }
  const closeDetails=()=>{setMode("list");setSelectedId(null);setGearOpen(false);setError("");};
  function openAdd() {
-  const target=items.find(i=>i.legacy_food)??items.find(i=>i.category==="Корм")??items[0];
+  const target=(mode==="detail"&&current)?current:(items.find(i=>i.legacy_food)??items.find(i=>i.category==="Корм")??items[0]);
   setCreateTarget(target?"existing":"new");
   setCreateItemId(target?.id??"");
   setUnit(target?.display_unit??"г");
@@ -215,7 +215,7 @@ export default function Stock({
      <button type="button" onClick={()=>{
       setSelectedId(featured.id);setOperation("manual_use");setUnit(featured.display_unit);
       setGearOpen(false);setMode("operation");
-     }}>Списать корм вручную</button>
+     }}>Списать вручную</button>
      <button type="button" onClick={()=>goDetail(featured)}>История и параметры</button>
     </div>}
     <div className="stock-overview">
@@ -420,15 +420,14 @@ export default function Stock({
     </form>
    </>}
    {mode==="rule"&&<>
-    <h2>Автоматическое списание</h2>
+    <h2>Расход корма</h2>
     <form className="stock-form" onSubmit={onRule}>
      <label className="stock-switch-row">
       <span>Автоматическое списание</span>
       <input type="checkbox" role="switch" className="stock-switch" checked={ruleEnabled}
        onChange={e=>setRuleEnabled(e.target.checked)}/>
      </label>
-     {ruleEnabled&&<>
-      <div className="stock-fields-two">
+     <div className="stock-fields-two">
        <Field label="Списывать"><input name="amount" type="number" min={0.001} step="0.001"
         defaultValue={(active??current.rules[0])?
          (active??current.rules[0]).amount/(current.display_unit==="кг"||current.display_unit==="л"?1000:1):undefined} required/></Field>
@@ -439,8 +438,9 @@ export default function Stock({
        onChange={e=>setStartDate(e.target.value)}/></Field>
       <RecurrenceFields date={startDate} value={draft} onChange={setDraft}
        allowedFrequencies={["daily","weekly","monthly"]} allowCount={false}/>
-      <p className="stock-muted">Изменение правила сохраняет историю предыдущих списаний.</p>
-     </>}
+      <p className="stock-muted">{ruleEnabled
+       ? "При сохранении списание включится. История уже выполненных операций останется."
+       : "Расход сохранится, но автоматическое списание останется выключенным."}</p>
      <Button type="submit" loading={busy}>Сохранить правило</Button>
     </form>
    </>}
