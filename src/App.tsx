@@ -15,7 +15,7 @@ import {
 } from "./components";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Sharing, JoinPet } from "./Sharing";
-import type { AuthSession } from "./backend";
+import { rpc, type AuthSession } from "./backend";
 import type { PersistOutcome } from "./cloud-data";
 import {
   PawPrint,
@@ -1070,6 +1070,12 @@ export default function App({
             onSave={async (data) => {
               const raw = text(data, "addedKg");
               const amount = raw ? Number(raw) : 0;
+              // First credit the new stock ledger with an idempotent purchase key.
+              // A failed JSON checklist save can be retried without crediting twice.
+              if (amount > 0) await rpc(session,"stock_mutate",{
+                p_pet:pet.id,p_action:"shopping_credit",
+                p_data:{amount,purchase_id:item.id},
+              });
               await saved(() => update((p) => completeShoppingItem(p, item.id, amount, today())));
             }}
           >
@@ -1373,8 +1379,7 @@ export default function App({
           {screen === "stock" && (
             <Stock
               pet={pet}
-              onEdit={() => setOverlay({ kind: "ration" })}
-              onAdd={() => setOverlay({ kind: "stock" })}
+              session={session}
               onShop={() => setOverlay({ kind: "shopping" })}
               onToggle={(itemId) => {
                 const item = pet.shopping.find((s) => s.id === itemId);
