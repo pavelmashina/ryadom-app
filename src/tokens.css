@@ -1,11 +1,12 @@
 :root {
   --font-family-base: "Manrope", Arial, sans-serif;
   --font-size-root: 16px;
-  /* Four reusable interface levels for the training experience. */
+  /* Five reusable type levels for the training experience. */
   --font-size-xl: 24px;
   --font-size-lg: 20px;
   --font-size-md: 16px;
   --font-size-sm: 14px;
+  --font-size-xs: 12px;
   --line-height-ui-heading: 1.25;
   --line-height-ui-body: 1.5;
   --line-height-ui-caption: 1.4;
@@ -33,6 +34,13 @@
   --space-6: 24px;
   --space-8: 32px;
   --space-12: 48px;
+  /* Compact 4 / 6 / 8 / 12 / 16 / 20px rhythm, scoped to training UI. */
+  --space-compact-1: 4px;
+  --space-compact-2: 6px;
+  --space-compact-3: 8px;
+  --space-compact-4: 12px;
+  --space-compact-5: 16px;
+  --space-compact-6: 20px;
   --color-background: #f7f6ee;
   --color-canvas: #eeeee5;
   --color-surface: #fffef9;
