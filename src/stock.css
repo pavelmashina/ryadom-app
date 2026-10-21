@@ -1,87 +1,417 @@
-/* Stock UI: same 5 typography steps and compact 4/6/8/12/16/20 spacing scale. */
+/* Previous PET APP "Питание и запасы" composition, with the agreed compact type/spacing.
+   12px from section headings to content; 16px between sections; no arbitrary type sizes. */
 .stock-screen {
- --stock-heading-gap: var(--space-compact-4);
- --stock-section-gap: var(--space-compact-5);
- color: var(--color-text-primary);
- font-size: var(--font-size-md);
- font-weight: var(--font-weight-regular);
- line-height: var(--line-height-ui-body);
- min-width: 0;
- padding-bottom: var(--space-compact-6);
+  --stock-heading-gap: var(--space-compact-4);
+  --stock-section-gap: var(--space-compact-5);
+  min-width: 0;
+  padding-bottom: var(--space-compact-6);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-ui-body);
 }
 .stock-screen h1,
 .stock-screen h2,
 .stock-screen h3,
-.stock-screen p {margin:0;}
-.stock-screen h1 {font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);line-height:var(--line-height-ui-heading);}
-.stock-screen h2 {font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);line-height:var(--line-height-ui-heading);margin:0 0 var(--stock-heading-gap);}
-.stock-screen h3 {font-size:var(--font-size-md);font-weight:var(--font-weight-semibold);}
-.stock-top {display:flex;align-items:center;justify-content:space-between;gap:var(--space-compact-3);margin:0 0 var(--stock-section-gap);}
-.stock-top .btn {width:auto;margin:0;white-space:nowrap;}
-.stock-top .btn svg {width:var(--icon-size-sm);height:var(--icon-size-sm);}
-.stock-section {margin:0 0 var(--stock-section-gap);}
+.stock-screen p {
+  margin: 0;
+}
+.stock-screen h1 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-ui-heading);
+}
+.stock-screen h2 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-ui-heading);
+}
+.stock-screen h3 {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+}
+.stock-screen .heading {
+  margin: 0 0 var(--stock-section-gap);
+}
+.stock-screen .heading .eyebrow,
+.stock-screen .stock-featured .eyebrow,
+.stock-screen .stock-detail-card .eyebrow {
+  margin-bottom: var(--space-compact-3);
+  font-size: var(--font-size-xs);
+}
+.stock-screen .heading p {
+  margin-top: var(--space-compact-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+.stock-screen .section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin: 0 0 var(--stock-heading-gap);
+  gap: var(--space-compact-3);
+}
+.stock-screen .section-title h2 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+.stock-screen .btn {
+  font-size: var(--font-size-sm);
+}
+.stock-screen .btn svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+.stock-top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0 0 var(--stock-section-gap);
+}
+.stock-top .btn {
+  margin: 0;
+}
+.stock-screen .card.stock-featured,
+.stock-screen .card.stock-detail-card {
+  display: grid;
+  gap: var(--space-compact-3);
+  margin: 0 0 var(--stock-section-gap);
+  padding: var(--space-compact-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-secondary);
+  box-shadow: none;
+}
+.stock-screen .card.stock-featured .eyebrow,
+.stock-screen .card.stock-detail-card .eyebrow {
+  margin: 0;
+}
+.stock-overview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-compact-3);
+}
+.stock-large {
+  min-width: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-ui-heading);
+}
+.stock-large small {
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+.stock-screen .stock-overview .badge {
+  background: var(--color-surface);
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+}
+.stock-screen .stock-overview .badge svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+.stock-screen progress {
+  display: block;
+  width: 100%;
+  height: var(--space-compact-3);
+  margin: var(--space-compact-1) 0 0;
+  accent-color: var(--color-primary);
+}
+.stock-scale {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-compact-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-ui-caption);
+}
+.stock-muted {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-ui-body);
+  color: var(--color-text-secondary);
+}
+.stock-screen .stock-featured .stock-muted,
+.stock-screen .stock-detail-card .stock-muted {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+.stock-screen .stock-featured > .btn,
+.stock-screen .stock-detail-card > .btn {
+  width: 100%;
+  margin: 0;
+}
+.stock-screen .stock-featured > .btn-ghost {
+  width: fit-content;
+  justify-self: start;
+  padding-inline: var(--space-compact-3);
+}
+.stock-warning {
+  color: var(--color-warning);
+  font-size: var(--font-size-sm);
+}
+.stock-notice {
+  background: var(--color-warning-surface);
+  color: var(--color-warning);
+  border-radius: var(--radius-md);
+  padding: var(--space-compact-4);
+  margin: 0 0 var(--stock-section-gap) !important;
+  font-size: var(--font-size-sm);
+}
+.stock-error {
+  padding: var(--space-compact-4);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  margin: 0 0 var(--stock-section-gap) !important;
+}
+.stock-section {
+  margin: 0 0 var(--stock-section-gap);
+}
+.stock-detail-title {
+  margin: 0 0 var(--stock-heading-gap) !important;
+}
 .stock-list {display:grid;gap:var(--space-compact-3);}
 .stock-card {
- display:grid;
- width:100%;
- gap:var(--space-compact-1);
- padding:var(--space-compact-4);
- border:1px solid var(--color-border);
- border-radius:var(--radius-md);
- background:var(--color-surface);
- box-shadow:none;
- color:var(--color-text-primary);
- font:inherit;
- text-align:left;
- cursor:pointer;
+  display: grid;
+  width: 100%;
+  gap: var(--space-compact-2);
+  padding: var(--space-compact-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+  font: inherit;
+  color: var(--color-text-primary);
 }
-.stock-card:focus-visible {outline:2px solid var(--color-focus);outline-offset:2px;}
-.stock-card strong {font-size:var(--font-size-md);font-weight:var(--font-weight-semibold);line-height:var(--line-height-ui-heading);}
-.stock-primary {font-size:var(--font-size-sm);font-weight:var(--font-weight-medium);}
-.stock-secondary {display:flex;justify-content:space-between;flex-wrap:wrap;gap:var(--space-compact-2);color:var(--color-text-secondary);font-size:var(--font-size-xs);line-height:var(--line-height-ui-caption);}
-.stock-secondary em {font-style:normal;color:var(--color-warning);font-weight:var(--font-weight-medium);}
-.stock-empty .stock-secondary em {color:var(--color-danger);}
-.stock-card progress,.stock-detail-card progress {display:block;width:100%;height:6px;accent-color:var(--color-primary);margin-top:var(--space-compact-2);}
-.stock-error {padding:var(--space-compact-4);border:1px solid var(--color-danger);border-radius:var(--radius-sm);color:var(--color-danger);font-size:var(--font-size-sm);margin-bottom:var(--space-compact-4)!important;}
-.stock-muted {font-size:var(--font-size-sm);color:var(--color-text-secondary);line-height:var(--line-height-ui-body);}
-.stock-section>.stock-muted {margin-bottom:var(--space-compact-3);}
-.stock-section>.btn {margin-top:var(--space-compact-4);}
-.stock-section>.stock-actions {margin-bottom:var(--stock-section-gap);}
-.stock-detail-card {
- display:grid;gap:var(--space-compact-3);
- border:1px solid var(--color-border);
- border-radius:var(--radius-md);
- padding:var(--space-compact-4);
- background:var(--color-surface);
- margin-bottom:var(--stock-section-gap);
+.stock-card:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
-.stock-balance {font-size:var(--font-size-xl);line-height:var(--line-height-ui-heading);font-weight:var(--font-weight-semibold);}
-.stock-warning {font-size:var(--font-size-sm);color:var(--color-warning);}
-.stock-actions {display:flex;align-items:center;gap:var(--space-compact-3);flex-wrap:wrap;margin:0 0 var(--stock-section-gap);}
-.stock-actions .btn {flex:1 1 44%;min-width:0;margin:0;font-size:var(--font-size-sm);}
-.stock-form {display:grid;gap:var(--space-compact-4);}
-.stock-field {display:grid;gap:var(--space-compact-2);min-width:0;font-size:var(--font-size-sm);font-weight:var(--font-weight-medium);}
-.stock-field input,.stock-field select,.stock-field textarea {
- box-sizing:border-box;width:100%;min-width:0;min-height:44px;border:1px solid var(--color-input-border);
- border-radius:var(--radius-sm);background:var(--color-surface);padding:var(--space-compact-3);
- color:var(--color-text-primary);font:inherit;font-size:var(--font-size-md);
+.stock-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-compact-3);
 }
-.stock-field textarea {resize:vertical;}
-.stock-fields-two {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--space-compact-3);}
-.stock-check {display:flex;align-items:center;gap:var(--space-compact-3);font-size:var(--font-size-sm);line-height:var(--line-height-ui-caption);}
-.stock-check input {width:18px;height:18px;accent-color:var(--color-primary);flex:none;}
-.stock-form .btn {margin:0;}
-.stock-history {display:grid;}
-.stock-transaction {display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-compact-3);padding:var(--space-compact-4) 0;border-bottom:1px solid var(--color-border);}
-.stock-transaction>div {display:grid;gap:var(--space-compact-1);min-width:0;}
-.stock-transaction strong {font-size:var(--font-size-sm);font-weight:var(--font-weight-medium);}
-.stock-transaction span,.stock-transaction small {font-size:var(--font-size-xs);color:var(--color-text-secondary);overflow-wrap:anywhere;}
-.stock-transaction b {font-size:var(--font-size-sm);font-weight:var(--font-weight-semibold);white-space:nowrap;}
-.stock-screen .recurrence-fields,.stock-screen .recurrence-options {display:grid;gap:var(--space-compact-3);}
-.stock-screen .recurrence-fields h3 {font-size:var(--font-size-md);}
-.stock-screen .recurrence-fields .fields {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-compact-3);}
-.stock-screen .recurrence-fields .field {min-width:0;margin:0;}
-.stock-screen .recurrence-fields .field label {font-size:var(--font-size-sm);}
-.stock-screen .recurrence-fields .btn {font-size:var(--font-size-sm);}
-.stock-screen .shopping {margin:0;}
-@media(max-width:350px) {.stock-fields-two {grid-template-columns:1fr;}}
+.stock-card strong {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-ui-heading);
+}
+.stock-card-quantity {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+.stock-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-compact-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-ui-caption);
+}
+.stock-secondary em {
+  font-style: normal;
+  color: var(--color-warning);
+  font-weight: var(--font-weight-medium);
+}
+.stock-empty .stock-secondary em {
+  color: var(--color-danger);
+}
+.stock-screen .stock-card progress {
+  height: var(--space-compact-2);
+  margin-top: var(--space-compact-1);
+}
+.stock-screen .stock-add-item {
+  margin: 0 0 var(--stock-section-gap);
+}
+.stock-shopping-count {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+.stock-shopping-list {
+  margin-bottom: var(--stock-heading-gap);
+}
+.stock-screen .shopping {
+  margin: 0;
+  padding: var(--space-compact-4) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.stock-screen .shopping small {
+  display: block;
+  font-size: var(--font-size-xs);
+}
+.stock-screen .stock-shopping .empty {
+  margin: 0 0 var(--stock-heading-gap);
+  padding: var(--stock-section-gap);
+}
+.stock-screen .stock-shopping .btn {
+  margin: 0;
+}
+.stock-shopping-help {
+  margin: var(--stock-heading-gap) 0 0 !important;
+  font-size: var(--font-size-xs);
+}
+.stock-detail-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-compact-3);
+}
+.stock-detail-actions .btn {
+  flex: 1 1 auto;
+  margin: 0;
+}
+.stock-screen .card.stock-setting-card {
+  display: grid;
+  gap: var(--space-compact-3);
+  padding: var(--space-compact-4);
+  margin: 0 0 var(--stock-heading-gap);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.stock-screen .stock-setting-card .btn {
+  justify-self: start;
+  margin: 0;
+}
+.stock-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-compact-3);
+  margin: 0;
+}
+.stock-actions .btn {
+  flex: 1 1 auto;
+  margin: 0;
+}
+.stock-form {
+  display: grid;
+  gap: var(--space-compact-4);
+  padding: var(--space-compact-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.stock-field {
+  display: grid;
+  gap: var(--space-compact-2);
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+.stock-field input,
+.stock-field select,
+.stock-field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-3);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font: inherit;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+}
+.stock-field textarea {
+  resize: vertical;
+}
+.stock-fields-two {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: var(--space-compact-3);
+}
+.stock-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-compact-3);
+  font-size: var(--font-size-sm);
+}
+.stock-check input {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+  flex: none;
+  accent-color: var(--color-primary);
+}
+.stock-form .btn {
+  margin: 0;
+}
+.stock-history {
+  display: grid;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.stock-transaction {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-compact-3);
+  padding: var(--space-compact-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.stock-transaction:last-child {
+  border-bottom: 0;
+}
+.stock-transaction > div {
+  display: grid;
+  gap: var(--space-compact-1);
+  min-width: 0;
+}
+.stock-transaction strong {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+.stock-transaction span,
+.stock-transaction small {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+.stock-transaction b {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+.stock-screen .recurrence-fields,
+.stock-screen .recurrence-options {
+  display: grid;
+  gap: var(--space-compact-3);
+}
+.stock-screen .recurrence-fields h3 {
+  font-size: var(--font-size-md);
+}
+.stock-screen .recurrence-fields .fields {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: var(--space-compact-3);
+}
+.stock-screen .recurrence-fields .field {
+  margin: 0;
+  min-width: 0;
+}
+.stock-screen .recurrence-fields .field label,
+.stock-screen .recurrence-fields .btn {
+  font-size: var(--font-size-sm);
+}
+@media (max-width: 350px) {
+  .stock-fields-two {grid-template-columns: 1fr;}
+  .stock-overview .badge {max-width:100%;}
+}
