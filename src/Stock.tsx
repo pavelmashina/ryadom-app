@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowLeft, Plus, RefreshCw } from "lucide-react";
-import { Button, Checkbox } from "./components";
+import { ArrowLeft, Plus, Package } from "lucide-react";
+import { Badge, Button, Card, Checkbox, Empty, PageHeader, SectionHeader } from "./components";
 import { today, fmt, type Pet } from "./domain";
 import { rpc, type AuthSession } from "./backend";
 import RecurrenceFields, { draftForDate, type RecurrenceDraft } from "./RecurrenceFields";
@@ -138,47 +138,100 @@ export default function Stock({
  }
  const currentView=mode!=="list"&&mode!=="create"&&current;
  const groups=categories.concat([...new Set(items.map(i=>i.category))].filter(x=>!categories.includes(x)));
+ const featured=items.find(i=>i.legacy_food)??items.find(i=>i.category==="Корм")??items[0];
  return <div className="stock-screen">
-  <div className="stock-top">
-   {mode==="list"?<h1>Запасы</h1>:<Button size="sm" variant="ghost"
-     onClick={()=>currentView?setMode("detail"):closeDetails()}><ArrowLeft/> Назад</Button>}
-   {mode==="list"&&<Button size="sm" variant="secondary" onClick={()=>{setMode("create");setError("");}}>
-     <Plus/> Добавить запас</Button>}
-  </div>
+  {mode==="list" ? (
+   <PageHeader title="Питание и запасы" eyebrow="Всё под рукой">
+    Остатки, расход и список покупок
+   </PageHeader>
+  ) : (
+   <div className="stock-top">
+    <Button size="sm" variant="ghost" onClick={()=>currentView?setMode("detail"):closeDetails()}>
+     <ArrowLeft/> Назад
+    </Button>
+   </div>
+  )}
   {error&&<p className="stock-error" role="alert">{error}</p>}
   {mode==="list"&&<>
    {loading&&<p className="stock-muted">Загружаем запасы…</p>}
-   {!loading&&!items.length&&<p className="stock-muted">Запасы пока не добавлены. Создайте первый товар.</p>}
+   {!loading&&!featured&&<Card variant="info" className="stock-featured">
+    <span className="eyebrow">Корм · фактический остаток</span>
+    <p className="stock-muted">Запасов пока нет. Добавьте первый товар, чтобы отслеживать расход и пополнения.</p>
+    <Button fullWidth variant="primary" onClick={()=>{setMode("create");setError("");}}>
+     <Plus/> Добавить запас
+    </Button>
+   </Card>}
+   {featured&&<Card variant="info" className="stock-featured">
+    <span className="eyebrow">{featured.name} · фактический остаток</span>
+    <div className="stock-overview">
+     <div className="stock-large">
+      {stockAmount(featured.current_quantity,featured.display_unit)} <small>{featured.display_unit}</small>
+     </div>
+     <Badge><Package/>{stockForecast(featured,today())
+      ? "≈ "+stockForecast(featured,today())!.days+" дн."
+      : activeStockRule(featured)?"Прогноз недоступен":"Укажите расход"}</Badge>
+    </div>
+    <progress value={stockProgress(featured)} max={100}
+     aria-label={"Остаток "+stockAmount(featured.current_quantity,featured.display_unit)+" "+featured.display_unit}/>
+    <div className="spread stock-scale">
+     <span>0 {featured.display_unit}</span>
+     <span>{stockAmount(featured.reference_quantity,featured.display_unit)} {featured.display_unit} · ориентир</span>
+    </div>
+    <p className="stock-muted">
+     {activeStockRule(featured)?stockRuleText(activeStockRule(featured)!):
+      "Автоматическое списание не включено."}
+     {stockForecast(featured,today())&&" · Примерно до "+fmt(stockForecast(featured,today())!.date)+"."}
+    </p>
+    {stockStatus(featured)!=="normal"&&<p className="stock-warning">
+     {stockStatus(featured)==="empty"?"Запас закончился.":"Запас скоро закончится."}
+    </p>}
+    <Button fullWidth variant="primary" onClick={()=>{
+     setSelectedId(featured.id);setOperation("add");setUnit(featured.display_unit);setMode("operation");
+    }}><Plus/> Пополнить</Button>
+    <Button variant="ghost" onClick={()=>goDetail(featured)}>Изменить расход или остаток</Button>
+   </Card>}
+   {featured&&stockStatus(featured)!=="normal"&&<p className="stock-notice">
+    {stockStatus(featured)==="empty"?"Запас закончился. Пора пополнить.":"Запас скоро закончится. Проверьте остаток и запланируйте покупку."}
+   </p>}
    {groups.map(category=>{
-    const stocks=items.filter(i=>i.category===category);
+    const stocks=items.filter(i=>i.id!==featured?.id && i.category===category);
     if(!stocks.length)return null;
     return <section className="stock-section" key={category}>
-     <h2>{category}</h2>
+     <SectionHeader title={category}/>
      <div className="stock-list">{stocks.map(item=>{
       const status=stockStatus(item),rule=activeStockRule(item);
       const forecast=stockForecast(item,today());
       return <button type="button" key={item.id} className={"stock-card stock-"+status}
        onClick={()=>goDetail(item)}>
-       <strong>{item.name}</strong>
-       <span className="stock-primary">{stockAmount(item.current_quantity,item.display_unit)} {item.display_unit}
-        {forecast&&<span> · ≈{forecast.days} дн.</span>}</span>
-       <span className="stock-secondary">{rule?stockRuleText(rule):"Автосписание выключено"}
-        {status!=="normal"&&<em>{status==="empty"?"Закончился":"Скоро закончится"}</em>}</span>
+       <div className="stock-card-head">
+        <strong>{item.name}</strong>
+        <span className="stock-card-quantity">{stockAmount(item.current_quantity,item.display_unit)} {item.display_unit}</span>
+       </div>
+       <span className="stock-secondary">
+        {rule?stockRuleText(rule):"Автосписание выключено"}
+        {forecast&&" · ≈"+forecast.days+" дн."}
+        {status!=="normal"&&<em>{status==="empty"?"Закончился":"Скоро закончится"}</em>}
+       </span>
        <progress max={100} value={stockProgress(item)} aria-label={"Остаток "+stockProgress(item)+"%"} />
       </button>;
      })}</div>
     </section>;
    })}
-   <section className="stock-section">
-    <h2>Купить</h2>
-    <div className="stock-list">
-     {pet.shopping.map(s=><Checkbox key={s.id} className={"shopping "+(s.done?"done":"")}
-      checked={s.done} onChange={()=>onToggle(s.id)}
-      label={<span>{s.name}<small>{s.quantity}</small></span>}/>)}
-     {!pet.shopping.length&&<p className="stock-muted">Список покупок пуст.</p>}
-    </div>
+   {featured&&<Button className="stock-add-item" fullWidth variant="secondary"
+    onClick={()=>{setMode("create");setError("");}}><Plus/> Добавить запас</Button>}
+   <section className="stock-section stock-shopping">
+    <SectionHeader title="Купить">
+     <span className="stock-shopping-count">{pet.shopping.filter(s=>!s.done).length} в списке</span>
+    </SectionHeader>
+    {pet.shopping.length?(
+     <div className="stock-shopping-list">
+      {pet.shopping.map(s=><Checkbox key={s.id} className={"shopping "+(s.done?"done":"")}
+       checked={s.done} onChange={()=>onToggle(s.id)}
+       label={<span>{s.name}<small>{s.quantity}</small></span>}/>)}
+     </div>
+    ):<Empty title="Всё есть дома">Добавляйте покупки по мере необходимости.</Empty>}
     <Button fullWidth variant="secondary" onClick={onShop}><Plus/> Добавить покупку</Button>
-    <p className="stock-muted">При подтверждении покупки вы можете сразу внести купленный корм в запас. Повторное пополнение той же покупки не начисляется.</p>
+    <p className="stock-muted stock-shopping-help">При подтверждении покупки вы можете сразу внести купленный корм в запас. Повторное пополнение той же покупки не начисляется.</p>
    </section>
   </>}
   {mode==="create"&&<section className="stock-section">
@@ -200,48 +253,65 @@ export default function Stock({
   </section>}
   {currentView&&<section className="stock-section">
    {mode==="detail"&&<>
-    <h2>{current.name}</h2>
-    <div className="stock-detail-card">
-     <span className="stock-muted">Фактический остаток</span>
-     <div className="stock-balance">{stockAmount(current.current_quantity,current.display_unit)} {current.display_unit}</div>
+    <h2 className="stock-detail-title">{current.name}</h2>
+    <Card variant="info" className="stock-detail-card">
+     <span className="eyebrow">Фактический остаток</span>
+     <div className="stock-overview">
+      <div className="stock-large">
+       {stockAmount(current.current_quantity,current.display_unit)} <small>{current.display_unit}</small>
+      </div>
+      <Badge><Package/>{stockForecast(current,today())
+       ? "≈ "+stockForecast(current,today())!.days+" дн."
+       : active?"Прогноз недоступен":"Укажите расход"}</Badge>
+     </div>
+     <progress value={stockProgress(current)} max={100}
+      aria-label={"Остаток "+stockAmount(current.current_quantity,current.display_unit)+" "+current.display_unit}/>
+     <div className="spread stock-scale">
+      <span>0 {current.display_unit}</span>
+      <span>{stockAmount(current.reference_quantity,current.display_unit)} {current.display_unit} · ориентир</span>
+     </div>
+     {stockForecast(current,today())&&<p className="stock-muted">Примерно до {fmt(stockForecast(current,today())!.date)}</p>}
+     <p className="stock-muted">{active?stockRuleText(active):"Автоматическое списание выключено"}</p>
      {stockStatus(current)!=="normal"&&<p className="stock-warning">
       {stockStatus(current)==="empty"?"Запас закончился":"Запас скоро закончится"}</p>}
-     {stockForecast(current,today())&&<p className="stock-muted">
-      Примерно до {fmt(stockForecast(current,today())!.date)}</p>}
-     <progress value={stockProgress(current)} max={100}/>
-     <p className="stock-muted">{active?stockRuleText(active):"Автоматическое списание выключено"}</p>
-     {current.note&&<p>{current.note}</p>}
-    </div>
-    <div className="stock-actions">
-     <Button onClick={()=>{setOperation("add");setUnit(current.display_unit);setMode("operation");}}>Пополнить</Button>
-     <Button onClick={()=>{setOperation("manual_use");setUnit(current.display_unit);setMode("operation");}}>Списать</Button>
-     <Button variant="ghost" onClick={()=>{setOperation("correction");setUnit(current.display_unit);setMode("operation");}}>Скорректировать остаток</Button>
-    </div>
-    <h2>Автоматическое списание</h2>
-    <div className="stock-detail-card">
-     <p>{active?stockRuleText(active):current.rules.length
-       ? "Автосписание выключено · ранее указан расход: "+stockRuleText(current.rules[0])
-       : "Выключено"}</p>
-     {active&&<p className="stock-muted">Начиная с {fmt(active.starts_on)}</p>}
-     <Button size="sm" variant="secondary" onClick={()=>openRule(current)}>
-      {active?"Изменить правило":"Настроить списание"}</Button>
-    </div>
-    <div className="stock-actions">
-     <Button variant="ghost" onClick={()=>{setUnit(current.display_unit);setMode("edit");}}>Редактировать товар</Button>
-     <Button variant="ghost" onClick={async()=>{if(!window.confirm("Архивировать запас? История сохранится."))return;
-      const updated=await mutate("archive",{id:current.id});if(updated)closeDetails();}}>Архивировать</Button>
-    </div>
-    <h2>История операций</h2>
-    {!current.transactions.length&&<p className="stock-muted">Операций пока нет.</p>}
-    <div className="stock-history">{current.transactions.map(t=><div className="stock-transaction" key={t.id}>
-     <div><strong>{t.type==="add"?"Пополнение":t.type==="manual_use"?"Ручное списание":
-      t.type==="automatic_use"?"Автоматическое списание":"Корректировка"}</strong>
-      <span>{new Date(t.occurred_at).toLocaleDateString("ru-RU")}</span>
-      {t.comment&&<small>{t.comment}</small>}
-      {t.shortage>0&&<small>Не хватило: {stockAmount(t.shortage,current.display_unit)} {current.display_unit}</small>}
+     {current.note&&<p className="stock-muted">{current.note}</p>}
+     <Button fullWidth variant="primary" onClick={()=>{
+      setOperation("add");setUnit(current.display_unit);setMode("operation");
+     }}><Plus/> Пополнить</Button>
+     <div className="stock-detail-actions">
+      <Button variant="secondary" onClick={()=>{setOperation("manual_use");setUnit(current.display_unit);setMode("operation");}}>Списать</Button>
+      <Button variant="ghost" onClick={()=>{setOperation("correction");setUnit(current.display_unit);setMode("operation");}}>Скорректировать остаток</Button>
      </div>
-     <b>{t.direction==="out"?"−":"+"}{stockAmount(t.applied_amount,current.display_unit)} {current.display_unit}</b>
-    </div>)}</div>
+    </Card>
+    <section className="stock-section">
+     <SectionHeader title="Автоматическое списание"/>
+     <Card className="stock-setting-card">
+      <p>{active?stockRuleText(active):current.rules.length
+        ? "Автосписание выключено · ранее указан расход: "+stockRuleText(current.rules[0])
+        : "Выключено"}</p>
+      {active&&<p className="stock-muted">Начиная с {fmt(active.starts_on)}</p>}
+      <Button size="sm" variant="secondary" onClick={()=>openRule(current)}>
+       {active?"Изменить правило":"Настроить списание"}</Button>
+     </Card>
+     <div className="stock-actions">
+      <Button variant="ghost" onClick={()=>{setUnit(current.display_unit);setMode("edit");}}>Редактировать товар</Button>
+      <Button variant="ghost" onClick={async()=>{if(!window.confirm("Архивировать запас? История сохранится."))return;
+       const updated=await mutate("archive",{id:current.id});if(updated)closeDetails();}}>Архивировать</Button>
+     </div>
+    </section>
+    <section className="stock-section">
+     <SectionHeader title="История операций"/>
+     {!current.transactions.length&&<p className="stock-muted">Операций пока нет.</p>}
+     <div className="stock-history">{current.transactions.map(t=><div className="stock-transaction" key={t.id}>
+      <div><strong>{t.type==="add"?"Пополнение":t.type==="manual_use"?"Ручное списание":
+       t.type==="automatic_use"?"Автоматическое списание":"Корректировка"}</strong>
+       <span>{new Date(t.occurred_at).toLocaleDateString("ru-RU")}</span>
+       {t.comment&&<small>{t.comment}</small>}
+       {t.shortage>0&&<small>Не хватило: {stockAmount(t.shortage,current.display_unit)} {current.display_unit}</small>}
+      </div>
+      <b>{t.direction==="out"?"−":"+"}{stockAmount(t.applied_amount,current.display_unit)} {current.display_unit}</b>
+     </div>)}</div>
+    </section>
    </>}
    {mode==="edit"&&<>
     <h2>Редактировать запас</h2>
