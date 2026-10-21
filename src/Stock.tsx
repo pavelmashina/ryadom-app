@@ -57,6 +57,7 @@ export default function Stock({
   setItems([]);
   setSelectedId(null);
   setMode("list");
+  setEditorReturn("list");
   setGearOpen(false);
   setLoading(true);
   void load();
@@ -264,7 +265,6 @@ export default function Stock({
    starts_on:startDate,ends_on:draft.endType==="date"?draft.endDate:null});
   if(updated)leaveEditor();
  }
- const currentView=mode!=="list"&&mode!=="create"&&current;
  const groups=categories.concat([...new Set(items.map(i=>i.category))].filter(x=>!categories.includes(x)));
  const featured=items.find(i=>i.legacy_food)??items.find(i=>i.category==="Корм")??items[0];
  return <div className="stock-screen">
@@ -439,8 +439,8 @@ export default function Stock({
      {current.note&&<p className="stock-muted">{current.note}</p>}
      <Button fullWidth variant="primary" onClick={openAdd}><Plus/> Добавить запас</Button>
      <div className="stock-detail-actions">
-      <Button variant="secondary" onClick={()=>{setOperation("manual_use");setUnit(current.display_unit);setMode("operation");}}>Списать</Button>
-      <Button variant="ghost" onClick={()=>{setOperation("correction");setUnit(current.display_unit);setMode("operation");}}>Скорректировать остаток</Button>
+      <Button variant="secondary" onClick={()=>openOperation(current,"manual_use","detail")}>Списать</Button>
+      <Button variant="ghost" onClick={()=>openOperation(current,"correction","detail")}>Скорректировать остаток</Button>
      </div>
     </Card>
     <section className="stock-section">
@@ -456,7 +456,7 @@ export default function Stock({
       <Button size="sm" variant="secondary" onClick={()=>openRule(current)}>Изменить расход</Button>
      </Card>
      <div className="stock-actions">
-      <Button variant="ghost" onClick={()=>{setUnit(current.display_unit);setMode("edit");}}>Редактировать товар</Button>
+      <Button variant="ghost" onClick={()=>{setUnit(current.display_unit);openEditor("edit",current,"detail");}}>Редактировать товар</Button>
       <Button variant="ghost" onClick={async()=>{if(!window.confirm("Архивировать запас? История сохранится."))return;
        const updated=await mutate("archive",{id:current.id});if(updated)closeDetails();}}>Архивировать</Button>
      </div>
