@@ -43,6 +43,7 @@ export default function Stock({
  const [draft,setDraft]=useState<RecurrenceDraft>(()=>({...draftForDate(today()),frequency:"daily"}));
  const [ruleEnabled,setRuleEnabled]=useState(true);
  const [gearOpen,setGearOpen]=useState(false);
+ const [settingsItemId,setSettingsItemId]=useState<string|null>(null);
  const gearTrigger=useRef<HTMLButtonElement|null>(null);
  const gearPopover=useRef<HTMLDivElement|null>(null);
  const [gearPosition,setGearPosition]=useState({top:0,left:0,width:260});
@@ -51,6 +52,7 @@ export default function Stock({
  const visibleItems=items.filter(item=>item.pet_id===pet.id);
  const current=visibleItems.find((i)=>i.id===selectedId);
  const active=current?activeStockRule(current):null;
+ const settingsItem=visibleItems.find((i)=>i.id===settingsItemId);
  const load=useCallback(async()=>{
   const epoch=++loadEpoch.current;
   try {
@@ -70,6 +72,7 @@ export default function Stock({
   setMode("list");
   setEditorReturn("list");
   setGearOpen(false);
+  setSettingsItemId(null);
   setLoading(true);
   void load();
   function refresh(){if(!document.hidden)void load();}
@@ -130,7 +133,8 @@ export default function Stock({
    }
   }
   reposition();
-  gearPopover.current?.querySelector<HTMLInputElement>('[role="switch"]')?.focus();
+  (gearPopover.current?.querySelector<HTMLElement>('[role="switch"]') ??
+   gearPopover.current?.querySelector<HTMLButtonElement>('button'))?.focus({preventScroll:true});
   window.addEventListener("resize",reposition);
   document.addEventListener("scroll",reposition,true);
   document.addEventListener("pointerdown",dismissOutside);
@@ -168,7 +172,13 @@ export default function Stock({
   }catch(e){setError(errText(e));return null;}
   finally{setBusy(false);}
  }
- const closeDetails=()=>{setMode("list");setSelectedId(null);setGearOpen(false);setError("");};
+ const closeDetails=()=>{setMode("list");setSelectedId(null);setGearOpen(false);setSettingsItemId(null);setError("");};
+ function showStockMenu(item:StockItem|null,button:HTMLButtonElement){
+  gearTrigger.current=button;
+  setSettingsItemId(item?.id??null);
+  setGearOpen(true);
+  setError("");
+ }
  function openEditor(next:"edit"|"operation"|"rule",item:StockItem,origin:"list"|"detail"=(mode==="detail"?"detail":"list")){
   setEditorReturn(origin);
   setSelectedId(item.id);
@@ -285,8 +295,6 @@ export default function Stock({
   if(updated)leaveEditor();
  }
  const currentView=mode!=="list"&&mode!=="create"&&current;
- const groups=categories.concat([...new Set(visibleItems.map(i=>i.category))].filter(x=>!categories.includes(x)));
- const featured=visibleItems.find(i=>i.legacy_food)??visibleItems.find(i=>i.category==="Корм")??visibleItems[0];
  return <div className="stock-screen">
   {mode!=="list"&&(
    <div className="stock-top">
@@ -297,87 +305,53 @@ export default function Stock({
   )}
   {error&&<p className="stock-error" role="alert">{error}</p>}
   {mode==="list"&&<>
-   {loading&&<p className="stock-muted">Загружаем запасы…</p>}
-   {!loading&&!featured&&<Card variant="info" className="stock-featured">
-    <span className="eyebrow">Корм · фактический остаток</span>
-    <p className="stock-muted">Запасов пока нет. Добавьте первый товар, чтобы отслеживать расход и пополнения.</p>
-    <Button fullWidth variant="primary" onClick={openAdd}>
-     <Plus/> Добавить запас
-    </Button>
-   </Card>}
-   {featured&&<Card variant="info" className="stock-featured">
-    <div className="stock-eyebrow-row">
-     <span className="eyebrow">{featured.name} · фактический остаток</span>
-     <button type="button" className="stock-gear" aria-label={"Настройки запаса: "+featured.name}
-      ref={gearTrigger} aria-haspopup="dialog" aria-expanded={gearOpen}
-      aria-controls={gearOpen?"stock-featured-settings":undefined}
-      onClick={()=>setGearOpen(open=>!open)}><Settings aria-hidden="true"/></button>
+   <section className="stock-section">
+    <div className="stock-list-header">
+     <h2>Запасы</h2>
+     <button type="button" className="stock-add-trigger"
+      aria-label="Добавить запас или покупку" aria-haspopup="dialog"
+      aria-expanded={gearOpen&&settingsItemId===null}
+      aria-controls={gearOpen&&settingsItemId===null?"stock-action-menu":undefined}
+      onClick={e=>showStockMenu(null,e.currentTarget)}>
+      <Plus aria-hidden="true"/>
+     </button>
     </div>
-    {gearOpen&&typeof document!=="undefined"&&createPortal(
-     <div className="stock-settings-layer">
-      <div className="stock-settings-backdrop" aria-hidden="true" onClick={()=>setGearOpen(false)}/>
-      <div className="stock-gear-panel" id="stock-featured-settings" ref={gearPopover}
-      role="dialog" aria-modal="true" aria-label={"Настройки запаса: "+featured.name}
-      style={{top:gearPosition.top,left:gearPosition.left,width:gearPosition.width}}>
-      <label className="stock-switch-row">
-       <span>Автоматическое списание</span>
-       <input type="checkbox" role="switch" className="stock-switch"
-        checked={Boolean(activeStockRule(featured))} disabled={busy}
-        onChange={e=>void toggleAuto(featured,e.target.checked)}/>
-      </label>
-      <button type="button" onClick={()=>{setGearOpen(false);openRule(featured);}}>Изменить расход</button>
-      <button type="button" onClick={()=>openOperation(featured,"manual_use","list")}>Списать вручную</button>
-      <button type="button" onClick={()=>goDetail(featured)}>История и параметры</button>
-     </div>
-     </div>,document.body)}
-    <div className="stock-overview">
-     <div className="stock-large">
-      {stockAmount(featured.current_quantity,featured.display_unit)} <small>{featured.display_unit}</small>
-     </div>
-     <Badge><Package/>{stockForecast(featured,today())
-      ? "≈ "+stockForecast(featured,today())!.days+" дн."
-      : activeStockRule(featured)?"Прогноз недоступен":"Укажите расход"}</Badge>
-    </div>
-    <progress value={stockProgress(featured)} max={100}
-     aria-label={"Остаток "+stockAmount(featured.current_quantity,featured.display_unit)+" "+featured.display_unit}/>
-    <div className="spread stock-scale">
-     <span>0 {featured.display_unit}</span>
-     <span>{stockAmount(featured.reference_quantity,featured.display_unit)} {featured.display_unit} · ориентир</span>
-    </div>
-    {stockForecast(featured,today())&&<p className="stock-muted">
-     Примерно до {fmt(stockForecast(featured,today())!.date)}
-    </p>}
-    {stockStatus(featured)!=="normal"&&<p className="stock-warning">
-     {stockStatus(featured)==="empty"?"Запас закончился.":"Запас скоро закончится."}
-    </p>}
-    <Button fullWidth variant="primary" onClick={openAdd}><Plus/> Добавить запас</Button>
-   </Card>}
-   {featured&&stockStatus(featured)!=="normal"&&<p className="stock-notice">
-    {stockStatus(featured)==="empty"?"Запас закончился. Пора пополнить.":"Запас скоро закончится. Проверьте остаток и запланируйте покупку."}
-   </p>}
-   {groups.map(category=>{
-    const stocks=visibleItems.filter(i=>i.id!==featured?.id && i.category===category);
-    if(!stocks.length)return null;
-    return <section className="stock-section" key={category}>
-     <SectionHeader title={category}/>
-     <div className="stock-list">{stocks.map(item=>{
-      const status=stockStatus(item);
+    <Card variant="info" className="stock-collection">
+     {loading&&<p className="stock-muted">Загружаем запасы…</p>}
+     {!loading&&!visibleItems.length&&<p className="stock-muted">
+      Пока нет запасов. Нажмите «+», чтобы добавить первый товар.
+     </p>}
+     {visibleItems.map(item=>{
       const forecast=stockForecast(item,today());
-      return <button type="button" key={item.id} className={"stock-card stock-"+status}
-       onClick={()=>goDetail(item)}>
-       <div className="stock-card-head">
-        <strong>{item.name}</strong>
-        <span className="stock-card-quantity">{stockAmount(item.current_quantity,item.display_unit)} {item.display_unit}</span>
+      const status=stockStatus(item);
+      return <div className={"stock-item stock-"+status} key={item.id}>
+       <div className="stock-item-top">
+        <button type="button" className="stock-item-open"
+         onClick={()=>goDetail(item)} aria-label={"Открыть запас: "+item.name}>
+         <strong className="stock-item-name">{item.name}</strong>
+         <span className="stock-item-category">{item.category}</span>
+        </button>
+        <strong className="stock-item-balance">
+         {stockAmount(item.current_quantity,item.display_unit)} {item.display_unit}
+        </strong>
+        <button type="button" className="stock-gear"
+         aria-label={"Настройки запаса: "+item.name}
+         aria-haspopup="dialog" aria-expanded={gearOpen&&settingsItemId===item.id}
+         aria-controls={gearOpen&&settingsItemId===item.id?"stock-action-menu":undefined}
+         onClick={e=>showStockMenu(item,e.currentTarget)}>
+         <Settings aria-hidden="true"/>
+        </button>
        </div>
-       {(forecast||status!=="normal")&&<span className="stock-secondary">
-        {forecast&&"≈"+forecast.days+" дн."}
+       <progress max={100} value={stockProgress(item)}
+        aria-label={"Остаток "+item.name+": "+stockAmount(item.current_quantity,item.display_unit)+" "+item.display_unit}/>
+       <div className="stock-item-footer">
+        <span>{forecast?"Примерно на "+forecast.days+" дн.":""}</span>
         {status!=="normal"&&<em>{status==="empty"?"Закончился":"Скоро закончится"}</em>}
-       </span>}
-       <progress max={100} value={stockProgress(item)} aria-label={"Остаток "+stockProgress(item)+"%"} />
-      </button>;
-     })}</div>
-    </section>;
-   })}
+       </div>
+      </div>;
+     })}
+    </Card>
+   </section>
    <section className="stock-section stock-shopping">
     <SectionHeader title="Купить">
      <span className="stock-shopping-count">{pet.shopping.filter(s=>!s.done).length} в списке</span>
@@ -389,9 +363,31 @@ export default function Stock({
        label={<span>{s.name}<small>{s.quantity}</small></span>}/>)}
      </div>
     ):<Empty title="Всё есть дома">Добавляйте покупки по мере необходимости.</Empty>}
-    <Button fullWidth variant="secondary" onClick={onShop}><Plus/> Добавить покупку</Button>
-    <p className="stock-muted stock-shopping-help">При подтверждении покупки вы можете сразу внести купленный корм в запас. Повторное пополнение той же покупки не начисляется.</p>
+    <p className="stock-muted stock-shopping-help">Купленный корм можно сразу внести в запас при подтверждении покупки.</p>
    </section>
+   {gearOpen&&typeof document!=="undefined"&&createPortal(
+    <div className="stock-settings-layer">
+     <div className="stock-settings-backdrop" aria-hidden="true" onClick={()=>setGearOpen(false)}/>
+     <div className="stock-gear-panel" id="stock-action-menu" ref={gearPopover}
+      role="dialog" aria-modal="true"
+      aria-label={settingsItem?"Настройки запаса: "+settingsItem.name:"Добавить"}
+      style={{top:gearPosition.top,left:gearPosition.left,width:gearPosition.width}}>
+      {settingsItem ? <>
+       <label className="stock-switch-row">
+        <span>Автоматическое списание</span>
+        <input type="checkbox" role="switch" className="stock-switch"
+         checked={Boolean(activeStockRule(settingsItem))} disabled={busy}
+         onChange={e=>void toggleAuto(settingsItem,e.target.checked)}/>
+       </label>
+       <button type="button" onClick={()=>{setGearOpen(false);openRule(settingsItem);}}>Изменить расход</button>
+       <button type="button" onClick={()=>openOperation(settingsItem,"manual_use","list")}>Списать вручную</button>
+       <button type="button" onClick={()=>goDetail(settingsItem)}>История и параметры</button>
+      </> : <>
+       <button type="button" onClick={()=>{setGearOpen(false);openAdd();}}>Добавить запас</button>
+       <button type="button" onClick={()=>{setGearOpen(false);onShop();}}>Добавить покупку</button>
+      </>}
+     </div>
+    </div>,document.body)}
   </>}
   {mode==="create"&&<section className="stock-section">
    <h2>Добавить запас</h2>
@@ -438,7 +434,6 @@ export default function Stock({
    {mode==="detail"&&<>
     <h2 className="stock-detail-title">{current.name}</h2>
     <Card variant="info" className="stock-detail-card">
-     <span className="eyebrow">Фактический остаток</span>
      <div className="stock-overview">
       <div className="stock-large">
        {stockAmount(current.current_quantity,current.display_unit)} <small>{current.display_unit}</small>
