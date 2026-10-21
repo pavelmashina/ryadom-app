@@ -29,6 +29,7 @@ export default function Stock({
  const handledLink=useRef<string|null>(null);
  const [selectedId,setSelectedId]=useState<string|null>(null);
  const [mode,setMode]=useState<Mode>("list");
+ const [editorReturn,setEditorReturn]=useState<"list"|"detail">("list");
  const [operation,setOperation]=useState<Op>("add");
  const [busy,setBusy]=useState(false);
  const [loading,setLoading]=useState(true);
@@ -70,6 +71,17 @@ export default function Stock({
  },[load]);
  useEffect(()=>{
   if(!gearOpen)return;
+  const oldBody={
+   position:document.body.style.position,top:document.body.style.top,
+   width:document.body.style.width,overflow:document.body.style.overflow,
+  };
+  const oldHtmlOverflow=document.documentElement.style.overflow;
+  const scrollY=window.scrollY;
+  document.body.style.position="fixed";
+  document.body.style.top="-"+scrollY+"px";
+  document.body.style.width="100%";
+  document.body.style.overflow="hidden";
+  document.documentElement.style.overflow="hidden";
   function reposition(){
    const trigger=gearTrigger.current;
    if(!trigger)return;
@@ -88,7 +100,19 @@ export default function Stock({
    if(!gearTrigger.current?.contains(target)&&!gearPopover.current?.contains(target))setGearOpen(false);
   }
   function dismissEscape(e:KeyboardEvent){
-   if(e.key==="Escape"){setGearOpen(false);gearTrigger.current?.focus();}
+   if(e.key==="Escape"){
+    e.preventDefault();setGearOpen(false);
+    gearTrigger.current?.focus({preventScroll:true});
+   }
+   if(e.key==="Tab"){
+    const controls=Array.from(gearPopover.current?.querySelectorAll<HTMLElement>(
+     'button:not([disabled]), input:not([disabled]), [tabindex="0"]'
+    )??[]);
+    if(!controls.length)return;
+    const first=controls[0],last=controls[controls.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+   }
   }
   reposition();
   gearPopover.current?.querySelector<HTMLInputElement>('[role="switch"]')?.focus();
@@ -101,6 +125,12 @@ export default function Stock({
    document.removeEventListener("scroll",reposition,true);
    document.removeEventListener("pointerdown",dismissOutside);
    document.removeEventListener("keydown",dismissEscape);
+   document.body.style.position=oldBody.position;
+   document.body.style.top=oldBody.top;
+   document.body.style.width=oldBody.width;
+   document.body.style.overflow=oldBody.overflow;
+   document.documentElement.style.overflow=oldHtmlOverflow;
+   window.scrollTo({top:scrollY,behavior:"instant"});
   };
  },[gearOpen]);
  useEffect(()=>{
@@ -119,6 +149,29 @@ export default function Stock({
   finally{setBusy(false);}
  }
  const closeDetails=()=>{setMode("list");setSelectedId(null);setGearOpen(false);setError("");};
+ function openEditor(next:"edit"|"operation"|"rule",item:StockItem,origin:"list"|"detail"=(mode==="detail"?"detail":"list")){
+  setEditorReturn(origin);
+  setSelectedId(item.id);
+  setGearOpen(false);
+  setError("");
+  setMode(next);
+ }
+ function leaveEditor(){
+  setGearOpen(false);
+  setError("");
+  if(editorReturn==="list"){setMode("list");setSelectedId(null);}
+  else setMode("detail");
+ }
+ function goBack(){
+  if(mode==="list")return;
+  if(mode==="create"||mode==="detail"){closeDetails();return;}
+  leaveEditor();
+ }
+ function openOperation(item:StockItem,action:Op,origin:"list"|"detail"=(mode==="detail"?"detail":"list")){
+  setOperation(action);
+  setUnit(item.display_unit);
+  openEditor("operation",item,origin);
+ }
  function openAdd() {
   const target=(mode==="detail"&&current)?current:(items.find(i=>i.legacy_food)??items.find(i=>i.category==="Корм")??items[0]);
   setCreateTarget(target?"existing":"new");
@@ -167,7 +220,7 @@ export default function Stock({
   setStartDate(rule?.enabled?today():starts);
   setUnit(item.display_unit);
   setRuleEnabled(Boolean(activeStockRule(item))||!rule);
-  setSelectedId(item.id);setMode("rule");setError("");
+  openEditor("rule",item);
  }
  function goDetail(item:StockItem) {setSelectedId(item.id);setGearOpen(false);setMode("detail");setError("");}
  async function onCreate(e:FormEvent<HTMLFormElement>) {
@@ -189,14 +242,14 @@ export default function Stock({
    unit:String(d.get("unit")),threshold:Number(d.get("threshold")||0),
    note:String(d.get("note")||""),notifications:d.has("notifications")
   });
-  if(updated)setMode("detail");
+  if(updated)leaveEditor();
  }
  async function onOperation(e:FormEvent<HTMLFormElement>) {
   e.preventDefault();if(!current)return;
   const d=new FormData(e.currentTarget);
   const updated=await mutate(operation,{id:current.id,amount:Number(d.get("amount")),
    unit:String(d.get("unit")),note:String(d.get("note")||"")});
-  if(updated)setMode("detail");
+  if(updated)leaveEditor();
  }
  async function onRule(e:FormEvent<HTMLFormElement>) {
   e.preventDefault();if(!current)return;
@@ -209,7 +262,7 @@ export default function Stock({
    frequency:draft.frequency,interval:draft.interval,
    days_of_week:draft.weekdays,day_of_month:draft.monthday,
    starts_on:startDate,ends_on:draft.endType==="date"?draft.endDate:null});
-  if(updated)setMode("detail");
+  if(updated)leaveEditor();
  }
  const currentView=mode!=="list"&&mode!=="create"&&current;
  const groups=categories.concat([...new Set(items.map(i=>i.category))].filter(x=>!categories.includes(x)));
@@ -217,7 +270,7 @@ export default function Stock({
  return <div className="stock-screen">
   {mode!=="list"&&(
    <div className="stock-top">
-    <Button size="sm" variant="ghost" onClick={()=>currentView?setMode("detail"):closeDetails()}>
+    <Button size="sm" variant="ghost" onClick={goBack}>
      <ArrowLeft/> Назад
     </Button>
    </div>
@@ -241,8 +294,10 @@ export default function Stock({
       onClick={()=>setGearOpen(open=>!open)}><Settings aria-hidden="true"/></button>
     </div>
     {gearOpen&&typeof document!=="undefined"&&createPortal(
-     <div className="stock-gear-panel" id="stock-featured-settings" ref={gearPopover}
-      role="dialog" aria-label={"Настройки запаса: "+featured.name}
+     <div className="stock-settings-layer">
+      <div className="stock-settings-backdrop" aria-hidden="true" onClick={()=>setGearOpen(false)}/>
+      <div className="stock-gear-panel" id="stock-featured-settings" ref={gearPopover}
+      role="dialog" aria-modal="true" aria-label={"Настройки запаса: "+featured.name}
       style={{top:gearPosition.top,left:gearPosition.left,width:gearPosition.width}}>
       <label className="stock-switch-row">
        <span>Автоматическое списание</span>
@@ -251,11 +306,9 @@ export default function Stock({
         onChange={e=>void toggleAuto(featured,e.target.checked)}/>
       </label>
       <button type="button" onClick={()=>{setGearOpen(false);openRule(featured);}}>Изменить расход</button>
-      <button type="button" onClick={()=>{
-       setSelectedId(featured.id);setOperation("manual_use");setUnit(featured.display_unit);
-       setGearOpen(false);setMode("operation");
-      }}>Списать вручную</button>
+      <button type="button" onClick={()=>openOperation(featured,"manual_use","list")}>Списать вручную</button>
       <button type="button" onClick={()=>goDetail(featured)}>История и параметры</button>
+     </div>
      </div>,document.body)}
     <div className="stock-overview">
      <div className="stock-large">
