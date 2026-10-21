@@ -270,7 +270,7 @@
   height: var(--training-day-circle);
   border-radius: 50%;
   font-size: var(--font-size-sm);
-  font-weight: inherit;
+  font-weight: var(--font-weight-medium);
   line-height: 1;
 }
 .training-screen .training-day:hover .training-day-number {
