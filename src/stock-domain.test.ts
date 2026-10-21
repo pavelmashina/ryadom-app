@@ -2,7 +2,7 @@ import { describe,it,expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { activeStockRule, compatibleStockUnits, stockAmount, stockForecast, stockProgress, stockRuleText, stockStatus, stockUnitBase, stockUnitFactor, type StockItem, type StockRule } from "./stock-domain";
 const css=readFileSync(new URL("./stock.css",import.meta.url),"utf8");
-const ddl=readFileSync(new URL("../supabase/migrations/20261021194000_stock_ledger_and_consumption.sql",import.meta.url),"utf8");
+const ddl=readFileSync(new URL("../supabase/migrations/20261021155329_stock_ledger_and_consumption.sql",import.meta.url),"utf8");
 const rule:StockRule={id:"r",enabled:true,amount:150,unit:"г",frequency:"daily",interval_count:1,
  days_of_week:[1,2,3,4,5,6,7],day_of_month:21,starts_on:"2026-10-21",ends_on:null,last_processed_on:null};
 const food:StockItem={id:"a",pet_id:"p",name:"Корм",category:"Корм",current_quantity:2400,reference_quantity:4000,
