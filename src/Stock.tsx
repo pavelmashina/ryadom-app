@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowLeft, Plus, RefreshCw } from "lucide-react";
 import { Button, Checkbox } from "./components";
 import { today, fmt, type Pet } from "./domain";
@@ -19,12 +19,13 @@ function Field({ label, children }: {label: string; children: React.ReactNode}) 
  return <label className="stock-field"><span>{label}</span>{children}</label>;
 }
 export default function Stock({
- pet, session, onShop, onToggle,
+ pet, session, onShop, onToggle, initialItemId,
 }:{
- pet: Pet; session: AuthSession;
+ pet: Pet; session: AuthSession; initialItemId?: string;
  onShop:()=>void; onToggle:(id:string)=>void;
 }) {
  const [items,setItems]=useState<StockItem[]>([]);
+ const handledLink=useRef<string|null>(null);
  const [selectedId,setSelectedId]=useState<string|null>(null);
  const [mode,setMode]=useState<Mode>("list");
  const [operation,setOperation]=useState<Op>("add");
@@ -45,14 +46,25 @@ export default function Stock({
   } catch(e){setError(errText(e));}finally{setLoading(false);}
  },[pet.id,session]);
  useEffect(()=>{
+  setItems([]);
+  setSelectedId(null);
+  setMode("list");
+  setLoading(true);
   void load();
   function refresh(){if(!document.hidden)void load();}
   window.addEventListener("focus",refresh);
   window.addEventListener("online",refresh);
+  window.addEventListener("ryadom:stock-changed",refresh);
   document.addEventListener("visibilitychange",refresh);
   return ()=>{window.removeEventListener("focus",refresh);window.removeEventListener("online",refresh);
+   window.removeEventListener("ryadom:stock-changed",refresh);
    document.removeEventListener("visibilitychange",refresh);};
  },[load]);
+ useEffect(()=>{
+  if(!initialItemId||handledLink.current===initialItemId)return;
+  if(!items.some(i=>i.id===initialItemId))return;
+  handledLink.current=initialItemId;setSelectedId(initialItemId);setMode("detail");
+ },[initialItemId,items]);
  async function mutate(action:string,data:Record<string,unknown>) {
   if(busy) return null;
   setBusy(true);setError("");
