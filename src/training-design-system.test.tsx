@@ -158,7 +158,15 @@ describe("Training mobile composition (requirements 140–161)", () => {
     const optionalSchedule = css.split(".training-screen .explanation {")[1]?.split("}")[0] ?? "";
     expect(title).toContain("margin: 0 0 var(--training-heading-gap)");
     expect(command).toContain("margin: 0 0 var(--training-heading-gap)");
-    expect(selectedDay).toContain("0 var(--training-heading-gap)");
+    // The Commands heading used to look farther away because it was centered
+    // in a 40/44px-high control row and cards had additional top padding.
+    expect(command).toContain("align-items: flex-end");
+    expect(command).not.toContain("min-height:");
+    const commandList = css.split(".training-screen .command-list {")[1]?.split("}")[0] ?? "";
+    expect(commandList).toContain("padding: 0 0 var(--space-compact-1)");
+    expect(commandList).not.toContain("padding: var(--space-compact-1) 0");
+    // Gap below the Calendar card matches the gap below the Commands section.
+    expect(selectedDay).toContain("margin: var(--training-section-gap) 0 var(--training-heading-gap)");
     expect(commandSection).toContain("margin-bottom: var(--training-section-gap)");
     expect(optionalSchedule).toContain("margin-top: var(--training-section-gap)");
     expect(css).toContain(".training-screen > .explanation + .training-history");

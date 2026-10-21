@@ -89,9 +89,10 @@
 }
 .training-screen .command-scroll-guide {
   display: flex;
-  align-items: center;
+  /* Align the heading's bottom with the scroll controls: no hidden gap
+     from the 44px icon buttons or a 40px minimum-height header. */
+  align-items: flex-end;
   justify-content: space-between;
-  min-height: 40px;
   gap: var(--space-compact-3);
   margin: 0 0 var(--training-heading-gap);
 }
@@ -114,7 +115,9 @@
   max-width: 100%;
   min-width: 0;
   overflow-x: auto;
-  padding: var(--space-compact-1) 0;
+  /* No extra top padding: the visible card starts at the same 12px
+     distance as the Calendar card below its section title. */
+  padding: 0 0 var(--space-compact-1);
   overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
   scrollbar-width: thin;
@@ -362,7 +365,8 @@
 
 /* The selected date is the sole day heading; cards do not repeat it. */
 .training-screen .training-selected-date {
-  margin: var(--training-heading-gap) 0 var(--training-heading-gap);
+  /* Calendar -> selected day equals Commands -> Calendar (16px). */
+  margin: var(--training-section-gap) 0 var(--training-heading-gap);
   color: var(--color-text-primary);
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
