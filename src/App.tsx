@@ -133,6 +133,8 @@ export default function App({
   const handledPushLink = useRef(false);
   const handledTrainingLink = useRef(false);
   const handledJoinLink = useRef(false);
+  const handledStockLink = useRef(false);
+  const [stockTarget,setStockTarget] = useState<string | undefined>();
   const [joinCode, setJoinCode] = useState<string | null>(() => joinCodeFromUrl(location.search));
   const [eventScope, setEventScope] = useState<EventScope>("single");
   const [busy, setBusy] = useState(false);
@@ -197,6 +199,20 @@ export default function App({
     setOverlay({ kind: "detail", event, on: day });
     history.replaceState(null, "", location.pathname + location.hash);
   }, [state]);
+  useEffect(() => {
+    if (handledStockLink.current) return;
+    const params = new URLSearchParams(location.search);
+    const targetPet = params.get("stockPet");
+    if (!targetPet || !state.pets.some((p) => p.id === targetPet)) return;
+    handledStockLink.current = true;
+    const stockId = params.get("stock");
+    setStockTarget(stockId || undefined);
+    setState((previous) => ({...previous,selectedPet:targetPet}));
+    setScreen("stock");
+    setOverlay(null);
+    history.replaceState(null,"",location.pathname+location.hash);
+  },[state]);
+
   const overlayRef = useRef(overlay);
   overlayRef.current = overlay;
   const refreshRef = useRef(onRefresh);
@@ -1077,6 +1093,7 @@ export default function App({
                 p_data:{amount,purchase_id:item.id},
               });
               await saved(() => update((p) => completeShoppingItem(p, item.id, amount, today())));
+              if (amount > 0) window.dispatchEvent(new Event("ryadom:stock-changed"));
             }}
           >
             <p><strong>{item.name}</strong>{item.quantity ? " · " + item.quantity : ""}</p>
@@ -1380,6 +1397,7 @@ export default function App({
             <Stock
               pet={pet}
               session={session}
+              initialItemId={stockTarget}
               onShop={() => setOverlay({ kind: "shopping" })}
               onToggle={(itemId) => {
                 const item = pet.shopping.find((s) => s.id === itemId);
