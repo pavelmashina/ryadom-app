@@ -23,6 +23,15 @@ describe("Stock domain and scheduled consumption",()=>{
   expect(stockForecast(spaced,"2026-10-21")).toMatchObject({date:"2026-11-04"});
   expect(stockRuleText(food.rules[0])).toContain("150 г");
  });
+ it("handles every-three-day consumption, biweekly schedules and short months",()=>{
+  const everyThree:StockItem={...food,current_quantity:2,unit:"таблетки",display_unit:"таблетки",
+    rules:[{...rule,unit:"таблетки",amount:1,frequency:"daily",interval_count:3}]};
+  expect(stockForecast(everyThree,"2026-10-21")).toMatchObject({days:6,date:"2026-10-27"});
+  const monthly:StockItem={...everyThree,current_quantity:1,rules:[{...rule,unit:"таблетки",
+    frequency:"monthly",amount:1,interval_count:1,
+    starts_on:"2026-10-31",day_of_month:31}]};
+  expect(stockForecast(monthly,"2026-10-31")).toMatchObject({days:30,date:"2026-11-30"});
+ });
  it("reports low and depleted stock and bounds progress",()=>{
   expect(stockStatus(food)).toBe("normal");
   expect(stockStatus({...food,current_quantity:500})).toBe("low");
