@@ -51,7 +51,7 @@ describe("Restored stock screen composition", () => {
   it("keeps one stock-add CTA and exposes a food settings gear with a direct switch", () => {
     expect(source).toContain('className="stock-gear"');
     expect(source).toContain('<Settings aria-hidden="true"/>');
-    expect(source).toContain('aria-controls="stock-featured-settings"');
+    expect(source).toContain('aria-controls={gearOpen?"stock-featured-settings":undefined}');
     expect(source).toContain('className="stock-gear-panel"');
     expect(source).toContain("Изменить расход");
     expect(source).toContain("Списать вручную");
@@ -105,7 +105,7 @@ describe("Restored stock screen composition", () => {
 
   it("lets users edit a saved consumption rate even while auto-deduction is off", () => {
     expect(source).toContain("const savedRule=activeStockRule(item)??item.rules[0]");
-    expect(source).toContain('if(enabled&&!savedRule){openRule(item);return;}');
+    expect(source).toContain('if(enabled&&!savedRule){setGearOpen(false);openRule(item);return;}');
     expect(source).toContain('await mutate("set_rule",');
     expect(source).toContain('Расход сохранится, но автоматическое списание останется выключенным.');
     expect(source).not.toContain('{ruleEnabled&&<>');
