@@ -58,8 +58,8 @@ describe("Training mobile composition (requirements 140–161)", () => {
     expect(headingSource).not.toContain(".length");
   });
 
-  it("uses four font-size and three weight tokens without isolated pixel overrides", () => {
-    for (const name of ["xl", "lg", "md", "sm"])
+  it("uses five font-size and three weight tokens without isolated pixel overrides", () => {
+    for (const name of ["xl", "lg", "md", "sm", "xs"])
       expect(tokens).toMatch(new RegExp("--font-size-" + name + ":\\s*\\d+px"));
     for (const weight of ["regular", "medium", "semibold"])
       expect(tokens).toContain("--font-weight-" + weight + ":");
@@ -68,7 +68,7 @@ describe("Training mobile composition (requirements 140–161)", () => {
     const fontSizes = [...css.matchAll(/font-size:\s*([^;]+);/g)].map((x) => x[1].trim());
     expect(new Set(fontSizes)).toEqual(new Set([
       "var(--font-size-md)", "var(--font-size-lg)",
-      "var(--font-size-xl)", "var(--font-size-sm)",
+      "var(--font-size-xl)", "var(--font-size-sm)", "var(--font-size-xs)",
     ]));
     const fontWeights = [...css.matchAll(/font-weight:\s*([^;]+);/g)].map((x) => x[1].trim());
     expect(new Set(fontWeights)).toEqual(new Set([
@@ -77,17 +77,34 @@ describe("Training mobile composition (requirements 140–161)", () => {
     expect(css).not.toMatch(/(?:font-size|font-weight):\s*(?:15px|17px|18px|19px|21px|26px|700)\s*;/);
   });
 
-  it("keeps a 44px hit target with smaller visual circle and calendar typography", () => {
-    expect(css).toMatch(/\.training-screen \.training-day,\s*\.training-screen \.training-days > span\s*\{[^}]*min-height: var\(--button-height-sm\);/);
-    expect(tokens).toContain("--button-height-sm: 44px;");
-    expect(css).toMatch(/\.training-screen \.training-day::before\s*\{[^}]*width: 32px;[^}]*height: 32px;/);
-    expect(css).toMatch(/\.training-screen \.training-day\s*\{[^}]*font-size: var\(--font-size-sm\);/);
-    expect(css).toContain(".training-screen .training-day[aria-pressed=\"true\"]::before");
+  it("keeps exactly 40px fixed cells with a 30px circle and centered markers", () => {
+    expect(css).toContain("--training-day-size: 40px;");
+    expect(css).toContain("--training-day-circle: 30px;");
+    expect(css).toContain("grid-template-columns: repeat(7, minmax(0, 1fr))");
+    expect(css).toContain("grid-auto-rows: var(--training-day-size)");
+    const numberRule = css.split(".training-screen .training-day-number {")[1]?.split("}")[0] ?? "";
+    expect(numberRule).toContain("display: flex");
+    expect(numberRule).toContain("align-items: center");
+    expect(numberRule).toContain("justify-content: center");
+    expect(numberRule).toContain("line-height: 1");
+    expect(numberRule).toContain("border-radius: 50%");
+    const markerRule = css.split(".training-screen .training-day-markers {")[1]?.split("}")[0] ?? "";
+    expect(markerRule).toContain("flex: 0 0 6px");
+    expect(markerRule).toContain("align-items: center");
+    expect(markerRule).toContain("justify-content: center");
+    expect(css).toContain('.training-screen .training-day[aria-pressed="true"] .training-day-number');
+    expect(css).toContain('.training-screen .training-day[aria-current="date"] .training-day-number');
+    expect(css).not.toContain(".training-day::before");
+    expect(css).not.toMatch(/margin-left:|translateX\(/);
   });
 
-  it("uses the same spacing tokens throughout calendar, header, cards and command area", () => {
-    for (const name of ["--space-1", "--space-2", "--space-3", "--space-4", "--space-6"])
+  it("uses the compact 4/6/8/12/16/20 spacing rhythm across the screen", () => {
+    const scale = [4, 6, 8, 12, 16, 20];
+    for (const [i, px] of scale.entries()) {
+      const name = "--space-compact-" + (i + 1);
+      expect(tokens).toContain(name + ": " + px + "px;");
       expect(css).toContain("var(" + name + ")");
+    }
     for (const selector of [
       ".training-screen .heading",
       ".training-screen .command-scroller",
@@ -96,9 +113,11 @@ describe("Training mobile composition (requirements 140–161)", () => {
       ".training-screen .training-session-summary.card",
       ".training-screen .training-session-actions",
     ]) expect(css).toContain(selector);
+    const declarations = [...css.matchAll(/(?:margin|padding|gap):\s*([^;]+);/g)]
+      .map((x) => x[1].trim());
+    expect(declarations.some((x) => /(?:24|32|11|17|19|27)px/.test(x))).toBe(false);
+    expect(css).toContain("grid-template-rows: repeat(2, 28px)");
     expect(css).toContain("overflow-x: auto;");
-    expect(css).toContain("grid-template-rows: repeat(2, 32px)");
-    expect(css).not.toMatch(/(?:margin|padding|gap):[^;]*(?:11|17|19|27)px/);
   });
 
   it("renders a consistent full training screen with command and calendar sections", () => {
