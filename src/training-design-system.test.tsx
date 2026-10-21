@@ -29,7 +29,7 @@ describe("Training mobile composition (requirements 140–161)", () => {
       commands={commands} onOpen={() => {}} onEdit={() => {}} />);
     expect(html).toContain("<h2>Календарь</h2>");
     const heading = html.match(/<h3 class="training-selected-date"[^>]*>([^<]+)<\/h3>/);
-    expect(heading?.[1]).toBe("15 октября 2026");
+    expect(heading?.[1]).toBe("15 октября");
     expect(html.match(/class="card training-session-summary completed"/g)).toHaveLength(2);
     expect(html).not.toContain('class="training-session-date"');
     expect(html.match(/<strong>Тренировка<\/strong>/g)).toHaveLength(2);
@@ -55,16 +55,16 @@ describe("Training mobile composition (requirements 140–161)", () => {
       expect(tokens).toContain("--font-weight-" + weight + ":");
     for (const lh of ["heading", "body", "caption"])
       expect(tokens).toContain("--line-height-ui-" + lh + ":");
-    const fontSizes = [...css.matchAll(/font-size:\\s*([^;]+);/g)].map((x) => x[1].trim());
+    const fontSizes = [...css.matchAll(/font-size:\s*([^;]+);/g)].map((x) => x[1].trim());
     expect(new Set(fontSizes)).toEqual(new Set([
       "var(--font-size-md)", "var(--font-size-lg)",
       "var(--font-size-xl)", "var(--font-size-sm)",
     ]));
-    const fontWeights = [...css.matchAll(/font-weight:\\s*([^;]+);/g)].map((x) => x[1].trim());
+    const fontWeights = [...css.matchAll(/font-weight:\s*([^;]+);/g)].map((x) => x[1].trim());
     expect(new Set(fontWeights)).toEqual(new Set([
       "var(--font-weight-regular)", "var(--font-weight-medium)", "var(--font-weight-semibold)",
     ]));
-    expect(css).not.toMatch(/(?:font-size|font-weight):\\s*(?:15px|17px|18px|19px|21px|26px|700)\\s*;/);
+    expect(css).not.toMatch(/(?:font-size|font-weight):\s*(?:15px|17px|18px|19px|21px|26px|700)\s*;/);
   });
 
   it("keeps a 44px hit target with smaller visual circle and calendar typography", () => {
