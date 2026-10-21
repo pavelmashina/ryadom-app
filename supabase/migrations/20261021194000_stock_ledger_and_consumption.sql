@@ -178,7 +178,7 @@ begin
  perform pet_private.process_stock_for_pet(p_pet);
  select coalesce(jsonb_agg(to_jsonb(i)||jsonb_build_object(
   'rules',coalesce((select jsonb_agg(to_jsonb(r) order by r.created_at desc) from public.stock_consumption_rules r where r.stock_item_id=i.id),'[]'::jsonb),
-  'transactions',coalesce((select jsonb_agg(to_jsonb(t) order by t.occurred_at desc,t.created_at desc limit 200) from public.stock_transactions t where t.stock_item_id=i.id),'[]'::jsonb)
+  'transactions',coalesce((select jsonb_agg(t.val) from (select to_jsonb(q) as val from public.stock_transactions q where q.stock_item_id=i.id order by q.occurred_at desc,q.created_at desc limit 200) t),'[]'::jsonb)
  ) order by i.created_at,i.id),'[]'::jsonb) into result
  from public.stock_items i where i.pet_id=p_pet and i.archived_at is null;
  return coalesce(result,'[]'::jsonb);
@@ -269,8 +269,8 @@ begin
     d:=(p_data->>'starts_on')::date;
     if d< (now() at time zone 'Europe/Moscow')::date - 365 then
       raise exception 'Начало списания не может быть раньше года назад'; end if;
-    dow:=coalesce(array(select jsonb_array_elements_text(p_data->'days_of_week')::integer),
-      array[extract(isodow from d)::integer]);
+    dow:=array(select jsonb_array_elements_text(coalesce(p_data->'days_of_week','[]'::jsonb))::integer);
+    if coalesce(array_length(dow,1),0)=0 then dow:=array[extract(isodow from d)::integer]; end if;
     insert into public.stock_consumption_rules(stock_item_id,amount,unit,frequency,interval_count,
       days_of_week,day_of_month,starts_on,ends_on,enabled)
     values(item.id,requested,item.unit,p_data->>'frequency',coalesce((p_data->>'interval')::int,1),
