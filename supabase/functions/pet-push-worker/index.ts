@@ -1,14 +1,12 @@
 import * as webpush from "jsr:@negrel/webpush@0.5.0";
 
 type Job = {
-  kind: "event" | "training" | "stock";
+  kind: "event" | "training";
   id: string;
   user_id: string;
   event_id?: string;
   session_id?: string;
-  stock_item_id?: string;
-  pet_id?: string;
-  reminder_id?: string;
+  reminder_id: string;
   occurrence_at: string;
   title: string;
   comment: string;
@@ -70,8 +68,7 @@ async function sender() {
   });
 }
 async function updateDelivery(job: Job, status: string, attempts = 1, error = "") {
-  const table = job.kind === "training" ? "training_notification_deliveries" :
-    job.kind === "stock" ? "stock_notification_deliveries" : "notification_deliveries";
+  const table = job.kind === "training" ? "training_notification_deliveries" : "notification_deliveries";
   await api("/" + table + "?id=eq." + q(job.id), {
     method: "PATCH",
     body: JSON.stringify({
@@ -90,8 +87,7 @@ async function deliver(job: Job, server: webpush.ApplicationServer) {
     return false;
   }
   const deviceTable = job.kind === "training"
-    ? "training_notification_device_deliveries" :
-    job.kind === "stock" ? "stock_notification_device_deliveries" : "notification_device_deliveries";
+    ? "training_notification_device_deliveries" : "notification_device_deliveries";
   const completed = await api(
     "/" + deviceTable + "?select=subscription_id&delivery_id=eq." +
     q(job.id) + "&sent_at=not.is.null",
@@ -104,15 +100,11 @@ async function deliver(job: Job, server: webpush.ApplicationServer) {
       title: job.kind === "training" ? "Тренировка · " + job.title : job.title,
       body: job.comment?.slice(0, 240) ||
         (job.kind === "training" ? "Запланирована тренировка" : "Запланированное событие"),
-      ...(job.kind === "training" ? { trainingId: job.session_id } :
-        job.kind === "stock" ? { stockItemId: job.stock_item_id } : { eventId: job.event_id }),
+      ...(job.kind === "training" ? { trainingId: job.session_id } : { eventId: job.event_id }),
       at: job.occurrence_at,
       icon: "/ryadom-app/icon-192.png",
       url: job.kind === "training"
         ? "/ryadom-app/?training=" + encodeURIComponent(job.session_id || "")
-        : job.kind === "stock"
-        ? "/ryadom-app/?stockPet=" + encodeURIComponent(job.pet_id || "") +
-          "&stock=" + encodeURIComponent(job.stock_item_id || "")
         : "/ryadom-app/?event=" + encodeURIComponent(job.event_id || "") +
           "&date=" + encodeURIComponent(new Date(job.occurrence_at).toLocaleDateString("sv-SE", {
             timeZone: job.timezone,
@@ -176,16 +168,13 @@ Deno.serve(async (request: Request) => {
     }
     const queued = await rpc("enqueue_due_push");
     const trainingQueued = await rpc("enqueue_due_training_push");
-    const stockQueued = await rpc("enqueue_due_stock_push");
     const events = await rpc("claim_due_push", { max_jobs: 25 }) as Omit<Job, "kind">[];
     const trainings = await rpc("claim_due_training_push", { max_jobs: 25 }) as Omit<Job, "kind">[];
-    const stocks = await rpc("claim_due_stock_push", { max_jobs: 25 }) as Omit<Job, "kind">[];
     const jobs: Job[] = [
       ...events.map((job) => ({ ...job, kind: "event" as const })),
       ...trainings.map((job) => ({ ...job, kind: "training" as const })),
-      ...stocks.map((job) => ({ ...job, kind: "stock" as const })),
     ];
-    if (!jobs.length) return Response.json({ queued, trainingQueued, stockQueued, processed: 0 });
+    if (!jobs.length) return Response.json({ queued, trainingQueued, processed: 0 });
     const server = await sender();
     let sent = 0;
     for (const job of jobs) {
@@ -195,7 +184,7 @@ Deno.serve(async (request: Request) => {
         await updateDelivery(job, "failed", 2, "Push processing failure");
       }
     }
-    return Response.json({ queued, trainingQueued, stockQueued, processed: jobs.length, sent });
+    return Response.json({ queued, trainingQueued, processed: jobs.length, sent });
   } catch {
     return Response.json({ error: "Push worker unavailable" }, { status: 503 });
   }
