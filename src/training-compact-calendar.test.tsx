@@ -72,7 +72,7 @@ describe("Training calendar geometry (#162–176)", () => {
     expect(css).not.toContain("calc(50% + 2px)");
   });
 
-  it("uses fixed 40px grid rows and a single 7-column alignment for weekdays", () => {
+  it("uses fixed 44px grid rows and a single 7-column alignment for weekdays", () => {
     expect(monthDays("2027-02")).toHaveLength(28);
     expect(monthDays("2026-03")).toHaveLength(42);
     // Month height changes only if the number of actual week rows changes.

@@ -9,6 +9,9 @@
   padding-top: var(--space-compact-3);
 }
 .training-screen {
+  /* Shared rhythm: heading -> content 12px; major section -> section 16px. */
+  --training-heading-gap: var(--space-compact-4);
+  --training-section-gap: var(--space-compact-5);
   min-width: 0;
   padding-bottom: calc(var(--button-height-lg) + var(--space-compact-5));
   font-size: var(--font-size-md);
@@ -22,17 +25,8 @@
 .training-screen p {
   line-height: var(--line-height-ui-body);
 }
-.training-screen .heading {
-  margin: 0 0 var(--space-compact-5);
-}
-.training-screen .heading h1 {
-  margin: 0;
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-ui-heading);
-}
 .training-screen .section-title {
-  margin: 0 0 var(--space-compact-4);
+  margin: 0 0 var(--training-heading-gap);
   gap: var(--space-compact-4);
 }
 .training-screen .section-title h2,
@@ -63,7 +57,15 @@
   line-height: var(--line-height-ui-body);
 }
 .training-screen .explanation {
-  margin-top: var(--space-compact-5);
+  margin-top: var(--training-section-gap);
+}
+.training-screen .explanation[open] > summary {
+  margin-bottom: var(--training-heading-gap);
+}
+/* The optional recurring schedule is a whole section between commands and calendar. */
+.training-screen > .explanation + .training-history,
+.training-screen > .empty + .command-scroller {
+  margin-top: var(--training-section-gap);
 }
 .training-screen .explanation .card {
   padding: var(--space-compact-4);
@@ -83,7 +85,7 @@
 .training-screen .command-scroller {
   min-width: 0;
   max-width: 100%;
-  margin-bottom: var(--space-compact-5);
+  margin-bottom: var(--training-section-gap);
 }
 .training-screen .command-scroll-guide {
   display: flex;
@@ -91,7 +93,7 @@
   justify-content: space-between;
   min-height: 40px;
   gap: var(--space-compact-3);
-  margin: 0 0 var(--space-compact-2);
+  margin: 0 0 var(--training-heading-gap);
 }
 .training-screen .command-scroll-buttons {
   display: flex;
@@ -180,11 +182,11 @@
   background: var(--color-primary);
 }
 
-/* Calendar: 7 equal columns, identical 40px cells and centered number/dot. */
+/* Calendar: seven equal columns, fixed 44px hit areas, exact 36px circles. */
 .training-screen .training-history { min-width: 0; }
 .training-screen .training-calendar {
-  --training-day-size: 40px;
-  --training-day-circle: 30px;
+  --training-day-size: 44px;
+  --training-day-circle: 36px;
   padding: var(--space-compact-3);
   margin: 0;
   background: var(--color-surface);
@@ -243,13 +245,14 @@
   min-width: 0;
   min-height: 0;
   margin: 0;
-  padding: var(--space-compact-1) 0 0;
+  padding: 0;
 }
 .training-screen .training-day {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  /* Identical tracks in every state: circle + reserved indicator row. */
+  display: grid;
+  grid-template-rows: var(--training-day-circle) 6px;
+  align-content: center;
+  justify-items: center;
   border: 0;
   border-radius: var(--radius-md);
   background: transparent;
@@ -261,13 +264,14 @@
   font-variant-numeric: tabular-nums;
 }
 .training-screen .training-day-number {
+  display: grid;
+  place-items: center;
   box-sizing: border-box;
-  flex: 0 0 var(--training-day-circle);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: var(--training-day-circle);
   height: var(--training-day-circle);
+  min-width: var(--training-day-circle);
+  min-height: var(--training-day-circle);
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
@@ -291,7 +295,6 @@
 /* A reserved marker row prevents layout shifts for dates without sessions. */
 .training-screen .training-day-markers {
   box-sizing: border-box;
-  flex: 0 0 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -359,7 +362,7 @@
 
 /* The selected date is the sole day heading; cards do not repeat it. */
 .training-screen .training-selected-date {
-  margin: var(--space-compact-4) 0 var(--space-compact-2);
+  margin: var(--training-heading-gap) 0 var(--training-heading-gap);
   color: var(--color-text-primary);
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
@@ -482,7 +485,7 @@
   margin: 0;
 }
 .training-screen .training-history > .btn-block {
-  margin-top: var(--space-compact-5);
+  margin-top: var(--training-section-gap);
 }
 
 /* Form and command details use the same four type sizes and spacing scale. */

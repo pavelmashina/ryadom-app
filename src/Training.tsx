@@ -2,7 +2,6 @@ import { Plus } from "lucide-react";
 import {
   Textarea,
   Select,
-  PageHeader,
   Button,
   InteractiveCard,
   Card,
@@ -116,7 +115,6 @@ export default function Training({
   }
   return (
     <div className="training-screen">
-      <PageHeader title="Занятия" />
       {!activeCommands.length && (
         <Empty title="Начните с первой команды">
           Команды принадлежат только этому питомцу.

@@ -66,9 +66,10 @@ describe("Training mobile composition (requirements 140–161)", () => {
     for (const lh of ["heading", "body", "caption"])
       expect(tokens).toContain("--line-height-ui-" + lh + ":");
     const fontSizes = [...css.matchAll(/font-size:\s*([^;]+);/g)].map((x) => x[1].trim());
+    // XL remains in the shared design tokens, but this screen has no top-level title.
     expect(new Set(fontSizes)).toEqual(new Set([
       "var(--font-size-md)", "var(--font-size-lg)",
-      "var(--font-size-xl)", "var(--font-size-sm)", "var(--font-size-xs)",
+      "var(--font-size-sm)", "var(--font-size-xs)",
     ]));
     const fontWeights = [...css.matchAll(/font-weight:\s*([^;]+);/g)].map((x) => x[1].trim());
     expect(new Set(fontWeights)).toEqual(new Set([
@@ -77,21 +78,29 @@ describe("Training mobile composition (requirements 140–161)", () => {
     expect(css).not.toMatch(/(?:font-size|font-weight):\s*(?:15px|17px|18px|19px|21px|26px|700)\s*;/);
   });
 
-  it("keeps exactly 40px fixed cells with a 30px circle and centered markers", () => {
-    expect(css).toContain("--training-day-size: 40px;");
-    expect(css).toContain("--training-day-circle: 30px;");
+  it("uses rigid 44px day cells and truly circular 36px day numbers", () => {
+    expect(css).toContain("--training-day-size: 44px;");
+    expect(css).toContain("--training-day-circle: 36px;");
     expect(css).toContain("grid-template-columns: repeat(7, minmax(0, 1fr))");
     expect(css).toContain("grid-auto-rows: var(--training-day-size)");
+    const dayRule = css.split(".training-screen .training-day {")[1]?.split("}")[0] ?? "";
+    expect(dayRule).toContain("grid-template-rows: var(--training-day-circle) 6px");
+    expect(dayRule).toContain("align-content: center");
+    expect(dayRule).toContain("justify-items: center");
     const numberRule = css.split(".training-screen .training-day-number {")[1]?.split("}")[0] ?? "";
-    expect(numberRule).toContain("display: flex");
-    expect(numberRule).toContain("align-items: center");
-    expect(numberRule).toContain("justify-content: center");
+    expect(numberRule).toContain("display: grid");
+    expect(numberRule).toContain("place-items: center");
+    expect(numberRule).toContain("width: var(--training-day-circle)");
+    expect(numberRule).toContain("height: var(--training-day-circle)");
+    expect(numberRule).toContain("min-width: var(--training-day-circle)");
+    expect(numberRule).toContain("min-height: var(--training-day-circle)");
+    expect(numberRule).toContain("aspect-ratio: 1 / 1");
     expect(numberRule).toContain("line-height: 1");
     expect(numberRule).toContain("border-radius: 50%");
     const markerRule = css.split(".training-screen .training-day-markers {")[1]?.split("}")[0] ?? "";
-    expect(markerRule).toContain("flex: 0 0 6px");
     expect(markerRule).toContain("align-items: center");
     expect(markerRule).toContain("justify-content: center");
+    expect(markerRule).toContain("height: 6px");
     expect(css).toContain('.training-screen .training-day[aria-pressed="true"] .training-day-number');
     expect(css).toContain('.training-screen .training-day[aria-current="date"] .training-day-number');
     expect(css).not.toContain(".training-day::before");
@@ -106,7 +115,6 @@ describe("Training mobile composition (requirements 140–161)", () => {
       expect(css).toContain("var(" + name + ")");
     }
     for (const selector of [
-      ".training-screen .heading",
       ".training-screen .command-scroller",
       ".training-screen .training-calendar",
       ".training-screen .training-selected-date",
@@ -130,13 +138,31 @@ describe("Training mobile composition (requirements 140–161)", () => {
     };
     const html = renderToStaticMarkup(<Training
       pet={pet} session={auth} onSave={async () => {}} canEdit />);
-    expect(html).toContain("<h1>Занятия</h1>");
+    expect(html).not.toContain("<h1>Занятия</h1>");
+    expect(html).not.toContain('class="heading"');
     expect(html).toContain("<h2>Команды</h2>");
     expect(html).toContain("<h2>Календарь</h2>");
     expect(html).toContain('class="command-list"');
     expect(html).toContain('class="training-calendar"');
     expect(html).toContain('class="training-selected-date"');
     expect(html).toMatch(/class="card\s+training-session-summary completed"/);
+  });
+
+  it("uses the Calendar heading gap consistently after Commands and selected-date headings", () => {
+    expect(css).toContain("--training-heading-gap: var(--space-compact-4)");
+    expect(css).toContain("--training-section-gap: var(--space-compact-5)");
+    const title = css.split(".training-screen .section-title {")[1]?.split("}")[0] ?? "";
+    const command = css.split(".training-screen .command-scroll-guide {")[1]?.split("}")[0] ?? "";
+    const selectedDay = css.split(".training-screen .training-selected-date {")[1]?.split("}")[0] ?? "";
+    const commandSection = css.split(".training-screen .command-scroller {")[1]?.split("}")[0] ?? "";
+    const optionalSchedule = css.split(".training-screen .explanation {")[1]?.split("}")[0] ?? "";
+    expect(title).toContain("margin: 0 0 var(--training-heading-gap)");
+    expect(command).toContain("margin: 0 0 var(--training-heading-gap)");
+    expect(selectedDay).toContain("0 var(--training-heading-gap)");
+    expect(commandSection).toContain("margin-bottom: var(--training-section-gap)");
+    expect(optionalSchedule).toContain("margin-top: var(--training-section-gap)");
+    expect(css).toContain(".training-screen > .explanation + .training-history");
+    expect(css).toContain(".training-screen .explanation[open] > summary");
   });
 
   it("retains keyboard and accessible labels for day navigation", () => {
