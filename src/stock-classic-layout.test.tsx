@@ -67,6 +67,42 @@ describe("Restored stock screen composition", () => {
     expect(source).toContain('mutate("add"');
   });
 
+  it("opens a true floating, keyboard-dismissible gear menu without growing the food card", () => {
+    expect(source).toContain('import { createPortal } from "react-dom"');
+    expect(source).toContain('createPortal(');
+    expect(source).toContain('document.body)');
+    expect(source).toContain('role="dialog"');
+    expect(source).toContain('ref={gearTrigger}');
+    expect(source).toContain('ref={gearPopover}');
+    expect(source).toContain('aria-haspopup="dialog"');
+    expect(source).toContain('e.key==="Escape"');
+    expect(source).toContain('pointerdown",dismissOutside');
+    expect(source).toContain('window.addEventListener("resize",reposition)');
+    expect(source).toContain('document.addEventListener("scroll",reposition,true)');
+    const menuStyle = css.split(".stock-gear-panel {")[1]?.split("}")[0] ?? "";
+    expect(menuStyle).toContain("position: fixed");
+    expect(menuStyle).toContain("z-index: 20");
+    expect(menuStyle).toContain("overflow-y: auto");
+    expect(menuStyle).toContain("font-family: var(--font-family-base)");
+  });
+
+  it("returns to the existing stock list after saving a new item", () => {
+    const createFn=source.split("async function onCreate(")[1]?.split("async function onEdit(")[0] ?? "";
+    expect(createFn).toContain('mutate("create"');
+    expect(createFn).toContain("if(updated)closeDetails();");
+    expect(createFn).not.toContain('goDetail(item)');
+    expect(createFn).not.toContain('openRule(item)');
+    expect(source).not.toContain('name="auto"');
+  });
+
+  it("shows usage details only in settings, not redundant enabled/disabled labels on cards", () => {
+    const stockList=source.split('mode==="list"&&<>')[1]?.split('mode==="create"&&')[0] ?? "";
+    expect(stockList).not.toContain("Автоматическое списание не включено.");
+    expect(stockList).not.toContain("Автосписание выключено");
+    expect(stockList).toContain("stockForecast(featured,today())");
+    expect(stockList).toContain('className="stock-gear-panel"');
+  });
+
   it("lets users edit a saved consumption rate even while auto-deduction is off", () => {
     expect(source).toContain("const savedRule=activeStockRule(item)??item.rules[0]");
     expect(source).toContain('if(enabled&&!savedRule){openRule(item);return;}');
