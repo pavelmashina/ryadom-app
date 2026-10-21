@@ -27,7 +27,8 @@ describe("Restored stock screen composition", () => {
     expect(html).toContain("checkbox shopping");
     expect(html).not.toContain('<h1>Запасы</h1>');
     expect(source).not.toContain("<PageHeader");
-    expect(html).toContain("Добавить запас");
+    // Stock data loads asynchronously, so SSR shows the checklist first.
+    expect(source).toContain("<Plus/> Добавить запас");
   });
 
   it("renders main balance in the former pale-green info card above purchases", () => {
