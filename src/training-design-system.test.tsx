@@ -173,6 +173,15 @@ describe("Training mobile composition (requirements 140–161)", () => {
     expect(css).toContain(".training-screen .explanation[open] > summary");
   });
 
+  it("keeps command labels at S (14px) and increases month label to M (16px)", () => {
+    const commands = css.split(".training-screen .command-name {")[1]?.split("}")[0] ?? "";
+    const month = css.split(".training-screen .training-month h3 {")[1]?.split("}")[0] ?? "";
+    expect(tokens).toContain("--font-size-sm: 14px;");
+    expect(tokens).toContain("--font-size-md: 16px;");
+    expect(commands).toContain("font-size: var(--font-size-sm);");
+    expect(month).toContain("font-size: var(--font-size-md);");
+  });
+
   it("retains keyboard and accessible labels for day navigation", () => {
     const html = renderToStaticMarkup(<TrainingHistory
       sessions={[session("s1", "19:00")]}
