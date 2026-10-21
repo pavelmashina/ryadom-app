@@ -166,6 +166,7 @@ export default function Stock({
      {!pet.shopping.length&&<p className="stock-muted">Список покупок пуст.</p>}
     </div>
     <Button fullWidth variant="secondary" onClick={onShop}><Plus/> Добавить покупку</Button>
+    <p className="stock-muted">При подтверждении покупки вы можете сразу внести купленный корм в запас. Повторное пополнение той же покупки не начисляется.</p>
    </section>
   </>}
   {mode==="create"&&<section className="stock-section">
