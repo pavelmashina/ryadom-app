@@ -30,7 +30,7 @@ describe("Training mobile composition (requirements 140–161)", () => {
     expect(html).toContain("<h2>Календарь</h2>");
     const heading = html.match(/<h3 class="training-selected-date"[^>]*>([^<]+)<\/h3>/);
     expect(heading?.[1]).toBe("15 октября 2026");
-    expect(html.match(/class="training-session-summary completed"/g)).toHaveLength(2);
+    expect(html.match(/class="card training-session-summary completed"/g)).toHaveLength(2);
     expect(html).not.toContain('class="training-session-date"');
     expect(html.match(/<strong>Тренировка<\/strong>/g)).toHaveLength(2);
     expect(html).toContain("10:00");
@@ -107,7 +107,7 @@ describe("Training mobile composition (requirements 140–161)", () => {
     expect(html).toContain('class="command-list"');
     expect(html).toContain('class="training-calendar"');
     expect(html).toContain('class="training-selected-date"');
-    expect(html).toContain('class="training-session-summary completed"');
+    expect(html).toContain('class="card training-session-summary completed"');
   });
 
   it("retains keyboard and accessible labels for day navigation", () => {
