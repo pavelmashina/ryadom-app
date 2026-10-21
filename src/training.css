@@ -1,16 +1,16 @@
 /*
  * Training screen design system: one hierarchy, no freehand font or spacing values.
- * Typography: XL / L / M / S; regular / medium / semibold only.
- * Spacing: --space-1/2/3/4/6/8 = 4/8/12/16/24/32px.
+ * Typography: XL / L / M / S / XS; regular / medium / semibold only.
+ * Spacing: --space-compact-1..6 = 4/6/8/12/16/20px.
  * Size exceptions below are physical touch targets, dots, and progress tracks.
  */
 
 .app main:has(> .training-screen) {
-  padding-top: var(--space-3);
+  padding-top: var(--space-compact-3);
 }
 .training-screen {
   min-width: 0;
-  padding-bottom: calc(var(--button-height-lg) + var(--space-6));
+  padding-bottom: calc(var(--button-height-lg) + var(--space-compact-5));
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-ui-body);
@@ -23,7 +23,7 @@
   line-height: var(--line-height-ui-body);
 }
 .training-screen .heading {
-  margin: 0 0 var(--space-6);
+  margin: 0 0 var(--space-compact-5);
 }
 .training-screen .heading h1 {
   margin: 0;
@@ -32,8 +32,8 @@
   line-height: var(--line-height-ui-heading);
 }
 .training-screen .section-title {
-  margin: 0 0 var(--space-3);
-  gap: var(--space-3);
+  margin: 0 0 var(--space-compact-4);
+  gap: var(--space-compact-4);
 }
 .training-screen .section-title h2,
 .training-screen .command-scroll-guide h2 {
@@ -63,19 +63,19 @@
   line-height: var(--line-height-ui-body);
 }
 .training-screen .explanation {
-  margin-top: var(--space-4);
+  margin-top: var(--space-compact-5);
 }
 .training-screen .explanation .card {
-  padding: var(--space-3);
-  margin: var(--space-3) 0;
+  padding: var(--space-compact-4);
+  margin: var(--space-compact-4) 0;
   border-radius: var(--radius-md);
 }
 .training-screen .explanation .btn {
-  margin-top: var(--space-2);
+  margin-top: var(--space-compact-3);
 }
 .training-screen .empty {
-  margin: var(--space-3) 0;
-  padding: var(--space-6) var(--space-4);
+  margin: var(--space-compact-4) 0;
+  padding: var(--space-compact-6) var(--space-compact-5);
   border-radius: var(--radius-md);
 }
 
@@ -83,19 +83,19 @@
 .training-screen .command-scroller {
   min-width: 0;
   max-width: 100%;
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-compact-5);
 }
 .training-screen .command-scroll-guide {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: var(--button-height-sm);
-  gap: var(--space-2);
-  margin: 0 0 var(--space-3);
+  min-height: 40px;
+  gap: var(--space-compact-3);
+  margin: 0 0 var(--space-compact-2);
 }
 .training-screen .command-scroll-buttons {
   display: flex;
-  gap: var(--space-1);
+  gap: var(--space-compact-1);
   flex-shrink: 0;
 }
 .training-screen .command-scroll-buttons .icon-button {
@@ -105,24 +105,24 @@
 .training-screen .command-list {
   display: grid;
   grid-template-columns: none;
-  grid-template-rows: repeat(2, var(--button-height-md));
+  grid-template-rows: repeat(2, var(--button-height-sm));
   grid-auto-flow: column;
   grid-auto-columns: clamp(116px, 42%, 188px);
-  gap: var(--space-2);
+  gap: var(--space-compact-2);
   max-width: 100%;
   min-width: 0;
   overflow-x: auto;
-  padding: var(--space-1) 0;
+  padding: var(--space-compact-1) 0;
   overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
   scrollbar-width: thin;
 }
 .training-screen .command-row.card {
-  height: var(--button-height-md);
-  min-height: var(--button-height-md);
+  height: var(--button-height-sm);
+  min-height: var(--button-height-sm);
   min-width: 0;
   margin: 0;
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-compact-1) var(--space-compact-3);
   border-radius: var(--radius-md);
   box-shadow: none;
   gap: 0;
@@ -140,7 +140,7 @@
   display: grid;
   grid-template-columns: minmax(0, auto) minmax(0, 1fr);
   align-items: center;
-  gap: 0 var(--space-1);
+  gap: 0 var(--space-compact-1);
   min-width: 0;
   width: 100%;
   line-height: var(--line-height-ui-caption);
@@ -151,13 +151,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
 }
 .training-screen .command-rating {
   grid-column: 1;
   white-space: nowrap;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   font-variant-numeric: tabular-nums;
 }
@@ -180,12 +180,12 @@
   background: var(--color-primary);
 }
 
-/* Calendar: modest visual day circles, independent >=44px touch targets. */
-.training-screen .training-history {
-  min-width: 0;
-}
+/* Calendar: 7 equal columns, identical 40px cells and centered number/dot. */
+.training-screen .training-history { min-width: 0; }
 .training-screen .training-calendar {
-  padding: var(--space-3);
+  --training-day-size: 40px;
+  --training-day-circle: 30px;
+  padding: var(--space-compact-3);
   margin: 0;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -195,21 +195,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-2);
-  margin-bottom: var(--space-1);
+  gap: var(--space-compact-2);
+  margin-bottom: 0;
 }
 .training-screen .training-month h3 {
   margin: 0;
   text-align: center;
   text-transform: capitalize;
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-ui-heading);
 }
 .training-screen .training-month .icon-button {
   flex: none;
-  min-height: var(--button-height-sm);
-  min-width: var(--button-height-sm);
+  min-height: var(--training-day-size);
+  min-width: var(--training-day-size);
+  width: var(--training-day-size);
+  height: var(--training-day-size);
 }
 .training-screen .training-weekdays,
 .training-screen .training-days {
@@ -217,26 +219,37 @@
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 0;
 }
+.training-screen .training-days {
+  grid-auto-rows: var(--training-day-size);
+}
 .training-screen .training-weekdays span {
-  padding: var(--space-1) 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  height: 20px;
   text-align: center;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-ui-caption);
   color: var(--color-text-muted);
 }
 .training-screen .training-day,
 .training-screen .training-days > span {
-  position: relative;
-  display: grid;
-  place-items: center;
+  box-sizing: border-box;
+  justify-self: center;
+  width: min(var(--training-day-size), 100%);
+  height: var(--training-day-size);
   min-width: 0;
-  min-height: var(--button-height-sm);
+  min-height: 0;
   margin: 0;
-  padding: 0;
+  padding: 2px 0;
 }
 .training-screen .training-day {
-  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   border: 0;
   border-radius: var(--radius-md);
   background: transparent;
@@ -245,80 +258,99 @@
   font-family: inherit;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  line-height: var(--line-height-ui-heading);
   font-variant-numeric: tabular-nums;
 }
-.training-screen .training-day::before {
-  position: absolute;
-  z-index: 0;
-  top: var(--space-1);
-  left: 50%;
-  width: 32px;
-  height: 32px;
-  transform: translateX(-50%);
-  border-radius: var(--radius-full);
-  content: "";
+.training-screen .training-day-number {
+  box-sizing: border-box;
+  flex: 0 0 var(--training-day-circle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--training-day-circle);
+  height: var(--training-day-circle);
+  border-radius: 50%;
+  font-size: var(--font-size-sm);
+  font-weight: inherit;
+  line-height: 1;
 }
-/* Keep the digit above the active-day circle. */
-.training-screen .training-day > span:first-child {
-  position: relative;
-  z-index: 1;
-}
-.training-screen .training-day:hover::before {
+.training-screen .training-day:hover .training-day-number {
   background: var(--color-surface-secondary);
 }
-.training-screen .training-day[aria-current="date"]::before {
-  outline: 1px solid var(--color-primary);
+.training-screen .training-day[aria-current="date"] .training-day-number {
+  box-shadow: inset 0 0 0 1px var(--color-primary);
 }
-.training-screen .training-day[aria-pressed="true"] {
+.training-screen .training-day[aria-pressed="true"] .training-day-number {
+  background: var(--color-primary);
   color: var(--color-on-primary);
   font-weight: var(--font-weight-semibold);
-}
-.training-screen .training-day[aria-pressed="true"]::before {
-  background: var(--color-primary);
 }
 .training-screen .training-day:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: -2px;
 }
+/* A reserved marker row prevents layout shifts for dates without sessions. */
+.training-screen .training-day-markers {
+  box-sizing: border-box;
+  flex: 0 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 6px;
+}
 .training-screen .training-day-dot,
 .training-screen .training-day-planned {
-  position: absolute;
-  z-index: 1;
-  bottom: 1px;
-  width: 5px;
-  height: 5px;
-  border-radius: var(--radius-full);
+  display: block;
+  flex: none;
+  box-sizing: border-box;
+  border-radius: 50%;
 }
 .training-screen .training-day-dot {
-  left: calc(50% - 7px);
+  width: 5px;
+  height: 5px;
   background: currentColor;
 }
 .training-screen .training-day-planned {
-  left: calc(50% + 2px);
+  width: 6px;
+  height: 6px;
   border: 1px solid currentColor;
+}
+/* Both statuses occupy exactly the same center: filled dot inside an outline. */
+.training-screen .training-day-markers.both {
+  position: relative;
+}
+.training-screen .training-day-markers.both .training-day-dot,
+.training-screen .training-day-markers.both .training-day-planned {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+.training-screen .training-day-markers.both .training-day-planned {
+  width: 8px;
+  height: 8px;
 }
 .training-screen .calendar-key {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  gap: var(--space-4);
-  margin: var(--space-2) 0 0;
+  gap: var(--space-compact-4);
+  margin: var(--space-compact-2) 0 0;
   color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   line-height: var(--line-height-ui-caption);
 }
 .training-screen .training-legend-item {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-compact-2);
 }
 .training-screen .training-legend-dot {
+  box-sizing: border-box;
   width: 6px;
   height: 6px;
   background: var(--color-primary);
-  border-radius: var(--radius-full);
+  border-radius: 50%;
 }
 .training-screen .training-legend-dot.planned {
   background: transparent;
@@ -327,15 +359,15 @@
 
 /* The selected date is the sole day heading; cards do not repeat it. */
 .training-screen .training-selected-date {
-  margin: var(--space-4) 0 var(--space-2);
+  margin: var(--space-compact-4) 0 var(--space-compact-2);
   color: var(--color-text-primary);
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-ui-heading);
 }
 .training-screen .training-session-summary.card {
-  padding: var(--space-4);
-  margin: 0 0 var(--space-3);
+  padding: var(--space-compact-4);
+  margin: 0 0 var(--space-compact-3);
   border-radius: var(--radius-md);
   box-shadow: none;
 }
@@ -348,7 +380,7 @@
 }
 .training-screen .training-session-heading {
   display: grid;
-  gap: var(--space-1);
+  gap: var(--space-compact-1);
 }
 .training-screen .training-session-heading strong {
   display: block;
@@ -365,25 +397,26 @@
 }
 .training-screen .training-session-date {
   display: block;
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-compact-1);
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
 }
 .training-screen .training-result-chips {
   display: grid;
-  grid-template-rows: repeat(2, 32px);
+  grid-template-rows: repeat(2, 28px);
   grid-auto-flow: column;
   grid-auto-columns: max-content;
-  gap: var(--space-2);
+  gap: var(--space-compact-3);
   max-width: 100%;
   min-width: 0;
   overflow-x: auto;
-  margin: var(--space-3) 0;
-  padding: 0 0 var(--space-1);
+  margin: var(--space-compact-3) 0;
+  padding: 0 0 var(--space-compact-1);
   overscroll-behavior-x: contain;
   scrollbar-width: thin;
 }
 .training-screen .training-result-chips.single {
-  grid-template-rows: 32px;
+  grid-template-rows: 28px;
 }
 .training-screen .training-result-chips:empty {
   display: none;
@@ -391,12 +424,12 @@
 .training-screen .training-result-chip {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-compact-3);
   max-width: 200px;
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-compact-1) var(--space-compact-3);
   background: var(--color-surface-secondary);
   border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   line-height: var(--line-height-ui-caption);
   white-space: nowrap;
 }
@@ -419,13 +452,13 @@
 }
 .training-screen .training-comment .comment-toggle {
   display: block;
-  margin-top: var(--space-1);
+  margin-top: var(--space-compact-1);
   color: var(--color-primary);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   text-decoration: underline;
 }
 .training-screen .training-comment .note {
-  margin: var(--space-2) 0 0;
+  margin: var(--space-compact-3) 0 0;
   font-size: var(--font-size-sm);
   overflow-wrap: anywhere;
 }
@@ -442,20 +475,20 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
+  gap: var(--space-compact-2);
+  margin-top: var(--space-compact-3);
 }
 .training-screen .training-session-actions .btn {
   margin: 0;
 }
 .training-screen .training-history > .btn-block {
-  margin-top: var(--space-4);
+  margin-top: var(--space-compact-5);
 }
 
 /* Form and command details use the same four type sizes and spacing scale. */
 .training-screen .training-row .interactive-content {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-compact-3);
 }
 .training-screen .training-row p {
   margin: 0;
@@ -464,8 +497,8 @@
 .training-screen .score-buttons {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: var(--space-3) 0;
+  gap: var(--space-compact-3);
+  margin: var(--space-compact-4) 0;
 }
 .training-screen .command-chips .btn {
   border-radius: var(--radius-full);
@@ -473,7 +506,7 @@
 .training-screen .score-buttons .btn {
   flex: 1;
   min-width: var(--button-height-sm);
-  padding: var(--space-2);
+  padding: var(--space-compact-3);
 }
 .training-screen .command-chips [aria-pressed="true"],
 .training-screen .score-buttons [aria-pressed="true"] {
@@ -485,8 +518,8 @@
 .training-screen .inline-command {
   display: flex;
   align-items: end;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
+  gap: var(--space-compact-3);
+  margin-bottom: var(--space-compact-5);
 }
 .training-screen .inline-command .field {
   flex: 1;
@@ -498,14 +531,14 @@
 }
 .training-screen .score-history {
   display: flex;
-  gap: var(--space-3);
+  gap: var(--space-compact-4);
   overflow: hidden;
-  padding: var(--space-3) 0;
+  padding: var(--space-compact-4) 0;
 }
 .training-screen .score-history > div {
   display: grid;
   flex: 1;
-  gap: var(--space-1);
+  gap: var(--space-compact-1);
   min-width: 0;
   font-size: var(--font-size-sm);
 }
@@ -518,7 +551,7 @@
   flex-direction: column;
   align-items: stretch;
   justify-content: center;
-  gap: var(--space-1);
+  gap: var(--space-compact-1);
   border: 2px solid var(--color-primary);
   background: var(--color-surface);
   text-align: left;
@@ -554,7 +587,7 @@
 }
 .training-screen .training-action-choices {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-compact-4);
 }
 .training-screen .training-action-choices .btn {
   margin: 0;
