@@ -104,7 +104,7 @@ describe("R3: purchase-to-stock checkout", () => {
     const html = renderToStaticMarkup(<Stock
       pet={initial()} session={{user:{id:"test",email:"test@example.com"},accessToken:"",refreshToken:"",expiresAt:0}}
       onShop={() => {}} onToggle={() => {}} />);
-    expect(html).toContain("вы можете сразу внести купленный корм");
+    expect(html).toContain("Купленный корм можно сразу внести в запас");
     const app = source("./App.tsx");
     expect(app).toContain('kind: "finishShopping"');
     expect(app).toContain("completeShoppingItem(p, item.id, amount, today())");
