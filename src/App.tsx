@@ -15,7 +15,7 @@ import {
 } from "./components";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Sharing, JoinPet } from "./Sharing";
-import type { AuthSession } from "./backend";
+import { rpc, type AuthSession } from "./backend";
 import type { PersistOutcome } from "./cloud-data";
 import {
   PawPrint,
@@ -100,8 +100,6 @@ type Overlay =
         | "weight"
         | "record"
         | "summary"
-        | "stock"
-        | "ration"
         | "shopping"
         | "document"
         | "backup";
@@ -133,6 +131,8 @@ export default function App({
   const handledPushLink = useRef(false);
   const handledTrainingLink = useRef(false);
   const handledJoinLink = useRef(false);
+  const handledStockLink = useRef(false);
+  const [stockTarget,setStockTarget] = useState<string | undefined>();
   const [joinCode, setJoinCode] = useState<string | null>(() => joinCodeFromUrl(location.search));
   const [eventScope, setEventScope] = useState<EventScope>("single");
   const [busy, setBusy] = useState(false);
@@ -197,6 +197,20 @@ export default function App({
     setOverlay({ kind: "detail", event, on: day });
     history.replaceState(null, "", location.pathname + location.hash);
   }, [state]);
+  useEffect(() => {
+    if (handledStockLink.current) return;
+    const params = new URLSearchParams(location.search);
+    const targetPet = params.get("stockPet");
+    if (!targetPet || !state.pets.some((p) => p.id === targetPet)) return;
+    handledStockLink.current = true;
+    const stockId = params.get("stock");
+    setStockTarget(stockId || undefined);
+    setState((previous) => ({...previous,selectedPet:targetPet}));
+    setScreen("stock");
+    setOverlay(null);
+    history.replaceState(null,"",location.pathname+location.hash);
+  },[state]);
+
   const overlayRef = useRef(overlay);
   overlayRef.current = overlay;
   const refreshRef = useRef(onRefresh);
@@ -466,8 +480,6 @@ export default function App({
                 deleteRecord: "Удалить медицинскую запись",
                 deleteDocument: "Удалить документ",
                 summary: "Сводка для ветеринара",
-                stock: "Пополнить корм",
-                ration: "Расход и остаток",
                 shopping: "Новая покупка",
                 finishShopping: "Покупка выполнена",
                 document: "Добавить документ",
@@ -983,85 +995,6 @@ export default function App({
             )}
           </>
         );
-      case "stock":
-        return (
-          <Form
-            label="Добавить в запас"
-            onSave={async (d) =>
-              await saved(() =>
-                update((p) => ({
-                  ...p,
-                  stock:
-                    Math.round((p.stock + number(d, "amount")) * 1000) / 1000,
-                  stockDate: today(),
-                })),
-              )
-            }
-          >
-            <Field
-              label="Добавить, кг"
-              name="amount"
-              type="number"
-              min="0.001"
-              max="100"
-              step="0.001"
-              required
-            />
-            <p>
-              Сейчас {pet.stock} кг. Указанное количество прибавится к остатку.
-            </p>
-          </Form>
-        );
-      case "ration":
-        return (
-          <Form
-            onSave={async (d) =>
-              await saved(() =>
-                update((p) => ({
-                  ...p,
-                  stock: number(d, "stock"),
-                  pack: number(d, "pack"),
-                  ration: number(d, "ration"),
-                  stockDate: today(),
-                })),
-              )
-            }
-          >
-            <Field
-              label="Фактический остаток, кг"
-              name="stock"
-              type="number"
-              min="0"
-              max="1000"
-              step="0.001"
-              defaultValue={pet.stock}
-              required
-            />
-            <Field
-              label="Ваш расход, г/день"
-              name="ration"
-              type="number"
-              min="0"
-              max="10000"
-              step="1"
-              defaultValue={pet.ration}
-              required
-            />
-            <Field
-              label="Размер упаковки, кг"
-              name="pack"
-              type="number"
-              min="0.001"
-              max="1000"
-              step="0.001"
-              defaultValue={pet.pack}
-              required
-            />
-            <p className="hint">
-              Используем расход только для прогноза. 0 — расход пока не указан.
-            </p>
-          </Form>
-        );
       case "finishShopping": {
         const item = pet.shopping.find((x) => x.id === overlay.itemId);
         if (!item || item.done) return <p role="alert">Покупка уже выполнена или удалена.</p>;
@@ -1070,7 +1003,14 @@ export default function App({
             onSave={async (data) => {
               const raw = text(data, "addedKg");
               const amount = raw ? Number(raw) : 0;
+              // First credit the new stock ledger with an idempotent purchase key.
+              // A failed JSON checklist save can be retried without crediting twice.
+              if (amount > 0) await rpc(session,"stock_mutate",{
+                p_pet:pet.id,p_action:"shopping_credit",
+                p_data:{amount,purchase_id:item.id},
+              });
               await saved(() => update((p) => completeShoppingItem(p, item.id, amount, today())));
+              if (amount > 0) window.dispatchEvent(new Event("ryadom:stock-changed"));
             }}
           >
             <p><strong>{item.name}</strong>{item.quantity ? " · " + item.quantity : ""}</p>
@@ -1373,8 +1313,8 @@ export default function App({
           {screen === "stock" && (
             <Stock
               pet={pet}
-              onEdit={() => setOverlay({ kind: "ration" })}
-              onAdd={() => setOverlay({ kind: "stock" })}
+              session={session}
+              initialItemId={stockTarget}
               onShop={() => setOverlay({ kind: "shopping" })}
               onToggle={(itemId) => {
                 const item = pet.shopping.find((s) => s.id === itemId);

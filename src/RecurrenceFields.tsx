@@ -30,10 +30,14 @@ export default function RecurrenceFields({
   date,
   value,
   onChange,
+  allowedFrequencies = ["once","daily","weekly","monthly","yearly"],
+  allowCount = true,
 }: {
   date: string;
   value: RecurrenceDraft;
   onChange: (next: RecurrenceDraft) => void;
+  allowedFrequencies?: RepeatFrequency[];
+  allowCount?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const patch = (next: Partial<RecurrenceDraft>) => onChange({ ...value, ...next });
@@ -54,11 +58,11 @@ export default function RecurrenceFields({
           if (frequency !== "once") setExpanded(true);
         }}
       >
-        <option value="once">Не повторять</option>
-        <option value="daily">Каждый день</option>
-        <option value="weekly">Каждую неделю</option>
-        <option value="monthly">Каждый месяц</option>
-        <option value="yearly">Каждый год</option>
+        {allowedFrequencies.includes("once") && <option value="once">Не повторять</option>}
+        {allowedFrequencies.includes("daily") && <option value="daily">Каждый день</option>}
+        {allowedFrequencies.includes("weekly") && <option value="weekly">Каждую неделю</option>}
+        {allowedFrequencies.includes("monthly") && <option value="monthly">Каждый месяц</option>}
+        {allowedFrequencies.includes("yearly") && <option value="yearly">Каждый год</option>}
       </Select>
       {value.frequency !== "once" && (
         <>
@@ -82,10 +86,10 @@ export default function RecurrenceFields({
                   value={value.frequency}
                   onChange={(e) => patch({ frequency: e.target.value as RepeatFrequency })}
                 >
-                  <option value="daily">Дней</option>
-                  <option value="weekly">Недель</option>
-                  <option value="monthly">Месяцев</option>
-                  <option value="yearly">Лет</option>
+                  {allowedFrequencies.includes("daily") && <option value="daily">Дней</option>}
+                  {allowedFrequencies.includes("weekly") && <option value="weekly">Недель</option>}
+                  {allowedFrequencies.includes("monthly") && <option value="monthly">Месяцев</option>}
+                  {allowedFrequencies.includes("yearly") && <option value="yearly">Лет</option>}
                 </Select>
               </div>
               {value.frequency === "weekly" && (
@@ -131,7 +135,7 @@ export default function RecurrenceFields({
             >
               <option value="never">Никогда</option>
               <option value="date">До даты</option>
-              <option value="count">После количества повторений</option>
+              {allowCount && <option value="count">После количества повторений</option>}
             </Select>
             {value.endType === "date" && (
               <Field

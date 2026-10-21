@@ -102,7 +102,7 @@ describe("R3: purchase-to-stock checkout", () => {
   });
   it("renders shopping list and explains explicit stock confirmation", () => {
     const html = renderToStaticMarkup(<Stock
-      pet={initial()} onEdit={() => {}} onAdd={() => {}}
+      pet={initial()} session={{user:{id:"test",email:"test@example.com"},accessToken:"",refreshToken:"",expiresAt:0}}
       onShop={() => {}} onToggle={() => {}} />);
     expect(html).toContain("вы можете сразу внести купленный корм");
     const app = source("./App.tsx");
