@@ -100,8 +100,6 @@ type Overlay =
         | "weight"
         | "record"
         | "summary"
-        | "stock"
-        | "ration"
         | "shopping"
         | "document"
         | "backup";
@@ -482,8 +480,6 @@ export default function App({
                 deleteRecord: "Удалить медицинскую запись",
                 deleteDocument: "Удалить документ",
                 summary: "Сводка для ветеринара",
-                stock: "Пополнить корм",
-                ration: "Расход и остаток",
                 shopping: "Новая покупка",
                 finishShopping: "Покупка выполнена",
                 document: "Добавить документ",
@@ -998,85 +994,6 @@ export default function App({
               <p>Записей нет.</p>
             )}
           </>
-        );
-      case "stock":
-        return (
-          <Form
-            label="Добавить в запас"
-            onSave={async (d) =>
-              await saved(() =>
-                update((p) => ({
-                  ...p,
-                  stock:
-                    Math.round((p.stock + number(d, "amount")) * 1000) / 1000,
-                  stockDate: today(),
-                })),
-              )
-            }
-          >
-            <Field
-              label="Добавить, кг"
-              name="amount"
-              type="number"
-              min="0.001"
-              max="100"
-              step="0.001"
-              required
-            />
-            <p>
-              Сейчас {pet.stock} кг. Указанное количество прибавится к остатку.
-            </p>
-          </Form>
-        );
-      case "ration":
-        return (
-          <Form
-            onSave={async (d) =>
-              await saved(() =>
-                update((p) => ({
-                  ...p,
-                  stock: number(d, "stock"),
-                  pack: number(d, "pack"),
-                  ration: number(d, "ration"),
-                  stockDate: today(),
-                })),
-              )
-            }
-          >
-            <Field
-              label="Фактический остаток, кг"
-              name="stock"
-              type="number"
-              min="0"
-              max="1000"
-              step="0.001"
-              defaultValue={pet.stock}
-              required
-            />
-            <Field
-              label="Ваш расход, г/день"
-              name="ration"
-              type="number"
-              min="0"
-              max="10000"
-              step="1"
-              defaultValue={pet.ration}
-              required
-            />
-            <Field
-              label="Размер упаковки, кг"
-              name="pack"
-              type="number"
-              min="0.001"
-              max="1000"
-              step="0.001"
-              defaultValue={pet.pack}
-              required
-            />
-            <p className="hint">
-              Используем расход только для прогноза. 0 — расход пока не указан.
-            </p>
-          </Form>
         );
       case "finishShopping": {
         const item = pet.shopping.find((x) => x.id === overlay.itemId);
