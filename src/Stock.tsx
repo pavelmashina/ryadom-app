@@ -219,7 +219,9 @@ export default function Stock({
     </div>
     <h2>Автоматическое списание</h2>
     <div className="stock-detail-card">
-     <p>{active?stockRuleText(active):"Выключено"}</p>
+     <p>{active?stockRuleText(active):current.rules.length
+       ? "Автосписание выключено · ранее указан расход: "+stockRuleText(current.rules[0])
+       : "Выключено"}</p>
      {active&&<p className="stock-muted">Начиная с {fmt(active.starts_on)}</p>}
      <Button size="sm" variant="secondary" onClick={()=>openRule(current)}>
       {active?"Изменить правило":"Настроить списание"}</Button>
@@ -280,7 +282,8 @@ export default function Stock({
      {ruleEnabled&&<>
       <div className="stock-fields-two">
        <Field label="Списывать"><input name="amount" type="number" min={0.001} step="0.001"
-        defaultValue={active?active.amount/(current.display_unit==="кг"||current.display_unit==="л"?1000:1):undefined} required/></Field>
+        defaultValue={(active??current.rules[0])?
+         (active??current.rules[0]).amount/(current.display_unit==="кг"||current.display_unit==="л"?1000:1):undefined} required/></Field>
        <Field label="Единица"><select name="unit" value={unit} onChange={e=>setUnit(e.target.value as StockUnit)}>
         {compatibleStockUnits(current.display_unit).map(x=><option key={x}>{x}</option>)}</select></Field>
       </div>
