@@ -284,6 +284,7 @@ export default function Stock({
    starts_on:startDate,ends_on:draft.endType==="date"?draft.endDate:null});
   if(updated)leaveEditor();
  }
+ const currentView=mode!=="list"&&mode!=="create"&&current;
  const groups=categories.concat([...new Set(visibleItems.map(i=>i.category))].filter(x=>!categories.includes(x)));
  const featured=visibleItems.find(i=>i.legacy_food)??visibleItems.find(i=>i.category==="Корм")??visibleItems[0];
  return <div className="stock-screen">
