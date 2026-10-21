@@ -204,7 +204,7 @@ export default function Stock({
  }
  function openAdd() {
   const target=(mode==="detail"&&current)?current:(visibleItems.find(i=>i.legacy_food)??visibleItems.find(i=>i.category==="Корм")??visibleItems[0]);
-  setCreateTarget(target?"existing":"new");
+  setCreateTarget(mode==="detail"&&current?"existing":"new");
   setCreateItemId(target?.id??"");
   setUnit(target?.display_unit??"г");
   setMode("create");
@@ -452,7 +452,6 @@ export default function Stock({
      {stockStatus(current)!=="normal"&&<p className="stock-warning">
       {stockStatus(current)==="empty"?"Запас закончился":"Запас скоро закончится"}</p>}
      {current.note&&<p className="stock-muted">{current.note}</p>}
-     <Button fullWidth variant="primary" onClick={openAdd}><Plus/> Добавить запас</Button>
      <div className="stock-detail-actions">
       <Button variant="secondary" onClick={()=>openOperation(current,"manual_use","detail")}>Списать</Button>
       <Button variant="ghost" onClick={()=>openOperation(current,"correction","detail")}>Скорректировать остаток</Button>
