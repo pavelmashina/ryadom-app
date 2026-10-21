@@ -192,7 +192,7 @@ export default function Stock({
   openEditor("operation",item,origin);
  }
  function openAdd() {
-  const target=(mode==="detail"&&current)?current:(items.find(i=>i.legacy_food)??items.find(i=>i.category==="Корм")??items[0]);
+  const target=(mode==="detail"&&current)?current:(visibleItems.find(i=>i.legacy_food)??visibleItems.find(i=>i.category==="Корм")??visibleItems[0]);
   setCreateTarget(target?"existing":"new");
   setCreateItemId(target?.id??"");
   setUnit(target?.display_unit??"г");
@@ -219,7 +219,7 @@ export default function Stock({
  async function onAddExisting(e:FormEvent<HTMLFormElement>) {
   e.preventDefault();
   const d=new FormData(e.currentTarget);
-  const item=items.find(i=>i.id===createItemId);
+  const item=visibleItems.find(i=>i.id===createItemId);
   if(!item){setError("Выберите товар из списка.");return;}
   const updated=await mutate("add",{
    id:item.id,amount:Number(d.get("amount")),unit:String(d.get("unit")),
@@ -283,8 +283,8 @@ export default function Stock({
    starts_on:startDate,ends_on:draft.endType==="date"?draft.endDate:null});
   if(updated)leaveEditor();
  }
- const groups=categories.concat([...new Set(items.map(i=>i.category))].filter(x=>!categories.includes(x)));
- const featured=items.find(i=>i.legacy_food)??items.find(i=>i.category==="Корм")??items[0];
+ const groups=categories.concat([...new Set(visibleItems.map(i=>i.category))].filter(x=>!categories.includes(x)));
+ const featured=visibleItems.find(i=>i.legacy_food)??visibleItems.find(i=>i.category==="Корм")??visibleItems[0];
  return <div className="stock-screen">
   {mode!=="list"&&(
    <div className="stock-top">
@@ -354,7 +354,7 @@ export default function Stock({
     {stockStatus(featured)==="empty"?"Запас закончился. Пора пополнить.":"Запас скоро закончится. Проверьте остаток и запланируйте покупку."}
    </p>}
    {groups.map(category=>{
-    const stocks=items.filter(i=>i.id!==featured?.id && i.category===category);
+    const stocks=visibleItems.filter(i=>i.id!==featured?.id && i.category===category);
     if(!stocks.length)return null;
     return <section className="stock-section" key={category}>
      <SectionHeader title={category}/>
@@ -393,24 +393,24 @@ export default function Stock({
   </>}
   {mode==="create"&&<section className="stock-section">
    <h2>Добавить запас</h2>
-   {items.length>0&&<div className="stock-add-modes" role="group" aria-label="Способ добавления">
+   {visibleItems.length>0&&<div className="stock-add-modes" role="group" aria-label="Способ добавления">
     <label><input type="radio" name="add-target" checked={createTarget==="existing"}
-     onChange={()=>{setCreateTarget("existing");setError("");const item=items.find(i=>i.id===createItemId)??items[0];setCreateItemId(item.id);setUnit(item.display_unit);}}/> В существующий</label>
+     onChange={()=>{setCreateTarget("existing");setError("");const item=visibleItems.find(i=>i.id===createItemId)??visibleItems[0];setCreateItemId(item.id);setUnit(item.display_unit);}}/> В существующий</label>
     <label><input type="radio" name="add-target" checked={createTarget==="new"}
      onChange={()=>{setCreateTarget("new");setError("");setUnit("г");}}/> Новый товар</label>
    </div>}
-   {createTarget==="existing"&&items.length>0 ? (
+   {createTarget==="existing"&&visibleItems.length>0 ? (
     <form className="stock-form" onSubmit={onAddExisting}>
      <Field label="Товар">
       <select value={createItemId} onChange={e=>{
-       const item=items.find(i=>i.id===e.target.value);setCreateItemId(e.target.value);
+       const item=visibleItems.find(i=>i.id===e.target.value);setCreateItemId(e.target.value);
        if(item)setUnit(item.display_unit);
-      }}>{items.map(i=><option key={i.id} value={i.id}>{i.name}</option>)}</select>
+      }}>{visibleItems.map(i=><option key={i.id} value={i.id}>{i.name}</option>)}</select>
      </Field>
      <div className="stock-fields-two">
       <Field label="Количество"><input type="number" name="amount" min={0.001} step="0.001" required/></Field>
       <Field label="Единица"><select name="unit" value={unit} onChange={e=>setUnit(e.target.value as StockUnit)}>
-       {compatibleStockUnits((items.find(i=>i.id===createItemId)??items[0]).display_unit).map(x=><option key={x}>{x}</option>)}
+       {compatibleStockUnits((visibleItems.find(i=>i.id===createItemId)??visibleItems[0]).display_unit).map(x=><option key={x}>{x}</option>)}
       </select></Field>
      </div>
      <Field label="Комментарий"><textarea name="note" rows={2}/></Field>
