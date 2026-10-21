@@ -81,9 +81,44 @@ describe("Restored stock screen composition", () => {
     expect(source).toContain('document.addEventListener("scroll",reposition,true)');
     const menuStyle = css.split(".stock-gear-panel {")[1]?.split("}")[0] ?? "";
     expect(menuStyle).toContain("position: fixed");
-    expect(menuStyle).toContain("z-index: 20");
+    expect(menuStyle).toContain("z-index: 1");
+    const layer=css.split(".stock-settings-layer {")[1]?.split("}")[0] ?? "";
+    expect(layer).toContain("z-index: 30");
+    expect(layer).toContain("touch-action: none");
+    const backdrop=css.split(".stock-settings-backdrop {")[1]?.split("}")[0] ?? "";
+    expect(backdrop).toContain("background: color-mix(");
     expect(menuStyle).toContain("overflow-y: auto");
     expect(menuStyle).toContain("font-family: var(--font-family-base)");
+  });
+
+  it("dims and freezes the background while opening evenly aligned settings", () => {
+    expect(source).toContain('className="stock-settings-layer"');
+    expect(source).toContain('className="stock-settings-backdrop"');
+    expect(source).toContain('onClick={()=>setGearOpen(false)}');
+    expect(source).toContain('aria-modal="true"');
+    expect(source).toContain('document.body.style.position="fixed"');
+    expect(source).toContain('document.documentElement.style.overflow="hidden"');
+    expect(source).toContain('document.body.style.position=oldBody.position');
+    expect(source).toContain('window.scrollTo({top:scrollY,behavior:"instant"})');
+    expect(source).toContain('if(e.key==="Tab")');
+    const actions=css.split(".stock-gear-panel > button,")[1]?.split("}")[0] ?? "";
+    expect(actions).toContain(".stock-gear-panel > .stock-switch-row");
+    expect(actions).toContain("align-items: center");
+    expect(actions).toContain("padding: var(--space-compact-3) var(--space-compact-4)");
+    expect(actions).toContain("text-align: left");
+  });
+
+  it("returns to the correct screen for each operation and cleans push deep-links", () => {
+    expect(source).toContain("stockBackDestination(mode,editorReturn)");
+    expect(source).toContain('openOperation(featured,"manual_use","list")');
+    expect(source).toContain('openOperation(current,"manual_use","detail")');
+    expect(source).toContain('openOperation(current,"correction","detail")');
+    expect(source).toContain('openEditor("edit",current,"detail")');
+    expect(source).toContain('if(updated)leaveEditor();');
+    expect(source).toContain('onInitialItemHandled?.()');
+    expect(source).toContain('activePetId.current!==targetPetId');
+    const app=readFileSync(new URL("./App.tsx",import.meta.url),"utf8");
+    expect(app).toContain('onInitialItemHandled={() => setStockTarget(undefined)}');
   });
 
   it("returns to the existing stock list after saving a new item", () => {

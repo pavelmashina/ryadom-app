@@ -1315,6 +1315,7 @@ export default function App({
               pet={pet}
               session={session}
               initialItemId={stockTarget}
+              onInitialItemHandled={() => setStockTarget(undefined)}
               onShop={() => setOverlay({ kind: "shopping" })}
               onToggle={(itemId) => {
                 const item = pet.shopping.find((s) => s.id === itemId);
