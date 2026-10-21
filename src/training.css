@@ -382,6 +382,9 @@
   overscroll-behavior-x: contain;
   scrollbar-width: thin;
 }
+.training-screen .training-result-chips.single {
+  grid-template-rows: 32px;
+}
 .training-screen .training-result-chips:empty {
   display: none;
 }
