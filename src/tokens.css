@@ -1,6 +1,14 @@
 :root {
   --font-family-base: "Manrope", Arial, sans-serif;
   --font-size-root: 16px;
+  /* Four reusable interface levels for the training experience. */
+  --font-size-xl: 24px;
+  --font-size-lg: 20px;
+  --font-size-md: 16px;
+  --font-size-sm: 14px;
+  --line-height-ui-heading: 1.25;
+  --line-height-ui-body: 1.5;
+  --line-height-ui-caption: 1.4;
   --font-size-display: 2.25rem;
   --font-size-h1: 1.75rem;
   --font-size-h2: 1.25rem;

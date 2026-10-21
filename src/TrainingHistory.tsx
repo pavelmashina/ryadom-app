@@ -22,7 +22,11 @@ export default function TrainingHistory({
   const latest =
     sessions
       .filter((s) => (s.status ?? "completed") === "completed")
-      .reduce((d, s) => (s.date > d ? s.date : d), "") || today();
+      .reduce((d, s) => (s.date > d ? s.date : d), "") ||
+    sessions
+      .filter((s) => s.status === "planned")
+      .reduce((d, s) => (s.date > d ? s.date : d), "") ||
+    today();
   const [selection, setSelection] = useState<string | null>(null);
   const selected = selection ?? latest;
   const [shownMonth, setMonth] = useState<string | null>(null);
@@ -53,17 +57,7 @@ export default function TrainingHistory({
   }
   return (
     <section className="training-history" aria-label="История тренировок">
-      <SectionHeader title={list ? "Все занятия" : "Календарь занятий"}>
-        <span>
-          {
-            sessions.filter((s) =>
-              list
-                ? (s.status ?? "completed") === "completed"
-                : s.status !== "cancelled",
-            ).length
-          }
-        </span>
-      </SectionHeader>
+      <SectionHeader title={list ? "История тренировок" : "Календарь"} />
       {!list && (
         <div className="training-calendar">
           <div className="training-month">
@@ -74,7 +68,7 @@ export default function TrainingHistory({
               <ChevronLeft aria-hidden="true" />
             </IconButton>
             <h3 aria-live="polite">
-              {fmt(month + "-01", { month: "long", year: "numeric" })}
+              {fmt(month + "-01", { month: "long", year: "numeric" }).replace(" г.", "")}
             </h3>
             <IconButton label="Следующий месяц" onClick={() => changeMonth(1)}>
               <ChevronRight aria-hidden="true" />
@@ -126,14 +120,21 @@ export default function TrainingHistory({
               ),
             )}
           </div>
-          <p className="calendar-key">
-            <span aria-hidden="true" />● Проведено · ○ Запланировано
-          </p>
+          <div className="calendar-key" aria-label="Обозначения календаря">
+            <span className="training-legend-item">
+              <span className="training-legend-dot" aria-hidden="true" />
+              Проведено
+            </span>
+            <span className="training-legend-item">
+              <span className="training-legend-dot planned" aria-hidden="true" />
+              Запланировано
+            </span>
+          </div>
         </div>
       )}
       {!list && (
         <h3 className="training-selected-date" aria-live="polite">
-          {fmt(selected, { day: "numeric", month: "long", year: "numeric" })}
+          {fmt(selected, { day: "numeric", month: "long" })}
         </h3>
       )}
       {!shown.length && (
@@ -151,16 +152,20 @@ export default function TrainingHistory({
           className={"training-session-summary " + (s.status ?? "completed")}
         >
           <div className="training-session-heading">
-            <strong>
-              {fmt(s.date, { day: "numeric", month: "long", year: "numeric" })}
-            </strong>
-            <span>
-              {s.status === "planned" ? "Запланировано · " : "Проведено · "}
-              {s.time || ""} Команд: {s.results.length}
-              {s.duration_minutes ? " · " + s.duration_minutes + " мин" : ""}
+            <strong>{s.name?.trim() || "Тренировка"}</strong>
+            <span className="training-session-meta">
+              {list && (
+                <span className="training-session-date">
+                  {fmt(s.date, { day: "numeric", month: "long", year: "numeric" })}
+                </span>
+              )}
+              <span>{s.status === "planned" ? "Запланирована" : "Проведена"}</span>
+              {s.time && <span> · {s.time}</span>}
+              {s.duration_minutes && <span> · {s.duration_minutes} мин</span>}
+              {!!s.results.length && <span> · {s.results.length} команд</span>}
             </span>
           </div>
-          <div className="training-result-chips">
+          <div className={"training-result-chips" + (s.results.length === 1 ? " single" : "")}>
             {s.results.map((r) => (
               <span key={r.command_id} className="training-result-chip">
                 <span>
