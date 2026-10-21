@@ -511,7 +511,7 @@ export default function Stock({
     <p className="stock-muted">Сейчас: {stockAmount(current.current_quantity,current.display_unit)} {current.display_unit}</p>
     <form className="stock-form" onSubmit={onOperation}>
      <div className="stock-fields-two">
-      <Field label={operation==="correction"?"Фактический остаток":"Количество"}>
+      <Field label={operation==="correction"?"Новый остаток":"Количество"}>
        <input name="amount" type="number" min={operation==="correction"?0:0.001} step="0.001" required/></Field>
       <Field label="Единица"><select name="unit" value={unit} onChange={e=>setUnit(e.target.value as StockUnit)}>
        {compatibleStockUnits(current.display_unit).map(x=><option key={x}>{x}</option>)}</select></Field>
