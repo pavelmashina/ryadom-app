@@ -34,9 +34,16 @@ export default function TrainingHistory({
   const [list, setList] = useState(false);
   const [limit, setLimit] = useState(10);
   const counts = new Map<string, number>();
+  const dayMarkers = new Map<string, { completed: boolean; planned: boolean }>();
   sessions
     .filter((s) => s.status !== "cancelled")
-    .forEach((s) => counts.set(s.date, (counts.get(s.date) ?? 0) + 1));
+    .forEach((s) => {
+      counts.set(s.date, (counts.get(s.date) ?? 0) + 1);
+      const markers = dayMarkers.get(s.date) ?? { completed: false, planned: false };
+      if (s.status === "planned") markers.planned = true;
+      else markers.completed = true;
+      dayMarkers.set(s.date, markers);
+    });
   const ordered = sessions
     .filter((s) => s.status !== "cancelled")
     .sort(
@@ -84,8 +91,10 @@ export default function TrainingHistory({
             role="group"
             aria-label="Выберите день"
           >
-            {monthDays(month).map((day, i) =>
-              day ? (
+            {monthDays(month).map((day, i) => {
+              if (!day) return <span key={"blank" + i} />;
+              const markers = dayMarkers.get(day);
+              return (
                 <button
                   type="button"
                   key={day}
@@ -103,22 +112,18 @@ export default function TrainingHistory({
                   }
                   onClick={() => setSelection(day)}
                 >
-                  <span>{Number(day.slice(-2))}</span>
-                  {sessions.some(
-                    (s) =>
-                      s.date === day &&
-                      (s.status ?? "completed") === "completed",
-                  ) && <span className="training-day-dot" aria-hidden="true" />}
-                  {sessions.some(
-                    (s) => s.date === day && s.status === "planned",
-                  ) && (
-                    <span className="training-day-planned" aria-hidden="true" />
-                  )}
+                  <span className="training-day-number">{Number(day.slice(-2))}</span>
+                  <span
+                    className={"training-day-markers" +
+                      (markers?.completed && markers.planned ? " both" : "")}
+                    aria-hidden="true"
+                  >
+                    {markers?.completed && <span className="training-day-dot" />}
+                    {markers?.planned && <span className="training-day-planned" />}
+                  </span>
                 </button>
-              ) : (
-                <span key={"blank" + i} />
-              ),
-            )}
+              );
+            })}
           </div>
           <div className="calendar-key" aria-label="Обозначения календаря">
             <span className="training-legend-item">
