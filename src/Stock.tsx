@@ -131,7 +131,7 @@ export default function Stock({
  async function toggleAuto(item:StockItem,enabled:boolean) {
   if(Boolean(activeStockRule(item))===enabled)return;
   const savedRule=activeStockRule(item)??item.rules[0];
-  if(enabled&&!savedRule){openRule(item);return;}
+  if(enabled&&!savedRule){setGearOpen(false);openRule(item);return;}
   await mutate("set_rule", {
    id:item.id,enabled,
    ...(enabled&&savedRule ? {
@@ -299,7 +299,7 @@ export default function Stock({
        {(forecast||status!=="normal")&&<span className="stock-secondary">
         {forecast&&"≈"+forecast.days+" дн."}
         {status!=="normal"&&<em>{status==="empty"?"Закончился":"Скоро закончится"}</em>}
-       </span>
+       </span>}
        <progress max={100} value={stockProgress(item)} aria-label={"Остаток "+stockProgress(item)+"%"} />
       </button>;
      })}</div>
