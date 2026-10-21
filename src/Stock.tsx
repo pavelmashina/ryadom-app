@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowLeft, Plus, Package } from "lucide-react";
-import { Badge, Button, Card, Checkbox, Empty, PageHeader, SectionHeader } from "./components";
+import { ArrowLeft, Plus, Package, Settings } from "lucide-react";
+import { Badge, Button, Card, Checkbox, Empty, SectionHeader } from "./components";
 import { today, fmt, type Pet } from "./domain";
 import { rpc, type AuthSession } from "./backend";
 import RecurrenceFields, { draftForDate, type RecurrenceDraft } from "./RecurrenceFields";
 import {
   STOCK_UNITS, stockAmount, activeStockRule, stockForecast, stockProgress,
-  stockStatus, stockRuleText, compatibleStockUnits,
+  stockStatus, stockRuleText, stockUnitFactor, compatibleStockUnits,
   type StockItem, type StockUnit,
 } from "./stock-domain";
 import "./stock.css";
@@ -36,6 +36,9 @@ export default function Stock({
  const [startDate,setStartDate]=useState(today());
  const [draft,setDraft]=useState<RecurrenceDraft>(()=>({...draftForDate(today()),frequency:"daily"}));
  const [ruleEnabled,setRuleEnabled]=useState(true);
+ const [gearOpen,setGearOpen]=useState(false);
+ const [createTarget,setCreateTarget]=useState<"existing"|"new">("new");
+ const [createItemId,setCreateItemId]=useState("");
  const current=items.find((i)=>i.id===selectedId);
  const active=current?activeStockRule(current):null;
  const load=useCallback(async()=>{
@@ -49,6 +52,7 @@ export default function Stock({
   setItems([]);
   setSelectedId(null);
   setMode("list");
+  setGearOpen(false);
   setLoading(true);
   void load();
   function refresh(){if(!document.hidden)void load();}
@@ -75,7 +79,44 @@ export default function Stock({
   }catch(e){setError(errText(e));return null;}
   finally{setBusy(false);}
  }
- const closeDetails=()=>{setMode("list");setSelectedId(null);setError("");};
+ const closeDetails=()=>{setMode("list");setSelectedId(null);setGearOpen(false);setError("");};
+ function openAdd() {
+  const target=(mode==="detail"&&current)?current:(items.find(i=>i.legacy_food)??items.find(i=>i.category==="Корм")??items[0]);
+  setCreateTarget(target?"existing":"new");
+  setCreateItemId(target?.id??"");
+  setUnit(target?.display_unit??"г");
+  setMode("create");
+  setGearOpen(false);
+  setError("");
+ }
+ async function toggleAuto(item:StockItem,enabled:boolean) {
+  if(Boolean(activeStockRule(item))===enabled)return;
+  const savedRule=activeStockRule(item)??item.rules[0];
+  if(enabled&&!savedRule){openRule(item);return;}
+  await mutate("set_rule", {
+   id:item.id,enabled,
+   ...(enabled&&savedRule ? {
+    amount:savedRule.amount/stockUnitFactor(item.display_unit),
+    unit:item.display_unit,frequency:savedRule.frequency,
+    interval:savedRule.interval_count,days_of_week:savedRule.days_of_week,
+    day_of_month:savedRule.day_of_month,
+    starts_on:today(),
+    ends_on:savedRule.ends_on&&savedRule.ends_on>=today()?savedRule.ends_on:null,
+   } : {}),
+  });
+ }
+ async function onAddExisting(e:FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+  const d=new FormData(e.currentTarget);
+  const item=items.find(i=>i.id===createItemId);
+  if(!item){setError("Выберите товар из списка.");return;}
+  const updated=await mutate("add",{
+   id:item.id,amount:Number(d.get("amount")),unit:String(d.get("unit")),
+   note:String(d.get("note")||""),
+  });
+  if(updated)closeDetails();
+ }
+
  function openRule(item:StockItem) {
   const rule=activeStockRule(item)??item.rules[0];
   const starts=rule?.starts_on??today();
@@ -89,7 +130,7 @@ export default function Stock({
   setRuleEnabled(Boolean(activeStockRule(item))||!rule);
   setSelectedId(item.id);setMode("rule");setError("");
  }
- function goDetail(item:StockItem) {setSelectedId(item.id);setMode("detail");setError("");}
+ function goDetail(item:StockItem) {setSelectedId(item.id);setGearOpen(false);setMode("detail");setError("");}
  async function onCreate(e:FormEvent<HTMLFormElement>) {
   e.preventDefault();
   const d=new FormData(e.currentTarget);
@@ -140,11 +181,7 @@ export default function Stock({
  const groups=categories.concat([...new Set(items.map(i=>i.category))].filter(x=>!categories.includes(x)));
  const featured=items.find(i=>i.legacy_food)??items.find(i=>i.category==="Корм")??items[0];
  return <div className="stock-screen">
-  {mode==="list" ? (
-   <PageHeader title="Питание и запасы" eyebrow="Всё под рукой">
-    Остатки, расход и список покупок
-   </PageHeader>
-  ) : (
+  {mode!=="list"&&(
    <div className="stock-top">
     <Button size="sm" variant="ghost" onClick={()=>currentView?setMode("detail"):closeDetails()}>
      <ArrowLeft/> Назад
@@ -157,12 +194,30 @@ export default function Stock({
    {!loading&&!featured&&<Card variant="info" className="stock-featured">
     <span className="eyebrow">Корм · фактический остаток</span>
     <p className="stock-muted">Запасов пока нет. Добавьте первый товар, чтобы отслеживать расход и пополнения.</p>
-    <Button fullWidth variant="primary" onClick={()=>{setMode("create");setError("");}}>
+    <Button fullWidth variant="primary" onClick={openAdd}>
      <Plus/> Добавить запас
     </Button>
    </Card>}
    {featured&&<Card variant="info" className="stock-featured">
-    <span className="eyebrow">{featured.name} · фактический остаток</span>
+    <div className="stock-eyebrow-row">
+     <span className="eyebrow">{featured.name} · фактический остаток</span>
+     <button type="button" className="stock-gear" aria-label={"Настройки запаса: "+featured.name}
+      aria-expanded={gearOpen} aria-controls="stock-featured-settings"
+      onClick={()=>setGearOpen(value=>!value)}><Settings aria-hidden="true"/></button>
+    </div>
+    {gearOpen&&<div className="stock-gear-panel" id="stock-featured-settings">
+     <label className="stock-switch-row">
+      <span>Автоматическое списание</span>
+      <input type="checkbox" role="switch" className="stock-switch" checked={Boolean(activeStockRule(featured))}
+       disabled={busy} onChange={e=>void toggleAuto(featured,e.target.checked)}/>
+     </label>
+     <button type="button" onClick={()=>openRule(featured)}>Изменить расход</button>
+     <button type="button" onClick={()=>{
+      setSelectedId(featured.id);setOperation("manual_use");setUnit(featured.display_unit);
+      setGearOpen(false);setMode("operation");
+     }}>Списать вручную</button>
+     <button type="button" onClick={()=>goDetail(featured)}>История и параметры</button>
+    </div>}
     <div className="stock-overview">
      <div className="stock-large">
       {stockAmount(featured.current_quantity,featured.display_unit)} <small>{featured.display_unit}</small>
@@ -185,10 +240,7 @@ export default function Stock({
     {stockStatus(featured)!=="normal"&&<p className="stock-warning">
      {stockStatus(featured)==="empty"?"Запас закончился.":"Запас скоро закончится."}
     </p>}
-    <Button fullWidth variant="primary" onClick={()=>{
-     setSelectedId(featured.id);setOperation("add");setUnit(featured.display_unit);setMode("operation");
-    }}><Plus/> Пополнить</Button>
-    <Button variant="ghost" onClick={()=>goDetail(featured)}>Изменить расход или остаток</Button>
+    <Button fullWidth variant="primary" onClick={openAdd}><Plus/> Добавить запас</Button>
    </Card>}
    {featured&&stockStatus(featured)!=="normal"&&<p className="stock-notice">
     {stockStatus(featured)==="empty"?"Запас закончился. Пора пополнить.":"Запас скоро закончится. Проверьте остаток и запланируйте покупку."}
@@ -217,8 +269,6 @@ export default function Stock({
      })}</div>
     </section>;
    })}
-   {featured&&<Button className="stock-add-item" fullWidth variant="secondary"
-    onClick={()=>{setMode("create");setError("");}}><Plus/> Добавить запас</Button>}
    <section className="stock-section stock-shopping">
     <SectionHeader title="Купить">
      <span className="stock-shopping-count">{pet.shopping.filter(s=>!s.done).length} в списке</span>
@@ -235,7 +285,31 @@ export default function Stock({
    </section>
   </>}
   {mode==="create"&&<section className="stock-section">
-   <h2>Новый запас</h2>
+   <h2>Добавить запас</h2>
+   {items.length>0&&<div className="stock-add-modes" role="group" aria-label="Способ добавления">
+    <label><input type="radio" name="add-target" checked={createTarget==="existing"}
+     onChange={()=>{setCreateTarget("existing");setError("");const item=items.find(i=>i.id===createItemId)??items[0];setCreateItemId(item.id);setUnit(item.display_unit);}}/> В существующий</label>
+    <label><input type="radio" name="add-target" checked={createTarget==="new"}
+     onChange={()=>{setCreateTarget("new");setError("");setUnit("г");}}/> Новый товар</label>
+   </div>}
+   {createTarget==="existing"&&items.length>0 ? (
+    <form className="stock-form" onSubmit={onAddExisting}>
+     <Field label="Товар">
+      <select value={createItemId} onChange={e=>{
+       const item=items.find(i=>i.id===e.target.value);setCreateItemId(e.target.value);
+       if(item)setUnit(item.display_unit);
+      }}>{items.map(i=><option key={i.id} value={i.id}>{i.name}</option>)}</select>
+     </Field>
+     <div className="stock-fields-two">
+      <Field label="Количество"><input type="number" name="amount" min={0.001} step="0.001" required/></Field>
+      <Field label="Единица"><select name="unit" value={unit} onChange={e=>setUnit(e.target.value as StockUnit)}>
+       {compatibleStockUnits((items.find(i=>i.id===createItemId)??items[0]).display_unit).map(x=><option key={x}>{x}</option>)}
+      </select></Field>
+     </div>
+     <Field label="Комментарий"><textarea name="note" rows={2}/></Field>
+     <Button fullWidth type="submit" loading={busy}>Добавить запас</Button>
+    </form>
+   ) : (
    <form className="stock-form" onSubmit={onCreate}>
     <Field label="Название"><input name="name" maxLength={120} required placeholder="Например, Royal Canin Mini"/></Field>
     <Field label="Категория"><select name="category">{categories.map(x=><option key={x}>{x}</option>)}</select></Field>
@@ -250,6 +324,7 @@ export default function Stock({
     <label className="stock-check"><input type="checkbox" name="auto"/> Настроить автоматическое списание после создания</label>
     <Button fullWidth type="submit" disabled={busy} loading={busy}>Создать запас</Button>
    </form>
+   )}
   </section>}
   {currentView&&<section className="stock-section">
    {mode==="detail"&&<>
@@ -275,9 +350,7 @@ export default function Stock({
      {stockStatus(current)!=="normal"&&<p className="stock-warning">
       {stockStatus(current)==="empty"?"Запас закончился":"Запас скоро закончится"}</p>}
      {current.note&&<p className="stock-muted">{current.note}</p>}
-     <Button fullWidth variant="primary" onClick={()=>{
-      setOperation("add");setUnit(current.display_unit);setMode("operation");
-     }}><Plus/> Пополнить</Button>
+     <Button fullWidth variant="primary" onClick={openAdd}><Plus/> Добавить запас</Button>
      <div className="stock-detail-actions">
       <Button variant="secondary" onClick={()=>{setOperation("manual_use");setUnit(current.display_unit);setMode("operation");}}>Списать</Button>
       <Button variant="ghost" onClick={()=>{setOperation("correction");setUnit(current.display_unit);setMode("operation");}}>Скорректировать остаток</Button>
@@ -286,12 +359,14 @@ export default function Stock({
     <section className="stock-section">
      <SectionHeader title="Автоматическое списание"/>
      <Card className="stock-setting-card">
-      <p>{active?stockRuleText(active):current.rules.length
-        ? "Автосписание выключено · ранее указан расход: "+stockRuleText(current.rules[0])
-        : "Выключено"}</p>
-      {active&&<p className="stock-muted">Начиная с {fmt(active.starts_on)}</p>}
-      <Button size="sm" variant="secondary" onClick={()=>openRule(current)}>
-       {active?"Изменить правило":"Настроить списание"}</Button>
+      <label className="stock-switch-row">
+       <span>Автоматическое списание</span>
+       <input type="checkbox" role="switch" className="stock-switch" checked={Boolean(active)}
+        disabled={busy} onChange={e=>void toggleAuto(current,e.target.checked)}/>
+      </label>
+      <p className="stock-muted">{active?stockRuleText(active):current.rules.length
+       ? "Сохранён расход: "+stockRuleText(current.rules[0]):"Укажите расход, чтобы включить списание."}</p>
+      <Button size="sm" variant="secondary" onClick={()=>openRule(current)}>Изменить расход</Button>
      </Card>
      <div className="stock-actions">
       <Button variant="ghost" onClick={()=>{setUnit(current.display_unit);setMode("edit");}}>Редактировать товар</Button>
@@ -345,12 +420,14 @@ export default function Stock({
     </form>
    </>}
    {mode==="rule"&&<>
-    <h2>Автоматическое списание</h2>
+    <h2>Расход корма</h2>
     <form className="stock-form" onSubmit={onRule}>
-     <label className="stock-check"><input type="checkbox" checked={ruleEnabled}
-      onChange={e=>setRuleEnabled(e.target.checked)}/> Включено</label>
-     {ruleEnabled&&<>
-      <div className="stock-fields-two">
+     <label className="stock-switch-row">
+      <span>Автоматическое списание</span>
+      <input type="checkbox" role="switch" className="stock-switch" checked={ruleEnabled}
+       onChange={e=>setRuleEnabled(e.target.checked)}/>
+     </label>
+     <div className="stock-fields-two">
        <Field label="Списывать"><input name="amount" type="number" min={0.001} step="0.001"
         defaultValue={(active??current.rules[0])?
          (active??current.rules[0]).amount/(current.display_unit==="кг"||current.display_unit==="л"?1000:1):undefined} required/></Field>
@@ -361,8 +438,9 @@ export default function Stock({
        onChange={e=>setStartDate(e.target.value)}/></Field>
       <RecurrenceFields date={startDate} value={draft} onChange={setDraft}
        allowedFrequencies={["daily","weekly","monthly"]} allowCount={false}/>
-      <p className="stock-muted">Изменение правила сохраняет историю предыдущих списаний.</p>
-     </>}
+      <p className="stock-muted">{ruleEnabled
+       ? "При сохранении списание включится. История уже выполненных операций останется."
+       : "Расход сохранится, но автоматическое списание останется выключенным."}</p>
      <Button type="submit" loading={busy}>Сохранить правило</Button>
     </form>
    </>}
