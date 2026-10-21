@@ -303,7 +303,6 @@ button svg {
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-label);
-  text-transform: uppercase;
   margin-bottom: var(--space-2);
 }
 .section-title {
@@ -322,7 +321,6 @@ button svg {
   font-size: var(--font-size-caption);
 }
 .section-title h2:first-letter {
-  text-transform: uppercase;
 }
 .section-title.compact {
   margin: 0 0 var(--space-4);

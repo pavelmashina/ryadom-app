@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { ArrowLeft, Plus, Package, Settings } from "lucide-react";
 import { Badge, Button, Card, Checkbox, Empty, SectionHeader } from "./components";
 import { today, fmt, type Pet } from "./domain";
@@ -37,6 +38,9 @@ export default function Stock({
  const [draft,setDraft]=useState<RecurrenceDraft>(()=>({...draftForDate(today()),frequency:"daily"}));
  const [ruleEnabled,setRuleEnabled]=useState(true);
  const [gearOpen,setGearOpen]=useState(false);
+ const gearTrigger=useRef<HTMLButtonElement|null>(null);
+ const gearPopover=useRef<HTMLDivElement|null>(null);
+ const [gearPosition,setGearPosition]=useState({top:0,left:0,width:260});
  const [createTarget,setCreateTarget]=useState<"existing"|"new">("new");
  const [createItemId,setCreateItemId]=useState("");
  const current=items.find((i)=>i.id===selectedId);
@@ -65,6 +69,41 @@ export default function Stock({
    document.removeEventListener("visibilitychange",refresh);};
  },[load]);
  useEffect(()=>{
+  if(!gearOpen)return;
+  function reposition(){
+   const trigger=gearTrigger.current;
+   if(!trigger)return;
+   const rect=trigger.getBoundingClientRect();
+   const width=Math.min(272,Math.max(0,window.innerWidth-24));
+   const left=Math.max(12,Math.min(rect.right-width,window.innerWidth-width-12));
+   const height=gearPopover.current?.getBoundingClientRect().height??216;
+   const below=window.innerHeight-rect.bottom-12;
+   const top=below>=height||below>=rect.top-12
+    ? Math.min(rect.bottom+6,Math.max(12,window.innerHeight-height-12))
+    : Math.max(12,rect.top-height-6);
+   setGearPosition({left,top,width});
+  }
+  function dismissOutside(e:PointerEvent){
+   const target=e.target as Node;
+   if(!gearTrigger.current?.contains(target)&&!gearPopover.current?.contains(target))setGearOpen(false);
+  }
+  function dismissEscape(e:KeyboardEvent){
+   if(e.key==="Escape"){setGearOpen(false);gearTrigger.current?.focus();}
+  }
+  reposition();
+  gearPopover.current?.querySelector<HTMLInputElement>('[role="switch"]')?.focus();
+  window.addEventListener("resize",reposition);
+  document.addEventListener("scroll",reposition,true);
+  document.addEventListener("pointerdown",dismissOutside);
+  document.addEventListener("keydown",dismissEscape);
+  return ()=>{
+   window.removeEventListener("resize",reposition);
+   document.removeEventListener("scroll",reposition,true);
+   document.removeEventListener("pointerdown",dismissOutside);
+   document.removeEventListener("keydown",dismissEscape);
+  };
+ },[gearOpen]);
+ useEffect(()=>{
   if(!initialItemId||handledLink.current===initialItemId)return;
   if(!items.some(i=>i.id===initialItemId))return;
   handledLink.current=initialItemId;setSelectedId(initialItemId);setMode("detail");
@@ -92,7 +131,7 @@ export default function Stock({
  async function toggleAuto(item:StockItem,enabled:boolean) {
   if(Boolean(activeStockRule(item))===enabled)return;
   const savedRule=activeStockRule(item)??item.rules[0];
-  if(enabled&&!savedRule){openRule(item);return;}
+  if(enabled&&!savedRule){setGearOpen(false);openRule(item);return;}
   await mutate("set_rule", {
    id:item.id,enabled,
    ...(enabled&&savedRule ? {
@@ -134,18 +173,13 @@ export default function Stock({
  async function onCreate(e:FormEvent<HTMLFormElement>) {
   e.preventDefault();
   const d=new FormData(e.currentTarget);
-  const originalIds=new Set(items.map((i)=>i.id));
   const updated=await mutate("create",{
    name:String(d.get("name")??""),category:String(d.get("category")??"Прочее"),
    quantity:Number(d.get("quantity")),unit:String(d.get("unit")),
    threshold:Number(d.get("threshold")||0),note:String(d.get("note")||""),
    notifications:d.has("notifications")
   });
-  if(!updated)return;
-  const item=updated.find((i)=>!originalIds.has(i.id));
-  if(!item){setMode("list");return;}
-  if(d.has("auto"))openRule(item);
-  else goDetail(item);
+  if(updated)closeDetails();
  }
  async function onEdit(e:FormEvent<HTMLFormElement>) {
   e.preventDefault();if(!current)return;
@@ -202,22 +236,27 @@ export default function Stock({
     <div className="stock-eyebrow-row">
      <span className="eyebrow">{featured.name} · фактический остаток</span>
      <button type="button" className="stock-gear" aria-label={"Настройки запаса: "+featured.name}
-      aria-expanded={gearOpen} aria-controls="stock-featured-settings"
-      onClick={()=>setGearOpen(value=>!value)}><Settings aria-hidden="true"/></button>
+      ref={gearTrigger} aria-haspopup="dialog" aria-expanded={gearOpen}
+      aria-controls={gearOpen?"stock-featured-settings":undefined}
+      onClick={()=>setGearOpen(open=>!open)}><Settings aria-hidden="true"/></button>
     </div>
-    {gearOpen&&<div className="stock-gear-panel" id="stock-featured-settings">
-     <label className="stock-switch-row">
-      <span>Автоматическое списание</span>
-      <input type="checkbox" role="switch" className="stock-switch" checked={Boolean(activeStockRule(featured))}
-       disabled={busy} onChange={e=>void toggleAuto(featured,e.target.checked)}/>
-     </label>
-     <button type="button" onClick={()=>openRule(featured)}>Изменить расход</button>
-     <button type="button" onClick={()=>{
-      setSelectedId(featured.id);setOperation("manual_use");setUnit(featured.display_unit);
-      setGearOpen(false);setMode("operation");
-     }}>Списать вручную</button>
-     <button type="button" onClick={()=>goDetail(featured)}>История и параметры</button>
-    </div>}
+    {gearOpen&&typeof document!=="undefined"&&createPortal(
+     <div className="stock-gear-panel" id="stock-featured-settings" ref={gearPopover}
+      role="dialog" aria-label={"Настройки запаса: "+featured.name}
+      style={{top:gearPosition.top,left:gearPosition.left,width:gearPosition.width}}>
+      <label className="stock-switch-row">
+       <span>Автоматическое списание</span>
+       <input type="checkbox" role="switch" className="stock-switch"
+        checked={Boolean(activeStockRule(featured))} disabled={busy}
+        onChange={e=>void toggleAuto(featured,e.target.checked)}/>
+      </label>
+      <button type="button" onClick={()=>{setGearOpen(false);openRule(featured);}}>Изменить расход</button>
+      <button type="button" onClick={()=>{
+       setSelectedId(featured.id);setOperation("manual_use");setUnit(featured.display_unit);
+       setGearOpen(false);setMode("operation");
+      }}>Списать вручную</button>
+      <button type="button" onClick={()=>goDetail(featured)}>История и параметры</button>
+     </div>,document.body)}
     <div className="stock-overview">
      <div className="stock-large">
       {stockAmount(featured.current_quantity,featured.display_unit)} <small>{featured.display_unit}</small>
@@ -232,11 +271,9 @@ export default function Stock({
      <span>0 {featured.display_unit}</span>
      <span>{stockAmount(featured.reference_quantity,featured.display_unit)} {featured.display_unit} · ориентир</span>
     </div>
-    <p className="stock-muted">
-     {activeStockRule(featured)?stockRuleText(activeStockRule(featured)!):
-      "Автоматическое списание не включено."}
-     {stockForecast(featured,today())&&" · Примерно до "+fmt(stockForecast(featured,today())!.date)+"."}
-    </p>
+    {stockForecast(featured,today())&&<p className="stock-muted">
+     Примерно до {fmt(stockForecast(featured,today())!.date)}
+    </p>}
     {stockStatus(featured)!=="normal"&&<p className="stock-warning">
      {stockStatus(featured)==="empty"?"Запас закончился.":"Запас скоро закончится."}
     </p>}
@@ -251,7 +288,7 @@ export default function Stock({
     return <section className="stock-section" key={category}>
      <SectionHeader title={category}/>
      <div className="stock-list">{stocks.map(item=>{
-      const status=stockStatus(item),rule=activeStockRule(item);
+      const status=stockStatus(item);
       const forecast=stockForecast(item,today());
       return <button type="button" key={item.id} className={"stock-card stock-"+status}
        onClick={()=>goDetail(item)}>
@@ -259,11 +296,10 @@ export default function Stock({
         <strong>{item.name}</strong>
         <span className="stock-card-quantity">{stockAmount(item.current_quantity,item.display_unit)} {item.display_unit}</span>
        </div>
-       <span className="stock-secondary">
-        {rule?stockRuleText(rule):"Автосписание выключено"}
-        {forecast&&" · ≈"+forecast.days+" дн."}
+       {(forecast||status!=="normal")&&<span className="stock-secondary">
+        {forecast&&"≈"+forecast.days+" дн."}
         {status!=="normal"&&<em>{status==="empty"?"Закончился":"Скоро закончится"}</em>}
-       </span>
+       </span>}
        <progress max={100} value={stockProgress(item)} aria-label={"Остаток "+stockProgress(item)+"%"} />
       </button>;
      })}</div>
@@ -321,7 +357,6 @@ export default function Stock({
     <Field label={"Порог низкого запаса, "+unit}><input name="threshold" type="number" min={0} step="0.001" defaultValue={0}/></Field>
     <Field label="Комментарий"><textarea name="note" rows={2} maxLength={3000}/></Field>
     <label className="stock-check"><input type="checkbox" name="notifications" defaultChecked/> Уведомлять о низком запасе</label>
-    <label className="stock-check"><input type="checkbox" name="auto"/> Настроить автоматическое списание после создания</label>
     <Button fullWidth type="submit" disabled={busy} loading={busy}>Создать запас</Button>
    </form>
    )}
@@ -346,7 +381,6 @@ export default function Stock({
       <span>{stockAmount(current.reference_quantity,current.display_unit)} {current.display_unit} · ориентир</span>
      </div>
      {stockForecast(current,today())&&<p className="stock-muted">Примерно до {fmt(stockForecast(current,today())!.date)}</p>}
-     <p className="stock-muted">{active?stockRuleText(active):"Автоматическое списание выключено"}</p>
      {stockStatus(current)!=="normal"&&<p className="stock-warning">
       {stockStatus(current)==="empty"?"Запас закончился":"Запас скоро закончится"}</p>}
      {current.note&&<p className="stock-muted">{current.note}</p>}
@@ -365,7 +399,7 @@ export default function Stock({
         disabled={busy} onChange={e=>void toggleAuto(current,e.target.checked)}/>
       </label>
       <p className="stock-muted">{active?stockRuleText(active):current.rules.length
-       ? "Сохранён расход: "+stockRuleText(current.rules[0]):"Укажите расход, чтобы включить списание."}</p>
+       ? "Расход: "+stockRuleText(current.rules[0]):"Для начала задайте расход."}</p>
       <Button size="sm" variant="secondary" onClick={()=>openRule(current)}>Изменить расход</Button>
      </Card>
      <div className="stock-actions">
