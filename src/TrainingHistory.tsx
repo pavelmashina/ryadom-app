@@ -22,7 +22,11 @@ export default function TrainingHistory({
   const latest =
     sessions
       .filter((s) => (s.status ?? "completed") === "completed")
-      .reduce((d, s) => (s.date > d ? s.date : d), "") || today();
+      .reduce((d, s) => (s.date > d ? s.date : d), "") ||
+    sessions
+      .filter((s) => s.status === "planned")
+      .reduce((d, s) => (s.date > d ? s.date : d), "") ||
+    today();
   const [selection, setSelection] = useState<string | null>(null);
   const selected = selection ?? latest;
   const [shownMonth, setMonth] = useState<string | null>(null);
@@ -130,7 +134,7 @@ export default function TrainingHistory({
       )}
       {!list && (
         <h3 className="training-selected-date" aria-live="polite">
-          {fmt(selected, { day: "numeric", month: "long", year: "numeric" })}
+          {fmt(selected, { day: "numeric", month: "long" })}
         </h3>
       )}
       {!shown.length && (
