@@ -107,7 +107,7 @@
   grid-template-columns: none;
   grid-template-rows: repeat(2, var(--button-height-md));
   grid-auto-flow: column;
-  grid-auto-columns: minmax(116px, calc((100% - var(--space-4)) / 2.4));
+  grid-auto-columns: clamp(116px, 42%, 188px);
   gap: var(--space-2);
   max-width: 100%;
   min-width: 0;
@@ -250,7 +250,7 @@
 }
 .training-screen .training-day::before {
   position: absolute;
-  z-index: -1;
+  z-index: 0;
   top: var(--space-1);
   left: 50%;
   width: 32px;
@@ -258,6 +258,11 @@
   transform: translateX(-50%);
   border-radius: var(--radius-full);
   content: "";
+}
+/* Keep the digit above the active-day circle. */
+.training-screen .training-day > span:first-child {
+  position: relative;
+  z-index: 1;
 }
 .training-screen .training-day:hover::before {
   background: var(--color-surface-secondary);
@@ -279,6 +284,7 @@
 .training-screen .training-day-dot,
 .training-screen .training-day-planned {
   position: absolute;
+  z-index: 1;
   bottom: 1px;
   width: 5px;
   height: 5px;
@@ -572,6 +578,6 @@
 }
 @media (min-width: 600px) {
   .training-screen .command-list {
-    grid-auto-columns: minmax(132px, calc((100% - var(--space-6)) / 3.4));
+    grid-auto-columns: clamp(132px, 29%, 210px);
   }
 }
