@@ -10,9 +10,10 @@ import {
   stockStatus, stockRuleText, stockUnitFactor, compatibleStockUnits,
   type StockItem, type StockUnit,
 } from "./stock-domain";
+import { stockBackDestination, type StockEditorOrigin, type StockViewMode } from "./stock-navigation";
 import "./stock.css";
 
-type Mode = "list"|"create"|"detail"|"edit"|"operation"|"rule";
+type Mode = StockViewMode;
 type Op = "add"|"manual_use"|"correction";
 const categories = ["Корм", "Лакомства", "Препараты", "Витамины", "Уход", "Прочее"];
 const errText = (e: unknown) => e instanceof Error ? e.message : "Ошибка связи";
@@ -32,7 +33,7 @@ export default function Stock({
  const handledLink=useRef<string|null>(null);
  const [selectedId,setSelectedId]=useState<string|null>(null);
  const [mode,setMode]=useState<Mode>("list");
- const [editorReturn,setEditorReturn]=useState<"list"|"detail">("list");
+ const [editorReturn,setEditorReturn]=useState<StockEditorOrigin>("list");
  const [operation,setOperation]=useState<Op>("add");
  const [busy,setBusy]=useState(false);
  const [loading,setLoading]=useState(true);
@@ -183,7 +184,7 @@ export default function Stock({
  }
  function goBack(){
   if(mode==="list")return;
-  if(mode==="create"||mode==="detail"){closeDetails();return;}
+  if(stockBackDestination(mode,editorReturn)==="list"){closeDetails();return;}
   leaveEditor();
  }
  function openOperation(item:StockItem,action:Op,origin:"list"|"detail"=(mode==="detail"?"detail":"list")){
