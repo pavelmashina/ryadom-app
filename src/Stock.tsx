@@ -20,12 +20,15 @@ function Field({ label, children }: {label: string; children: React.ReactNode}) 
  return <label className="stock-field"><span>{label}</span>{children}</label>;
 }
 export default function Stock({
- pet, session, onShop, onToggle, initialItemId,
+ pet, session, onShop, onToggle, initialItemId, onInitialItemHandled,
 }:{
- pet: Pet; session: AuthSession; initialItemId?: string;
+ pet: Pet; session: AuthSession; initialItemId?: string; onInitialItemHandled?:()=>void;
  onShop:()=>void; onToggle:(id:string)=>void;
 }) {
  const [items,setItems]=useState<StockItem[]>([]);
+ const loadEpoch=useRef(0);
+ const activePetId=useRef(pet.id);
+ activePetId.current=pet.id;
  const handledLink=useRef<string|null>(null);
  const [selectedId,setSelectedId]=useState<string|null>(null);
  const [mode,setMode]=useState<Mode>("list");
@@ -44,14 +47,21 @@ export default function Stock({
  const [gearPosition,setGearPosition]=useState({top:0,left:0,width:260});
  const [createTarget,setCreateTarget]=useState<"existing"|"new">("new");
  const [createItemId,setCreateItemId]=useState("");
- const current=items.find((i)=>i.id===selectedId);
+ const visibleItems=items.filter(item=>item.pet_id===pet.id);
+ const current=visibleItems.find((i)=>i.id===selectedId);
  const active=current?activeStockRule(current):null;
  const load=useCallback(async()=>{
+  const epoch=++loadEpoch.current;
   try {
    const next=await rpc(session,"stock_snapshot",{p_pet:pet.id}) as StockItem[];
+   if(epoch!==loadEpoch.current||activePetId.current!==pet.id)return;
    setItems(next);
    setError("");
-  } catch(e){setError(errText(e));}finally{setLoading(false);}
+  }catch(e){
+   if(epoch===loadEpoch.current&&activePetId.current===pet.id)setError(errText(e));
+  }finally{
+   if(epoch===loadEpoch.current&&activePetId.current===pet.id)setLoading(false);
+  }
  },[pet.id,session]);
  useEffect(()=>{
   setItems([]);
@@ -66,9 +76,12 @@ export default function Stock({
   window.addEventListener("online",refresh);
   window.addEventListener("ryadom:stock-changed",refresh);
   document.addEventListener("visibilitychange",refresh);
-  return ()=>{window.removeEventListener("focus",refresh);window.removeEventListener("online",refresh);
+  return ()=>{
+   ++loadEpoch.current;
+   window.removeEventListener("focus",refresh);window.removeEventListener("online",refresh);
    window.removeEventListener("ryadom:stock-changed",refresh);
-   document.removeEventListener("visibilitychange",refresh);};
+   document.removeEventListener("visibilitychange",refresh);
+  };
  },[load]);
  useEffect(()=>{
   if(!gearOpen)return;
@@ -132,18 +145,23 @@ export default function Stock({
    document.body.style.overflow=oldBody.overflow;
    document.documentElement.style.overflow=oldHtmlOverflow;
    window.scrollTo({top:scrollY,behavior:"instant"});
+   if(document.contains(gearTrigger.current))gearTrigger.current?.focus({preventScroll:true});
   };
  },[gearOpen]);
  useEffect(()=>{
   if(!initialItemId||handledLink.current===initialItemId)return;
-  if(!items.some(i=>i.id===initialItemId))return;
+  if(!visibleItems.some(i=>i.id===initialItemId))return;
   handledLink.current=initialItemId;setSelectedId(initialItemId);setMode("detail");
- },[initialItemId,items]);
+  onInitialItemHandled?.();
+ },[initialItemId,visibleItems,onInitialItemHandled]);
  async function mutate(action:string,data:Record<string,unknown>) {
   if(busy) return null;
   setBusy(true);setError("");
   try {
-   const updated=await rpc(session,"stock_mutate",{p_pet:pet.id,p_action:action,p_data:data}) as StockItem[];
+   const targetPetId=pet.id;
+   const updated=await rpc(session,"stock_mutate",{p_pet:targetPetId,p_action:action,p_data:data}) as StockItem[];
+   if(activePetId.current!==targetPetId)return null;
+   ++loadEpoch.current;
    setItems(updated);
    return updated;
   }catch(e){setError(errText(e));return null;}
