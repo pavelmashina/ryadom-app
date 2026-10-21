@@ -68,7 +68,7 @@ export default function TrainingHistory({
               <ChevronLeft aria-hidden="true" />
             </IconButton>
             <h3 aria-live="polite">
-              {fmt(month + "-01", { month: "long", year: "numeric" })}
+              {fmt(month + "-01", { month: "long", year: "numeric" }).replace(" г.", "")}
             </h3>
             <IconButton label="Следующий месяц" onClick={() => changeMonth(1)}>
               <ChevronRight aria-hidden="true" />
@@ -165,7 +165,7 @@ export default function TrainingHistory({
               {!!s.results.length && <span> · {s.results.length} команд</span>}
             </span>
           </div>
-          <div className="training-result-chips">
+          <div className={"training-result-chips" + (s.results.length === 1 ? " single" : "")}>
             {s.results.map((r) => (
               <span key={r.command_id} className="training-result-chip">
                 <span>
