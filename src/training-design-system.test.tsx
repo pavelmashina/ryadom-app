@@ -40,6 +40,16 @@ describe("Training mobile composition (requirements 140–161)", () => {
     expect(html).toContain("4/5");
   });
 
+  it("does not reserve a second chip row for a single result", () => {
+    const lone = session("s1", "12:00");
+    lone.results = lone.results.slice(0, 1);
+    const html = renderToStaticMarkup(<TrainingHistory
+      sessions={[lone]} commands={commands}
+      onOpen={() => {}} onEdit={() => {}} />);
+    expect(html).toContain('class="training-result-chips single"');
+    expect(css).toContain(".training-screen .training-result-chips.single");
+  });
+
   it("removes the internal training count from the calendar heading at source", () => {
     expect(history).toContain('<SectionHeader title={list ? "История тренировок" : "Календарь"} />');
     const headingSource = history.slice(history.indexOf("<SectionHeader"), history.indexOf("{!list && ("));
