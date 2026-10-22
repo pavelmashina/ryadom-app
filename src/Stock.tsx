@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, CalendarDays, ChevronRight, Plus, Package, Settings } from "lucide-react";
+import { Archive, ArrowLeft, CalendarDays, ChevronRight, Plus, Package, Settings } from "lucide-react";
 import { Badge, Button, Card, Checkbox, Empty, SectionHeader, Toast } from "./components";
 import { today, fmt, type Pet } from "./domain";
 import { rpc, type AuthSession } from "./backend";
@@ -28,6 +28,10 @@ export default function Stock({
  onShop:()=>void; onToggle:(id:string)=>void;
 }) {
  const [items,setItems]=useState<StockItem[]>([]);
+ const [archiveItems,setArchiveItems]=useState<StockItem[]>([]);
+ const [archiveLoading,setArchiveLoading]=useState(false);
+ const [archiveDetailId,setArchiveDetailId]=useState<string|null>(null);
+ const archiveEpoch=useRef(0);
  const loadEpoch=useRef(0);
  const hasSnapshot=useRef(false);
  const activePetId=useRef(pet.id);
@@ -81,6 +85,9 @@ export default function Stock({
  useEffect(()=>{
   hasSnapshot.current=false;
   setItems([]);
+  setArchiveItems([]);
+  setArchiveDetailId(null);
+  ++archiveEpoch.current;
   setSelectedId(null);
   setMode("list");
   setEditorReturn("list");
@@ -196,7 +203,30 @@ export default function Stock({
   }catch(e){setError(errText(e));return null;}
   finally{setBusy(false);}
  }
- const closeDetails=()=>{setMode("list");setSelectedId(null);setGearOpen(false);setSettingsItemId(null);setError("");};
+ const closeDetails=()=>{++archiveEpoch.current;setMode("list");setSelectedId(null);setArchiveDetailId(null);setGearOpen(false);setSettingsItemId(null);setError("");};
+ async function openArchive(){
+  const epoch=++archiveEpoch.current;
+  const pid=pet.id;
+  setGearOpen(false);setError("");setArchiveDetailId(null);setArchiveLoading(true);setMode("archive");
+  try{
+   const result=await rpc(session,"stock_archive",{p_pet:pid,p_action:"list"}) as StockItem[];
+   if(epoch===archiveEpoch.current&&activePetId.current===pid)setArchiveItems(result);
+  }catch(e){if(epoch===archiveEpoch.current&&activePetId.current===pid)setError(errText(e));}
+  finally{if(epoch===archiveEpoch.current&&activePetId.current===pid)setArchiveLoading(false);}
+ }
+ async function changeArchive(item:StockItem,action:"restore"|"delete"){
+  if(busy)return;
+  if(action==="delete"&&!window.confirm("Удалить «"+item.name+"» навсегда? История операций тоже будет удалена. Восстановить нельзя."))return;
+  setBusy(true);setError("");
+  try{
+   const pid=pet.id;
+   const result=await rpc(session,"stock_archive",{p_pet:pid,p_action:action,p_id:item.id}) as StockItem[];
+   if(activePetId.current!==pid)return;
+   setArchiveItems(result);setArchiveDetailId(null);
+   if(action==="restore")await load();
+  }catch(e){setError(errText(e));}
+  finally{setBusy(false);}
+ }
  function showStockMenu(item:StockItem|null,button:HTMLButtonElement){
   if(gearOpen&&settingsItemId===(item?.id??null)){setGearOpen(false);return;}
   gearTrigger.current=button;
@@ -337,6 +367,10 @@ export default function Stock({
    <section className="stock-section">
     <div className="stock-list-header">
      <h2>Запасы</h2>
+     <div className="stock-header-actions">
+      <button type="button" className="stock-archive-trigger" onClick={()=>void openArchive()}>
+       <Archive aria-hidden="true"/> Архив
+      </button>
      <button type="button" className="stock-add-trigger"
       aria-label="Добавить запас или покупку" aria-haspopup="dialog"
       aria-expanded={gearOpen&&settingsItemId===null}
@@ -344,6 +378,7 @@ export default function Stock({
       onClick={e=>showStockMenu(null,e.currentTarget)}>
       <Plus aria-hidden="true"/>
      </button>
+     </div>
     </div>
     <Card variant="info" className="stock-collection">
      {loading&&<p className="stock-muted">Загружаем запасы…</p>}
@@ -429,6 +464,36 @@ export default function Stock({
      </div>
     </div>,document.body)}
   </>}
+  {mode==="archive"&&<section className="stock-section stock-archive-page">
+   <h2 className="stock-editor-heading">Архив запасов</h2>
+   {archiveLoading&&<p className="stock-muted">Загружаем архив…</p>}
+   {!archiveLoading&&!error&&!archiveItems.length&&<Empty title="Архив пуст">Здесь будут архивированные товары.</Empty>}
+   <div className="stock-archive-list">{archiveItems.map(item=><div className="stock-archive-item" key={item.id}>
+    <button type="button" className="stock-archive-item-title" aria-expanded={archiveDetailId===item.id}
+     onClick={()=>setArchiveDetailId(v=>v===item.id?null:item.id)}>
+     <span><strong>{item.name}</strong><small>{item.category} · {stockAmount(item.current_quantity,item.display_unit)} {item.display_unit}</small></span>
+     <ChevronRight aria-hidden="true"/>
+    </button>
+    {archiveDetailId===item.id&&<div className="stock-archive-item-body">
+     <p className="stock-muted">Дата архивации: {item.archived_at?new Date(item.archived_at).toLocaleDateString("ru-RU"):"—"}</p>
+     <p>Остаток: {stockAmount(item.current_quantity,item.display_unit)} {item.display_unit}</p>
+     {item.note&&<p className="stock-muted">{item.note}</p>}
+     <h3>История операций</h3>
+     {!item.transactions.length&&<p className="stock-muted">Операций пока нет.</p>}
+     <div className="stock-history">{item.transactions.map(t=><div className="stock-transaction" key={t.id}>
+      <div><strong>{t.type==="add"?"Пополнение":t.type==="manual_use"?"Ручное списание":t.type==="automatic_use"?"Автоматическое списание":"Корректировка"}</strong>
+       <span>{new Date(t.occurred_at).toLocaleDateString("ru-RU")}</span>
+       {t.comment&&<small>{t.comment}</small>}</div>
+      <b>{t.direction==="out"?"−":"+"}{stockAmount(t.applied_amount,item.display_unit)} {item.display_unit}</b>
+     </div>)}</div>
+    </div>}
+    <div className="stock-archive-actions">
+     <Button variant="secondary" disabled={busy} onClick={()=>void changeArchive(item,"restore")}>Восстановить</Button>
+     {pet.role!=="editor"&&<Button variant="secondary" disabled={busy}
+      onClick={()=>void changeArchive(item,"delete")}>Удалить</Button>}
+    </div>
+   </div>)}</div>
+  </section>}
   {mode==="create"&&<section className="stock-section">
    <h2 className="stock-editor-heading">Добавить запас</h2>
    {visibleItems.length>0&&<div className="stock-add-modes" role="group" aria-label="Способ добавления">
@@ -519,8 +584,8 @@ export default function Stock({
     </section>
    </>}
    {mode==="edit"&&<>
-    <h2>Редактировать запас</h2>
-    <form className="stock-form" onSubmit={onEdit}>
+    <h2 className="stock-editor-heading">Редактировать товар</h2>
+    <form className="stock-form stock-create-form stock-edit-form" onSubmit={onEdit}>
      <Field label="Название"><input name="name" defaultValue={current.name} maxLength={120} required/></Field>
      <Field label="Категория"><select name="category" defaultValue={current.category}>
       {[...new Set([...categories,current.category])].map(x=><option key={x}>{x}</option>)}</select></Field>
@@ -536,7 +601,7 @@ export default function Stock({
     </form>
    </>}
    {mode==="operation"&&<>
-    <h2 className="stock-editor-heading">{operation==="add"?"Пополнить":operation==="manual_use"?"Списать вручную":"Скорректировать остаток"}</h2>
+    <h2 className="stock-editor-heading">{operation==="add"?"Пополнить":operation==="manual_use"?"Списать вручную":"Изменить остаток"}</h2>
     <p className="stock-muted stock-editor-subtitle">Сейчас: {stockAmount(current.current_quantity,current.display_unit)} {current.display_unit}</p>
     <form className="stock-form stock-operation-form" onSubmit={onOperation}>
      <div className="stock-fields-two">
@@ -545,7 +610,7 @@ export default function Stock({
       <Field label="Единица"><select name="unit" value={unit} onChange={e=>setUnit(e.target.value as StockUnit)}>
        {compatibleStockUnits(current.display_unit).map(x=><option key={x}>{x}</option>)}</select></Field>
      </div>
-     {operation!=="manual_use"&&<Field label="Комментарий"><textarea name="note" rows={2}/></Field>}
+     {operation==="add"&&<Field label="Комментарий"><textarea name="note" rows={2}/></Field>}
      <Button type="submit" loading={busy}>Подтвердить</Button>
     </form>
    </>}

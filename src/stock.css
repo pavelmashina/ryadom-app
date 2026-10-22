@@ -1142,3 +1142,145 @@
 .stock-screen .stock-add-modes label {
   font-size: var(--font-size-sm);
 }
+
+/* Consistent editor layout for product details and balance correction. */
+.stock-screen .stock-edit-form {
+  box-sizing: border-box;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  gap: var(--space-compact-3);
+  padding: var(--space-compact-4);
+}
+.stock-screen .stock-edit-form .stock-field > span:first-child,
+.stock-screen .stock-operation-form .stock-field > span:first-child {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+}
+.stock-screen .stock-edit-form .stock-field :is(input,select,textarea),
+.stock-screen .stock-operation-form .stock-field :is(input,select,textarea) {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  font-size: var(--font-size-sm);
+}
+.stock-screen .stock-edit-form .stock-check {
+  gap: var(--space-compact-3);
+  font-size: var(--font-size-sm);
+}
+
+/* Archive pill sits next to the round plus without altering its placement. */
+.stock-header-actions {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: var(--space-compact-2);
+}
+.stock-screen .stock-archive-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  gap: var(--space-compact-2);
+  min-height: var(--button-height-sm);
+  padding: 0 var(--space-compact-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+.stock-screen .stock-archive-trigger svg {
+  flex: none;
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+.stock-screen .stock-archive-trigger:hover {
+  background: var(--color-surface-secondary);
+}
+.stock-screen .stock-archive-trigger:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Archived items are readable but inactive until explicitly restored. */
+.stock-archive-list {
+  display: grid;
+  gap: var(--space-compact-3);
+}
+.stock-archive-item {
+  display: grid;
+  gap: var(--space-compact-3);
+  box-sizing: border-box;
+  min-width: 0;
+  padding: var(--space-compact-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+.stock-screen .stock-archive-item-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: var(--button-height-sm);
+  min-width: 0;
+  gap: var(--space-compact-3);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+.stock-archive-item-title span {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-compact-1);
+}
+.stock-archive-item-title strong {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  overflow-wrap: anywhere;
+}
+.stock-archive-item-title small {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+.stock-archive-item-title svg {
+  flex: none;
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+  color: var(--color-text-secondary);
+  transition: transform var(--transition-fast);
+}
+.stock-archive-item-title[aria-expanded="true"] svg {
+  transform: rotate(90deg);
+}
+.stock-archive-item-body {
+  display: grid;
+  gap: var(--space-compact-3);
+  min-width: 0;
+  font-size: var(--font-size-sm);
+}
+.stock-archive-item-body h3 {
+  font-size: var(--font-size-md);
+  margin: var(--space-compact-2) 0 0;
+}
+.stock-archive-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-compact-2);
+}
+.stock-archive-actions .btn {
+  min-width: 0;
+  margin: 0;
+}
+.stock-archive-item-body .stock-history {
+  max-height: 320px;
+  overflow-y: auto;
+}

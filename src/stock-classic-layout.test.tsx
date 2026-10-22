@@ -171,7 +171,8 @@ describe("Unified stock and shopping overview",()=>{
   expect(css).toContain("margin: calc(-1 * var(--space-compact-6))");
   const operation=source.split('{mode==="operation"&&<>')[1]?.split('    </>}')[0]??"";
   expect(operation).toContain('className="stock-form stock-operation-form"');
-  expect(operation).toContain('operation!=="manual_use"&&<Field label="Комментарий">');
+  expect(operation).toContain('operation==="add"&&<Field label="Комментарий">');
+  expect(operation).toContain('"Списать вручную":"Изменить остаток"');
  });
  it("follows the previous palette, compact typography and 12/16px spacing",()=>{
   const panel=css.split(".stock-screen .card.stock-collection {")[1]?.split("}")[0]??"";
@@ -207,6 +208,29 @@ describe("Unified stock and shopping overview",()=>{
   expect(css).toContain(".stock-screen .stock-rule-form .recurrence-options-flat-frequency .field :is(input,select)");
   expect(css).toContain(".stock-screen .stock-create-form .stock-field > span:first-child");
   expect(css).toContain(".stock-screen .stock-create-form .stock-field :is(input,select,textarea)");
+ });
+ it("provides an archive beside the plus, with read, restore, and guarded delete",()=>{
+  expect(source).toContain('className="stock-header-actions"');
+  expect(source).toContain('className="stock-archive-trigger"');
+  expect(source).toContain('<Archive aria-hidden="true"/> Архив');
+  expect(source).toContain('mode==="archive"');
+  expect(source).toContain('rpc(session,"stock_archive",{p_pet:pid,p_action:"list"})');
+  expect(source).toContain('rpc(session,"stock_archive",{p_pet:pid,p_action:action,p_id:item.id})');
+  expect(source).toContain('onClick={()=>setArchiveDetailId');
+  expect(source).toContain('item.transactions.map');
+  expect(source).toContain('pet.role!=="editor"');
+  expect(source).toContain('window.confirm("Удалить «"');
+  expect(source).toContain('if(action==="restore")await load()');
+  expect(css).toContain('.stock-screen .stock-archive-trigger {');
+  expect(css).toContain('border-radius: var(--radius-full)');
+  expect(css).toContain('.stock-archive-actions {');
+ });
+ it("uses identical compact typography for editing and balance correction",()=>{
+  expect(source).toContain('className="stock-form stock-create-form stock-edit-form"');
+  expect(source).toContain('className="stock-editor-heading">Редактировать товар');
+  expect(css).toContain('.stock-screen .stock-edit-form .stock-field > span:first-child');
+  expect(css).toContain('.stock-screen .stock-operation-form .stock-field > span:first-child');
+  expect(css).toContain('font-size: var(--font-size-sm)');
  });
 
 });

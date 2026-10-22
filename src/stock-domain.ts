@@ -19,6 +19,7 @@ export type StockItem = {
  current_quantity: number; reference_quantity: number;
  display_unit: StockUnit; unit: string; low_stock_threshold: number;
  note: string; notifications_enabled: boolean; legacy_food: boolean;
+ archived_at?: string|null;
  rules: StockRule[]; transactions: StockTransaction[];
 };
 export const stockUnitBase = (unit: StockUnit): string =>
