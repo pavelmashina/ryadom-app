@@ -269,7 +269,8 @@ export default function App({
         running = false;
       }
     }
-    const timer = setInterval(refresh, 10000);
+    // A less aggressive sync cadence avoids unnecessary mobile reconnects.
+    const timer = setInterval(refresh, 30000);
     window.addEventListener("focus", refresh);
     window.addEventListener("online", refresh);
     document.addEventListener("visibilitychange", refresh);

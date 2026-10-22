@@ -221,7 +221,8 @@ async function authorizedSession(session: AuthSession) {
 async function request(url: string, options: RequestInit, retryLoad = false) {
   for (let attempt = 0; ; attempt++) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 60000);
+    let timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; controller.abort(); }, 60000);
     try {
       const response = await fetch(url, { ...options, signal: controller.signal });
       // Fetch resolves at headers. Read the entire body inside the timeout/error
@@ -230,9 +231,20 @@ async function request(url: string, options: RequestInit, retryLoad = false) {
       return new Response([204, 205, 304].includes(response.status) ? null : body, {
         status: response.status, statusText: response.statusText, headers: response.headers,
       });
-    } catch {
-      if (!retryLoad || attempt >= 1)
-        throw new Error("Нет связи с сервером. Проверьте интернет и нажмите «Повторить».");
+    } catch (cause) {
+      // Safari may interrupt a request or response stream despite a working connection.
+      // The diagnostics include only an endpoint path, not a token or request content.
+      console.warn("[PET APP] API transport failure", {
+        route: new URL(url).pathname, attempt: attempt + 1, timedOut,
+        kind: cause instanceof Error ? cause.name : "unknown",
+      });
+      if (!retryLoad || attempt >= 1) {
+        if (typeof navigator !== "undefined" && navigator.onLine === false)
+          throw new Error("Устройство офлайн. Проверьте подключение и повторите действие.");
+        if (timedOut)
+          throw new Error("Сервер не ответил вовремя. Повторите действие, проверив результат предыдущей попытки.");
+        throw new Error("Сетевой запрос к серверу прервался. Интернет может работать — повторите действие.");
+      }
     } finally {
       clearTimeout(timer);
     }

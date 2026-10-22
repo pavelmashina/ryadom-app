@@ -184,6 +184,10 @@ describe("Unified stock and shopping overview",()=>{
   expect(css).toContain("--stock-section-gap: var(--space-compact-5)");
   for(const size of ["xl","lg","md","sm","xs"])expect(css).toContain("var(--font-size-"+size+")");
   expect(css).toContain("font-family: var(--font-family-base)");
+  const shopping=css.split(".stock-screen .shopping {")[1]?.split("}")[0]??"";
+  expect(shopping).toContain("padding: var(--space-compact-2) 0");
+  expect(css).toContain("font-size: var(--font-size-lg)");
+  expect(source).toContain("if(hasSnapshot.current)");
  });
  it("uses larger editor labels, smaller control values, and an unboxed end section",()=>{
   expect(source).toContain('allowCount={false} flatEnd');

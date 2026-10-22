@@ -29,6 +29,7 @@ export default function Stock({
 }) {
  const [items,setItems]=useState<StockItem[]>([]);
  const loadEpoch=useRef(0);
+ const hasSnapshot=useRef(false);
  const activePetId=useRef(pet.id);
  activePetId.current=pet.id;
  const handledLink=useRef<string|null>(null);
@@ -64,14 +65,21 @@ export default function Stock({
    const next=await rpc(session,"stock_snapshot",{p_pet:pet.id}) as StockItem[];
    if(epoch!==loadEpoch.current||activePetId.current!==pet.id)return;
    setItems(next);
+   hasSnapshot.current=true;
    setError("");
   }catch(e){
-   if(epoch===loadEpoch.current&&activePetId.current===pet.id)setError(errText(e));
+   if(epoch===loadEpoch.current&&activePetId.current===pet.id){
+    if(hasSnapshot.current) {
+     // Background refresh errors should not falsely tell users they lost connectivity.
+     console.warn("[PET APP] stock refresh failed; displaying last confirmed data",e);
+    } else setError(errText(e));
+   }
   }finally{
    if(epoch===loadEpoch.current&&activePetId.current===pet.id)setLoading(false);
   }
  },[pet.id,session]);
  useEffect(()=>{
+  hasSnapshot.current=false;
   setItems([]);
   setSelectedId(null);
   setMode("list");

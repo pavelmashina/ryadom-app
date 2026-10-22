@@ -28,7 +28,7 @@ it("reports a version conflict immediately",async()=>{
 });
 it("does not claim success on network failure",async()=>{
  vi.stubGlobal("fetch",vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
- const api=await import("./backend");await expect(api.signIn("a@example.com","password")).rejects.toThrow("Нет связи");
+ const api=await import("./backend");await expect(api.signIn("a@example.com","password")).rejects.toThrow("Сетевой запрос");
 });
 
 it("retries an interrupted account response body with a fresh signal",async()=>{
@@ -46,14 +46,14 @@ it("does not retry a write if its response stream fails",async()=>{
  .mockResolvedValueOnce(new Response(new ReadableStream({start(c){c.error(new DOMException("Fetch is aborted","AbortError"));}})));
  vi.stubGlobal("fetch",fetcher);const api=await import("./backend");
  const s=await api.signIn("a@example.com","password");
- await expect(api.rpc(s,"save_shared_state",{})).rejects.toThrow("Нет связи");
+ await expect(api.rpc(s,"save_shared_state",{})).rejects.toThrow("Сетевой запрос");
  expect(fetcher).toHaveBeenCalledTimes(2);
 });
 it("bounds retries and preserves the account when offline",async()=>{
  const fetcher=vi.fn().mockResolvedValueOnce(new Response(JSON.stringify(token()))).mockRejectedValue(new TypeError("Failed to fetch"));
  vi.stubGlobal("fetch",fetcher);const api=await import("./backend");
  const s=await api.signIn("a@example.com","password");
- await expect(api.rpc(s,"load_shared_state",{})).rejects.toThrow("Повторить");
+ await expect(api.rpc(s,"load_shared_state",{})).rejects.toThrow("повторите");
  expect(fetcher).toHaveBeenCalledTimes(3);expect(api.readStoredSession()?.user.id).toBe("a");
 });
 it("clears the timeout after reading the body",async()=>{
