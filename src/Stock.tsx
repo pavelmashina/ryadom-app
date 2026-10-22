@@ -7,7 +7,7 @@ import { rpc, type AuthSession } from "./backend";
 import RecurrenceFields, { draftForDate, type RecurrenceDraft } from "./RecurrenceFields";
 import {
   STOCK_UNITS, stockAmount, activeStockRule, stockForecast, stockProgress,
-  stockStatus, stockRuleText, stockUnitFactor, compatibleStockUnits,
+  stockStatus, stockUnitFactor, compatibleStockUnits,
   type StockItem, type StockUnit,
 } from "./stock-domain";
 import { stockBackDestination, type StockEditorOrigin, type StockViewMode } from "./stock-navigation";
@@ -305,9 +305,9 @@ export default function Stock({
  return <div className="stock-screen">
   {mode!=="list"&&(
    <div className="stock-top">
-    <Button size="sm" variant="ghost" onClick={goBack}>
-     <ArrowLeft/> Назад
-    </Button>
+    <button type="button" className="stock-back" onClick={goBack} aria-label="Назад" title="Назад">
+     <ArrowLeft aria-hidden="true"/>
+    </button>
    </div>
   )}
   {error&&<p className="stock-error" role="alert">{error}</p>}
@@ -375,7 +375,9 @@ export default function Stock({
    {gearOpen&&typeof document!=="undefined"&&createPortal(
     <div className="stock-settings-layer">
      <div className="stock-settings-backdrop" aria-hidden="true"
-      onPointerDown={e=>{e.preventDefault();setGearOpen(false);}}/>
+      onPointerDown={e=>e.stopPropagation()}
+      onPointerUp={e=>e.stopPropagation()}
+      onClick={e=>{e.preventDefault();e.stopPropagation();setGearOpen(false);}}/>
      {!settingsItem&&<button type="button" ref={addCloseTrigger}
       className="stock-add-trigger stock-add-trigger-overlay"
       aria-label="Закрыть меню добавления"
@@ -473,18 +475,8 @@ export default function Stock({
      </div>
     </Card>
     <section className="stock-section">
-     <SectionHeader title="Автоматическое списание"/>
-     <Card className="stock-setting-card">
-      <label className="stock-switch-row">
-       <span>Автоматическое списание</span>
-       <input type="checkbox" role="switch" className="stock-switch" checked={Boolean(active)}
-        disabled={busy} onChange={e=>void toggleAuto(current,e.target.checked)}/>
-      </label>
-      <p className="stock-muted">{active?stockRuleText(active):current.rules.length
-       ? "Расход: "+stockRuleText(current.rules[0]):"Для начала задайте расход."}</p>
-      <Button size="sm" variant="secondary" onClick={()=>openRule(current)}>Изменить расход</Button>
-     </Card>
      <div className="stock-actions">
+      <Button variant="secondary" onClick={()=>openRule(current)}>Изменить расход</Button>
       <Button variant="ghost" onClick={()=>{setUnit(current.display_unit);openEditor("edit",current,"detail");}}>Редактировать товар</Button>
       <Button variant="ghost" onClick={async()=>{if(!window.confirm("Архивировать запас? История сохранится."))return;
        const updated=await mutate("archive",{id:current.id});if(updated)closeDetails();}}>Архивировать</Button>
@@ -522,16 +514,16 @@ export default function Stock({
     </form>
    </>}
    {mode==="operation"&&<>
-    <h2>{operation==="add"?"Пополнить":operation==="manual_use"?"Списать":"Скорректировать остаток"}</h2>
-    <p className="stock-muted">Сейчас: {stockAmount(current.current_quantity,current.display_unit)} {current.display_unit}</p>
-    <form className="stock-form" onSubmit={onOperation}>
+    <h2 className="stock-editor-heading">{operation==="add"?"Пополнить":operation==="manual_use"?"Списать вручную":"Скорректировать остаток"}</h2>
+    <p className="stock-muted stock-editor-subtitle">Сейчас: {stockAmount(current.current_quantity,current.display_unit)} {current.display_unit}</p>
+    <form className="stock-form stock-operation-form" onSubmit={onOperation}>
      <div className="stock-fields-two">
       <Field label={operation==="correction"?"Новый остаток":"Количество"}>
        <input name="amount" type="number" min={operation==="correction"?0:0.001} step="0.001" required/></Field>
       <Field label="Единица"><select name="unit" value={unit} onChange={e=>setUnit(e.target.value as StockUnit)}>
        {compatibleStockUnits(current.display_unit).map(x=><option key={x}>{x}</option>)}</select></Field>
      </div>
-     <Field label="Комментарий"><textarea name="note" rows={2}/></Field>
+     {operation!=="manual_use"&&<Field label="Комментарий"><textarea name="note" rows={2}/></Field>}
      <Button type="submit" loading={busy}>Подтвердить</Button>
     </form>
    </>}
@@ -545,8 +537,10 @@ export default function Stock({
        <Field label="Единица"><select name="unit" value={unit} onChange={e=>setUnit(e.target.value as StockUnit)}>
         {compatibleStockUnits(current.display_unit).map(x=><option key={x}>{x}</option>)}</select></Field>
       </div>
-      <Field label="Начиная с"><input className="stock-rule-date" type="date" value={startDate} required
-       onChange={e=>setStartDate(e.target.value)}/></Field>
+      <Field label="Начиная с"><span className="stock-rule-date-wrap">
+       <input className="stock-rule-date" type="date" value={startDate} required
+       onChange={e=>setStartDate(e.target.value)}/>
+      </span></Field>
       <RecurrenceFields date={startDate} value={draft} onChange={setDraft}
        allowedFrequencies={["daily","weekly","monthly"]} allowCount={false}/>
      <Button type="submit" loading={busy}>Сохранить расход</Button>

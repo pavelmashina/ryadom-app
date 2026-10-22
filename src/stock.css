@@ -67,10 +67,31 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  margin: 0 0 var(--stock-section-gap);
+  margin: calc(-1 * var(--space-compact-2)) 0 var(--space-compact-2);
 }
-.stock-top .btn {
+.stock-screen .stock-back {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  flex: none;
+  width: var(--button-height-sm);
+  height: var(--button-height-sm);
   margin: 0;
+  padding: var(--space-compact-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+.stock-screen .stock-back svg {
+  width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+}
+.stock-screen .stock-back:hover { background: var(--color-surface-secondary); }
+.stock-screen .stock-back:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 .stock-screen .card.stock-featured,
 .stock-screen .card.stock-detail-card {
@@ -468,6 +489,8 @@
   inset: 0;
   background: color-mix(in srgb, var(--color-overlay) 42%, transparent);
   cursor: pointer;
+  touch-action: none;
+  /* Keep the backdrop mounted through pointerup and click. */
   -webkit-tap-highlight-color: transparent;
 }
 .stock-gear-panel {
@@ -855,4 +878,65 @@
   .stock-screen .stock-rule-form .recurrence-fields .fields {
     grid-template-columns: minmax(0,1fr);
   }
+}
+/* Compact typography and spacing for manual use and stock detail screens. */
+.stock-screen .stock-editor-heading,
+.stock-screen .stock-detail-title {
+  margin: 0 0 var(--stock-heading-gap) !important;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-ui-heading);
+}
+.stock-screen .stock-editor-subtitle {
+  margin: 0 0 var(--stock-heading-gap);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-ui-caption);
+}
+.stock-screen .stock-operation-form {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  gap: var(--space-compact-3);
+  padding: var(--space-compact-4);
+}
+.stock-screen .stock-operation-form .stock-fields-two {
+  min-width: 0;
+  gap: var(--space-compact-3);
+}
+.stock-screen .stock-operation-form .stock-field {
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-ui-caption);
+}
+.stock-screen .stock-operation-form :is(input, select) {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  min-height: var(--button-height-sm);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+}
+.stock-screen .stock-rule-form .stock-rule-date-wrap {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+}
+.stock-screen .stock-rule-form input.stock-rule-date {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-inline-size: 0;
+  margin: 0;
+}
+.stock-screen .stock-rule-form input[type="date"]::-webkit-calendar-picker-indicator {
+  flex: none;
+  margin: 0;
+  padding: 0;
 }

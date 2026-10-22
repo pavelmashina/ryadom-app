@@ -75,7 +75,7 @@ describe("Unified stock and shopping overview",()=>{
  it("keeps the modal behavior: overlay, outside-tap, scroll lock and focus trap",()=>{
   expect(source).toContain('createPortal(');
   expect(source).toContain('className="stock-settings-backdrop"');
-  expect(source).toContain('onPointerDown={e=>{e.preventDefault();setGearOpen(false);}}');
+  expect(source).toContain('onPointerDown={e=>e.stopPropagation()}');
   expect(source).toContain('aria-modal="true"');
   expect(source).toContain('document.body.style.position="fixed"');
   expect(source).toContain('document.documentElement.style.overflow="hidden"');
@@ -85,10 +85,12 @@ describe("Unified stock and shopping overview",()=>{
   expect(menu).toContain("position: fixed");
   expect(menu).toContain("font-family: var(--font-family-base)");
  });
- it("dismisses on press rather than click-release, and the close stays above the dimmer",()=>{
+ it("dismisses after release so taps cannot activate underlying buttons",()=>{
   expect(source).toContain('if(gearOpen&&settingsItemId===(item?.id??null))');
-  expect(source).toContain('onPointerDown={e=>{e.preventDefault();setGearOpen(false);}}');
-  expect(source).not.toContain('onClick={()=>setGearOpen(false)}/>'); // no delayed backdrop click
+  expect(source).toContain('onPointerDown={e=>e.stopPropagation()}');
+  expect(source).toContain('onPointerUp={e=>e.stopPropagation()}');
+   expect(source).toContain('onClick={e=>{e.preventDefault();e.stopPropagation();setGearOpen(false);}}');
+   expect(source).not.toContain('onPointerDown={e=>{e.preventDefault();setGearOpen(false);}}');
   expect(source).toContain('onClick={()=>setGearOpen(false)}');
   const layer=css.split(".stock-settings-layer {")[1]?.split("}")[0]??"";
   expect(layer).toContain("z-index: 30");
@@ -104,7 +106,8 @@ describe("Unified stock and shopping overview",()=>{
   const editor=source.split('{mode==="rule"&&<>')[1]?.split('   </>}')[0]??"";
   expect(editor).toContain('className="stock-rule-heading">Изменить расход');
   expect(editor).toContain('className="stock-form stock-rule-form"');
-  expect(editor).toContain('className="stock-rule-date" type="date"');
+  expect(editor).toContain('className="stock-rule-date-wrap"');
+   expect(editor).toContain('className="stock-rule-date" type="date"');
   expect(editor).toContain('allowedFrequencies={["daily","weekly","monthly"]}');
   expect(editor).not.toContain('className="stock-switch"');
   expect(editor).not.toContain('role="switch"');
@@ -118,12 +121,26 @@ describe("Unified stock and shopping overview",()=>{
   expect(dates).toContain("width: 100%");
   expect(dates).toContain("min-inline-size: 0");
   expect(dates).toContain("overflow: hidden");
+   expect(css).toContain(".stock-screen .stock-rule-form .stock-rule-date-wrap {");
   expect(css).toContain("@media (max-width: 420px)");
   for(const token of ["--font-size-xs","--font-size-sm","--font-size-md","--font-size-lg"]){
    expect(css).toContain("var("+token+")");
   }
  });
 
+ it("unifies back arrows and removes the redundant stock controls",()=>{
+  expect(source).toContain('className="stock-back"');
+  expect(source).toContain('<ArrowLeft aria-hidden="true"/>');
+  expect(source).not.toContain('<ArrowLeft/> Назад');
+  expect(css).toContain(".stock-screen .stock-back svg {");
+  expect(css).toContain("width: var(--icon-size-lg)");
+  const detail=source.split('{mode==="detail"&&<>')[1]?.split('    </>}')[0]??"";
+  expect(detail).not.toContain('<SectionHeader title="Автоматическое списание"/>');
+  expect(detail).toContain('onClick={()=>openRule(current)}');
+  const operation=source.split('{mode==="operation"&&<>')[1]?.split('    </>}')[0]??"";
+  expect(operation).toContain('className="stock-form stock-operation-form"');
+  expect(operation).toContain('operation!=="manual_use"&&<Field label="Комментарий">');
+ });
  it("follows the previous palette, compact typography and 12/16px spacing",()=>{
   const panel=css.split(".stock-screen .card.stock-collection {")[1]?.split("}")[0]??"";
   expect(panel).toContain("background: var(--color-surface-secondary)");
