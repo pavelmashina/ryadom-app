@@ -727,3 +727,132 @@
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
+
+/* One undimmed close affordance above the modal scrim, aligned exactly with +. */
+.stock-add-trigger svg {
+  transform-origin: center;
+  transition: transform var(--transition-fast);
+}
+.stock-add-trigger[aria-expanded="true"] svg {
+  transform: rotate(45deg);
+}
+.stock-settings-layer .stock-add-trigger-overlay {
+  position: fixed;
+  z-index: 2;
+  box-sizing: border-box;
+  box-shadow: var(--shadow-sm);
+  opacity: 1;
+  touch-action: manipulation;
+}
+.stock-settings-layer .stock-add-trigger-overlay svg {
+  animation: stock-add-becomes-close 160ms ease-out forwards;
+}
+@keyframes stock-add-becomes-close {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(45deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stock-add-trigger svg { transition: none; }
+  .stock-settings-layer .stock-add-trigger-overlay svg { animation: none; transform: rotate(45deg); }
+}
+
+/* Compact shared form scales: XL/L/M/S/XS typography, 4/6/8/12/16/20px rhythm. */
+.stock-screen .stock-rule-heading {
+  margin: 0 0 var(--stock-heading-gap);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-ui-heading);
+}
+.stock-screen .stock-rule-form {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  gap: var(--space-compact-4);
+  padding: var(--space-compact-4);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+}
+.stock-screen .stock-rule-form :is(.stock-fields-two,.recurrence-fields,.recurrence-options,.fields,.field) {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-inline-size: 0;
+}
+.stock-screen .stock-rule-form .recurrence-fields {
+  gap: var(--space-compact-4);
+}
+.stock-screen .stock-rule-form .recurrence-options {
+  gap: var(--space-compact-3);
+  padding: var(--space-compact-4);
+  border-radius: var(--radius-md);
+}
+.stock-screen .stock-rule-form .field {
+  display: grid;
+  margin: 0;
+  gap: var(--space-compact-2);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-caption);
+}
+.stock-screen .stock-rule-form .field label,
+.stock-screen .stock-rule-form .stock-field {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-caption);
+}
+.stock-screen .stock-rule-form .field :is(input,select),
+.stock-screen .stock-rule-form .stock-field :is(input,select) {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-inline-size: 0;
+  max-width: 100%;
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-3);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-ui-body);
+}
+.stock-screen .stock-rule-form input[type="date"] {
+  width: 100%;
+  min-width: 0;
+  min-inline-size: 0;
+  max-width: 100%;
+  overflow: hidden;
+  padding-inline: var(--space-compact-3);
+}
+.stock-screen .stock-rule-form input[type="date"]::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
+}
+.stock-screen .stock-rule-form .recurrence-options h3 {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-ui-heading);
+}
+.stock-screen .stock-rule-form .recurrence-fields .btn {
+  min-height: var(--button-height-sm);
+  font-size: var(--font-size-sm);
+}
+.stock-screen .stock-rule-form .weekdays-picker p,
+.stock-screen .stock-rule-form .weekdays-picker-row .checkbox {
+  font-size: var(--font-size-sm);
+}
+.stock-screen .stock-rule-form .stock-muted,
+.stock-screen .stock-rule-form .field .hint {
+  font-size: var(--font-size-xs);
+}
+@media (max-width: 420px) {
+  .stock-screen .stock-rule-form .recurrence-fields .fields {
+    grid-template-columns: minmax(0,1fr);
+  }
+}

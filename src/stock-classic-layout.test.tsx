@@ -41,8 +41,14 @@ describe("Unified stock and shopping overview",()=>{
   expect(source).not.toContain("groups.map");
   expect(source).not.toContain("Фактический остаток");
  });
- it("has one plus, which offers add stock or add purchase",()=>{
-  expect(source.match(/<Plus aria-hidden="true"\/>/g)).toHaveLength(1);
+ it("has one visible plus that turns into the undimmed close control when opened",()=>{
+  expect(source.match(/<Plus aria-hidden="true"\/>/g)).toHaveLength(2);
+  expect(source.match(/className="stock-add-trigger"/g)).toHaveLength(1);
+  expect(source).toContain('className="stock-add-trigger stock-add-trigger-overlay"');
+  expect(source).toContain('aria-label="Закрыть меню добавления"');
+  expect(source).toContain('style={addTriggerRect}');
+  expect(source).toContain('ref={addCloseTrigger}');
+  expect(source).toContain('onClick={()=>setGearOpen(false)}');
   expect(source).toContain('onClick={e=>showStockMenu(null,e.currentTarget)}');
   expect(source).toContain('setGearOpen(false);openAdd();');
   expect(source).toContain('setGearOpen(false);onShop();');
@@ -69,7 +75,7 @@ describe("Unified stock and shopping overview",()=>{
  it("keeps the modal behavior: overlay, outside-tap, scroll lock and focus trap",()=>{
   expect(source).toContain('createPortal(');
   expect(source).toContain('className="stock-settings-backdrop"');
-  expect(source).toContain('onClick={()=>setGearOpen(false)}');
+  expect(source).toContain('onPointerDown={e=>{e.preventDefault();setGearOpen(false);}}');
   expect(source).toContain('aria-modal="true"');
   expect(source).toContain('document.body.style.position="fixed"');
   expect(source).toContain('document.documentElement.style.overflow="hidden"');
@@ -79,6 +85,45 @@ describe("Unified stock and shopping overview",()=>{
   expect(menu).toContain("position: fixed");
   expect(menu).toContain("font-family: var(--font-family-base)");
  });
+ it("dismisses on press rather than click-release, and the close stays above the dimmer",()=>{
+  expect(source).toContain('if(gearOpen&&settingsItemId===(item?.id??null))');
+  expect(source).toContain('onPointerDown={e=>{e.preventDefault();setGearOpen(false);}}');
+  expect(source).not.toContain('onClick={()=>setGearOpen(false)}/>'); // no delayed backdrop click
+  expect(source).toContain('onClick={()=>setGearOpen(false)}');
+  const layer=css.split(".stock-settings-layer {")[1]?.split("}")[0]??"";
+  expect(layer).toContain("z-index: 30");
+  const overlayButton=css.split(".stock-settings-layer .stock-add-trigger-overlay {")[1]?.split("}")[0]??"";
+  expect(overlayButton).toContain("position: fixed");
+  expect(overlayButton).toContain("z-index: 2");
+  expect(overlayButton).toContain("opacity: 1");
+  expect(css).toContain("@keyframes stock-add-becomes-close");
+  expect(css).toContain("transform: rotate(45deg)");
+ });
+
+ it("edits the consumption rate without a second auto-deduction toggle or overflowing dates",()=>{
+  const editor=source.split('{mode==="rule"&&<>')[1]?.split('   </>}')[0]??"";
+  expect(editor).toContain('className="stock-rule-heading">Изменить расход');
+  expect(editor).toContain('className="stock-form stock-rule-form"');
+  expect(editor).toContain('className="stock-rule-date" type="date"');
+  expect(editor).toContain('allowedFrequencies={["daily","weekly","monthly"]}');
+  expect(editor).not.toContain('className="stock-switch"');
+  expect(editor).not.toContain('role="switch"');
+  expect(source).toContain('openRule(item,true)');
+  expect(source).toContain('setRuleEnabled(enableOnSave||Boolean(activeStockRule(item)))');
+  expect(source).toContain('enabled:ruleEnabled');
+  const rule=css.split(".stock-screen .stock-rule-form {")[1]?.split("}")[0]??"";
+  expect(rule).toContain("max-width: 100%");
+  expect(rule).toContain("min-width: 0");
+  const dates=css.split('.stock-screen .stock-rule-form input[type="date"] {')[1]?.split("}")[0]??"";
+  expect(dates).toContain("width: 100%");
+  expect(dates).toContain("min-inline-size: 0");
+  expect(dates).toContain("overflow: hidden");
+  expect(css).toContain("@media (max-width: 420px)");
+  for(const token of ["--font-size-xs","--font-size-sm","--font-size-md","--font-size-lg"]){
+   expect(css).toContain("var("+token+")");
+  }
+ });
+
  it("follows the previous palette, compact typography and 12/16px spacing",()=>{
   const panel=css.split(".stock-screen .card.stock-collection {")[1]?.split("}")[0]??"";
   expect(panel).toContain("background: var(--color-surface-secondary)");
