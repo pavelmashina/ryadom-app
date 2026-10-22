@@ -32,12 +32,15 @@ export default function RecurrenceFields({
   onChange,
   allowedFrequencies = ["once","daily","weekly","monthly","yearly"],
   allowCount = true,
+  flatEnd = false,
 }: {
   date: string;
   value: RecurrenceDraft;
   onChange: (next: RecurrenceDraft) => void;
   allowedFrequencies?: RepeatFrequency[];
   allowCount?: boolean;
+  /** Keep the end selector in the same unboxed form layout (stock consumption). */
+  flatEnd?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const patch = (next: Partial<RecurrenceDraft>) => onChange({ ...value, ...next });
@@ -126,10 +129,11 @@ export default function RecurrenceFields({
               )}
             </div>
           )}
-          <div className="recurrence-options">
-            <h3>Диапазон</h3>
+          <div className={flatEnd ? "recurrence-options recurrence-options-flat-end" : "recurrence-options"}>
+            <h3>{flatEnd ? "Конец диапазона" : "Диапазон"}</h3>
             <Select
-              label="Заканчивается"
+              label={flatEnd ? "" : "Заканчивается"}
+              aria-label={flatEnd ? "Конец диапазона" : undefined}
               value={value.endType}
               onChange={(e) => patch({ endType: e.target.value as RepeatEndType })}
             >

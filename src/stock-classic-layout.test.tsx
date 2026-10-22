@@ -157,7 +157,11 @@ describe("Unified stock and shopping overview",()=>{
   expect(css).toContain("width: var(--icon-size-lg)");
   const detail=source.split('{mode==="detail"&&<>')[1]?.split('    </>}')[0]??"";
   expect(detail).not.toContain('<SectionHeader title="Автоматическое списание"/>');
-  expect(detail).toContain('onClick={()=>openRule(current)}');
+  expect(detail).not.toContain('onClick={()=>openRule(current)}');
+  expect(detail).not.toContain('current.note&&<p className="stock-muted"');
+  expect(detail).toContain('variant="secondary" onClick={()=>openOperation(current,"correction","detail")}>Изменить остаток');
+  expect(detail).toContain('variant="secondary" onClick={()=>{setUnit(current.display_unit)');
+  expect(detail).toContain('variant="secondary" onClick={async()=>{if(!window.confirm');
   expect(detail).not.toContain('onClick={()=>openOperation(current,"manual_use","detail")}');
   expect(detail).toContain('className="stock-edit-actions"');
   expect(css).toContain("grid-template-columns: repeat(2, minmax(0, 1fr))");
@@ -177,5 +181,16 @@ describe("Unified stock and shopping overview",()=>{
   expect(css).toContain("--stock-section-gap: var(--space-compact-5)");
   for(const size of ["xl","lg","md","sm","xs"])expect(css).toContain("var(--font-size-"+size+")");
   expect(css).toContain("font-family: var(--font-family-base)");
+ });
+ it("uses larger editor labels, smaller control values, and an unboxed end section",()=>{
+  expect(source).toContain('allowCount={false} flatEnd');
+  expect(css).toContain('font-size: var(--font-size-md)');
+  expect(css).toContain('.stock-screen :is(.stock-rule-form, .stock-operation-form) .stock-field');
+  expect(css).toContain('.stock-screen .stock-rule-form .recurrence-options-flat-end {');
+  expect(css).toContain('.stock-screen .stock-rule-form .recurrence-options-flat-end .field > label {');
+  const recurrenceSource=readFileSync(new URL("./RecurrenceFields.tsx",import.meta.url),"utf8");
+  expect(recurrenceSource).toContain('flatEnd ? "Конец диапазона" : "Диапазон"');
+  expect(recurrenceSource).toContain('label={flatEnd ? "" : "Заканчивается"}');
+  expect(css).toContain('.stock-screen .card.stock-detail-card {');
  });
 });

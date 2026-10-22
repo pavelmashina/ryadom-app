@@ -483,17 +483,15 @@ export default function Stock({
      {stockForecast(current,today())&&<p className="stock-muted">Примерно до {fmt(stockForecast(current,today())!.date)}</p>}
      {stockStatus(current)!=="normal"&&<p className="stock-warning">
       {stockStatus(current)==="empty"?"Запас закончился":"Запас скоро закончится"}</p>}
-     {current.note&&<p className="stock-muted">{current.note}</p>}
      <div className="stock-detail-actions">
-      <Button variant="ghost" onClick={()=>openOperation(current,"correction","detail")}>Скорректировать остаток</Button>
+      <Button variant="secondary" onClick={()=>openOperation(current,"correction","detail")}>Изменить остаток</Button>
      </div>
     </Card>
     <section className="stock-section">
      <div className="stock-actions">
-      <Button variant="secondary" onClick={()=>openRule(current)}>Изменить расход</Button>
       <div className="stock-edit-actions">
-       <Button variant="ghost" onClick={()=>{setUnit(current.display_unit);openEditor("edit",current,"detail");}}>Редактировать товар</Button>
-       <Button variant="ghost" onClick={async()=>{if(!window.confirm("Архивировать запас? История сохранится."))return;
+       <Button variant="secondary" onClick={()=>{setUnit(current.display_unit);openEditor("edit",current,"detail");}}>Редактировать товар</Button>
+       <Button variant="secondary" onClick={async()=>{if(!window.confirm("Архивировать запас? История сохранится."))return;
         const updated=await mutate("archive",{id:current.id});if(updated)closeDetails();}}>Архивировать</Button>
       </div>
      </div>
@@ -562,7 +560,7 @@ export default function Stock({
         onChange={e=>setStartDate(e.target.value)}/>
       </span></Field>
       <RecurrenceFields date={startDate} value={draft} onChange={setDraft}
-       allowedFrequencies={["daily","weekly","monthly"]} allowCount={false}/>
+       allowedFrequencies={["daily","weekly","monthly"]} allowCount={false} flatEnd/>
      <Button type="submit" loading={busy}>Сохранить расход</Button>
     </form>
    </>}

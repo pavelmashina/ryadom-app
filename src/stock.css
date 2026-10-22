@@ -1026,3 +1026,50 @@
 .stock-screen .stock-rule-form input[type="date"]::-webkit-datetime-edit {
   min-width: 0;
 }
+
+/* Rate and manual-use editors: one token up for labels, one down for values. */
+.stock-screen :is(.stock-rule-form, .stock-operation-form) .stock-field {
+  font-size: var(--font-size-md);
+}
+.stock-screen :is(.stock-rule-form, .stock-operation-form) .stock-field > span:first-child,
+.stock-screen .stock-rule-form .field > label {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-caption);
+}
+.stock-screen :is(.stock-rule-form, .stock-operation-form) .stock-field :is(input,select),
+.stock-screen .stock-rule-form .field :is(input,select),
+.stock-screen .stock-rule-form .stock-rule-date-label {
+  font-size: var(--font-size-sm);
+}
+.stock-screen .stock-rule-form .recurrence-options h3,
+.stock-screen .stock-rule-form .weekdays-picker p {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+}
+.stock-screen .stock-rule-form .recurrence-options-flat-end {
+  display: grid;
+  gap: var(--space-compact-2);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.stock-screen .stock-rule-form .recurrence-options-flat-end .field > label {
+  display: none;
+}
+
+/* Compact stock balance card; retain bordered actions without extra commentary. */
+.stock-screen .card.stock-detail-card {
+  gap: var(--space-compact-2);
+  padding: var(--space-compact-3);
+}
+.stock-screen .stock-detail-card progress {
+  height: var(--space-compact-2);
+  margin-top: 0;
+}
+.stock-screen .stock-detail-card .stock-detail-actions .btn {
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-3);
+}
