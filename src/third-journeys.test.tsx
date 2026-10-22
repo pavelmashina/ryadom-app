@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { blankPet } from "./domain";
 import { inviteLink, invitationMailto, joinCodeFromUrl } from "./share-invitation";
-import { completeShoppingItem, restoreShoppingItem } from "./shopping-checkout";
+import { completeShoppingItem, restoreShoppingItem, visibleShoppingItems } from "./shopping-checkout";
 import { JoinPet, Sharing } from "./Sharing";
 import Stock from "./Stock";
 import type { AuthSession } from "./backend";
@@ -68,6 +68,7 @@ describe("R3: purchase-to-stock checkout", () => {
     expect(updated.stock).toBe(5);
     expect(updated.stockDate).toBe("2026-10-16");
     expect(updated.shopping[0].done).toBe(true);
+    expect(updated.shopping[0].completedOn).toBe("2026-10-16");
     expect(updated.shopping[0].stockCreditedKg).toBe(3);
     expect(updated.shopping[1].done).toBe(false);
     expect(pet.stock).toBe(2);
@@ -86,6 +87,7 @@ describe("R3: purchase-to-stock checkout", () => {
     const restored = restoreShoppingItem(pet, "food");
     expect(restored.stock).toBe(3.5);
     expect(restored.shopping[0].done).toBe(false);
+    expect(restored.shopping[0].completedOn).toBeUndefined();
     expect(() => completeShoppingItem(restored, "food", 1.5, "2026-10-16")).toThrow(/уже внесён/);
     expect(completeShoppingItem(restored, "food", 0, "2026-10-16").stock).toBe(3.5);
   });
@@ -99,6 +101,14 @@ describe("R3: purchase-to-stock checkout", () => {
     pet.stock = 999;
     expect(() => completeShoppingItem(pet, "food", 3, "2026-10-16")).toThrow();
     expect(() => completeShoppingItem(pet, "missing", 0, "2026-10-16")).toThrow();
+  });
+  it("keeps completed purchases on their day, then hides them without deleting them", () => {
+    const pet=completeShoppingItem(initial(),"toy",0,"2026-10-16");
+    expect(visibleShoppingItems(pet.shopping,"2026-10-16")).toHaveLength(2);
+    expect(visibleShoppingItems(pet.shopping,"2026-10-17").map(s=>s.id)).toEqual(["food"]);
+    expect(pet.shopping).toHaveLength(2);
+    expect(visibleShoppingItems(restoreShoppingItem(pet,"toy").shopping,"2026-10-17")).toHaveLength(2);
+    expect(visibleShoppingItems([{id:"old",name:"Старое",quantity:"1",done:true}],"2026-10-17")).toHaveLength(0);
   });
   it("renders shopping list without the old stock hint and preserves checkout", () => {
     const html = renderToStaticMarkup(<Stock

@@ -67,7 +67,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  margin: calc(-1 * var(--space-compact-2)) 0 var(--space-compact-2);
+  margin: calc(-1 * var(--space-compact-6)) 0 var(--space-compact-2);
 }
 .stock-screen .stock-back {
   display: grid;
@@ -307,14 +307,25 @@
   margin: 0;
 }
 .stock-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-compact-3);
   margin: 0;
 }
-.stock-actions .btn {
-  flex: 1 1 auto;
+.stock-actions > .btn { width: 100%; margin: 0; }
+.stock-edit-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-compact-2);
+  min-width: 0;
+}
+.stock-edit-actions .btn {
+  min-width: 0;
   margin: 0;
+  padding-inline: var(--space-compact-2);
+  font-size: var(--font-size-sm);
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .stock-form {
   display: grid;
@@ -678,7 +689,7 @@
 }
 .stock-item-open {
   display: grid;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   gap: var(--space-compact-1);
   min-width: 0;
   min-height: var(--button-height-sm);
@@ -690,6 +701,23 @@
   font-family: var(--font-family-base);
   text-align: left;
   cursor: pointer;
+}
+.stock-item-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-compact-1);
+  max-width: 100%;
+  width: fit-content;
+  color: var(--color-primary);
+}
+.stock-item-title svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  flex: none;
+}
+.stock-item-open:is(:hover, :focus-visible) .stock-item-name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .stock-item-name {
   font-size: var(--font-size-md);
@@ -704,6 +732,7 @@
   line-height: var(--line-height-ui-caption);
 }
 .stock-item-balance {
+  margin-inline-start: auto;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
@@ -916,33 +945,73 @@
   font-family: var(--font-family-base);
   font-size: var(--font-size-md);
 }
+/* The iOS date input is only a transparent hit area; the visible border belongs
+   to this wrapper, so the native input's intrinsic width cannot clip it. */
 .stock-screen .stock-rule-form .stock-rule-date-wrap {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  position: relative;
+  display: flex;
   box-sizing: border-box;
-  inline-size: 100%;
-  max-inline-size: min(100%, calc(100dvw - 2 * var(--page-gutter) - 2 * var(--space-compact-4)));
-  min-inline-size: 0;
-  overflow: hidden;
-  border-radius: var(--radius-sm);
-}
-.stock-screen .stock-rule-form input.stock-rule-date {
-  display: block;
-  box-sizing: border-box;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-compact-3);
   inline-size: 100%;
   max-inline-size: 100%;
   min-inline-size: 0;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  margin: 0;
-  padding-inline: var(--space-compact-3);
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-3);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
   overflow: hidden;
 }
-.stock-screen .stock-rule-form input[type="date"]::-webkit-calendar-picker-indicator {
+.stock-screen .stock-rule-form .stock-rule-date-label {
+  min-width: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-ui-body);
+  overflow-wrap: anywhere;
+}
+.stock-screen .stock-rule-form .stock-rule-date-icon {
   flex: none;
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+  color: var(--color-text-secondary);
+}
+.stock-screen .stock-rule-form .stock-rule-date-wrap:focus-within {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.stock-screen .stock-rule-form input.stock-rule-date {
+  position: absolute;
+  inset: 0;
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   margin: 0;
   padding: 0;
+  border: 0;
+  border-radius: inherit;
+  opacity: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.stock-screen .stock-rule-form input.stock-rule-date::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
 }
 
 /* Prevent native iOS date controls from stretching the grid track. */

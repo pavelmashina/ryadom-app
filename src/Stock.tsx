@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, Plus, Package, Settings } from "lucide-react";
+import { ArrowLeft, CalendarDays, ChevronRight, Plus, Package, Settings } from "lucide-react";
 import { Badge, Button, Card, Checkbox, Empty, SectionHeader, Toast } from "./components";
 import { today, fmt, type Pet } from "./domain";
 import { rpc, type AuthSession } from "./backend";
@@ -11,6 +11,7 @@ import {
   type StockItem, type StockUnit,
 } from "./stock-domain";
 import { stockBackDestination, type StockEditorOrigin, type StockViewMode } from "./stock-navigation";
+import { visibleShoppingItems } from "./shopping-checkout";
 import "./stock.css";
 
 type Mode = StockViewMode;
@@ -38,6 +39,7 @@ export default function Stock({
  const [busy,setBusy]=useState(false);
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState("");
+ const [shoppingDate,setShoppingDate]=useState(today);
  const [unit,setUnit]=useState<StockUnit>("г");
  const [startDate,setStartDate]=useState(today());
  const [draft,setDraft]=useState<RecurrenceDraft>(()=>({...draftForDate(today()),frequency:"daily"}));
@@ -55,6 +57,7 @@ export default function Stock({
  const current=visibleItems.find((i)=>i.id===selectedId);
  const active=current?activeStockRule(current):null;
  const settingsItem=visibleItems.find((i)=>i.id===settingsItemId);
+ const shoppingItems=visibleShoppingItems(pet.shopping,shoppingDate);
  const load=useCallback(async()=>{
   const epoch=++loadEpoch.current;
   try {
@@ -155,6 +158,17 @@ export default function Stock({
    if(document.contains(gearTrigger.current))gearTrigger.current?.focus({preventScroll:true});
   };
  },[gearOpen,settingsItemId]);
+ useEffect(()=>{
+  const updateDate=()=>setShoppingDate(today());
+  const timer=window.setInterval(updateDate,60_000);
+  document.addEventListener("visibilitychange",updateDate);
+  window.addEventListener("focus",updateDate);
+  return ()=>{
+   window.clearInterval(timer);
+   document.removeEventListener("visibilitychange",updateDate);
+   window.removeEventListener("focus",updateDate);
+  };
+ },[]);
  useEffect(()=>{
   if(!initialItemId||handledLink.current===initialItemId)return;
   if(!visibleItems.some(i=>i.id===initialItemId))return;
@@ -335,7 +349,10 @@ export default function Stock({
        <div className="stock-item-top">
         <button type="button" className="stock-item-open"
          onClick={()=>goDetail(item)} aria-label={"Открыть запас: "+item.name}>
-         <strong className="stock-item-name">{item.name}</strong>
+         <span className="stock-item-title">
+          <strong className="stock-item-name">{item.name}</strong>
+          <ChevronRight aria-hidden="true"/>
+         </span>
          <span className="stock-item-category">{item.category}</span>
         </button>
         <strong className="stock-item-balance">
@@ -363,9 +380,9 @@ export default function Stock({
     <SectionHeader title="Купить">
      <span className="stock-shopping-count">{pet.shopping.filter(s=>!s.done).length} в списке</span>
     </SectionHeader>
-    {pet.shopping.length?(
+    {shoppingItems.length?(
      <div className="stock-shopping-list">
-      {pet.shopping.map(s=><Checkbox key={s.id} className={"shopping "+(s.done?"done":"")}
+      {shoppingItems.map(s=><Checkbox key={s.id} className={"shopping "+(s.done?"done":"")}
        checked={s.done} onChange={()=>onToggle(s.id)}
        label={<span>{s.name}<small>{s.quantity}</small></span>}/>)}
      </div>
@@ -397,7 +414,6 @@ export default function Stock({
        </label>
        <button type="button" onClick={()=>{setGearOpen(false);openRule(settingsItem);}}>Изменить расход</button>
        <button type="button" onClick={()=>openOperation(settingsItem,"manual_use","list")}>Списать вручную</button>
-       <button type="button" onClick={()=>goDetail(settingsItem)}>История и параметры</button>
       </> : <>
        <button type="button" onClick={()=>{setGearOpen(false);openAdd();}}>Добавить запас</button>
        <button type="button" onClick={()=>{setGearOpen(false);onShop();}}>Добавить покупку</button>
@@ -469,16 +485,17 @@ export default function Stock({
       {stockStatus(current)==="empty"?"Запас закончился":"Запас скоро закончится"}</p>}
      {current.note&&<p className="stock-muted">{current.note}</p>}
      <div className="stock-detail-actions">
-      <Button variant="secondary" onClick={()=>openOperation(current,"manual_use","detail")}>Списать</Button>
       <Button variant="ghost" onClick={()=>openOperation(current,"correction","detail")}>Скорректировать остаток</Button>
      </div>
     </Card>
     <section className="stock-section">
      <div className="stock-actions">
       <Button variant="secondary" onClick={()=>openRule(current)}>Изменить расход</Button>
-      <Button variant="ghost" onClick={()=>{setUnit(current.display_unit);openEditor("edit",current,"detail");}}>Редактировать товар</Button>
-      <Button variant="ghost" onClick={async()=>{if(!window.confirm("Архивировать запас? История сохранится."))return;
-       const updated=await mutate("archive",{id:current.id});if(updated)closeDetails();}}>Архивировать</Button>
+      <div className="stock-edit-actions">
+       <Button variant="ghost" onClick={()=>{setUnit(current.display_unit);openEditor("edit",current,"detail");}}>Редактировать товар</Button>
+       <Button variant="ghost" onClick={async()=>{if(!window.confirm("Архивировать запас? История сохранится."))return;
+        const updated=await mutate("archive",{id:current.id});if(updated)closeDetails();}}>Архивировать</Button>
+      </div>
      </div>
     </section>
     <section className="stock-section">
@@ -537,8 +554,12 @@ export default function Stock({
         {compatibleStockUnits(current.display_unit).map(x=><option key={x}>{x}</option>)}</select></Field>
       </div>
       <Field label="Начиная с"><span className="stock-rule-date-wrap">
+       <span className="stock-rule-date-label" aria-hidden="true">
+        {startDate ? fmt(startDate,{day:"numeric",month:"short",year:"numeric"}) : "Выберите дату"}
+       </span>
+       <CalendarDays aria-hidden="true" className="stock-rule-date-icon"/>
        <input className="stock-rule-date" type="date" value={startDate} required
-       onChange={e=>setStartDate(e.target.value)}/>
+        onChange={e=>setStartDate(e.target.value)}/>
       </span></Field>
       <RecurrenceFields date={startDate} value={draft} onChange={setDraft}
        allowedFrequencies={["daily","weekly","monthly"]} allowCount={false}/>

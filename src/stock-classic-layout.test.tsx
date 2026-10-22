@@ -45,6 +45,9 @@ describe("Unified stock and shopping overview",()=>{
   expect(source).toContain('className="stock-item-category"');
   expect(source).toContain('className="stock-item-footer"');
   expect(source).toContain('onClick={()=>goDetail(item)}');
+  expect(source).toContain('className="stock-item-title"');
+  expect(source).toContain('<ChevronRight aria-hidden="true"/>');
+  expect(css).toContain("flex: 0 1 auto");
   expect(source).toContain('onClick={e=>showStockMenu(item,e.currentTarget)}');
   expect(source).not.toContain("featured");
   expect(source).not.toContain("groups.map");
@@ -76,7 +79,8 @@ describe("Unified stock and shopping overview",()=>{
   expect(source).toContain('toggleAuto(settingsItem,e.target.checked)');
   expect(source).toContain('openRule(settingsItem)');
   expect(source).toContain('openOperation(settingsItem,"manual_use","list")');
-  expect(source).toContain('goDetail(settingsItem)');
+  expect(source).not.toContain('goDetail(settingsItem)');
+  expect(source).not.toContain('>История и параметры</button>');
   for(const name of ['mutate("create"','mutate("add"','mutate("edit"','mutate(operation','mutate("set_rule"','mutate("archive"']){
    expect(source).toContain(name);
   }
@@ -116,7 +120,9 @@ describe("Unified stock and shopping overview",()=>{
   expect(editor).toContain('className="stock-rule-heading">Изменить расход');
   expect(editor).toContain('className="stock-form stock-rule-form"');
   expect(editor).toContain('className="stock-rule-date-wrap"');
-   expect(editor).toContain('className="stock-rule-date" type="date"');
+  expect(editor).toContain('className="stock-rule-date-label"');
+  expect(editor).toContain('<CalendarDays aria-hidden="true" className="stock-rule-date-icon"/>');
+  expect(editor).toContain('className="stock-rule-date" type="date"');
   expect(editor).toContain('allowedFrequencies={["daily","weekly","monthly"]}');
   expect(editor).not.toContain('className="stock-switch"');
   expect(editor).not.toContain('role="switch"');
@@ -132,7 +138,10 @@ describe("Unified stock and shopping overview",()=>{
   expect(dates).toContain("overflow: hidden");
    expect(css).toContain(".stock-screen .stock-rule-form .stock-rule-date-wrap {");
    expect(css).toContain("grid-template-columns: minmax(0, 1fr)");
-   expect(css).toContain("max-inline-size: min(100%, calc(100dvw");
+   expect(css).toContain("max-inline-size: 100%");
+   expect(css).toContain("position: absolute");
+   expect(css).toContain("opacity: 0");
+   expect(css).toContain("border: 1px solid var(--color-input-border)");
    expect(css).toContain('.stock-screen .stock-rule-form input[type="date"]::-webkit-datetime-edit');
   expect(css).toContain("@media (max-width: 420px)");
   for(const token of ["--font-size-xs","--font-size-sm","--font-size-md","--font-size-lg"]){
@@ -149,6 +158,10 @@ describe("Unified stock and shopping overview",()=>{
   const detail=source.split('{mode==="detail"&&<>')[1]?.split('    </>}')[0]??"";
   expect(detail).not.toContain('<SectionHeader title="Автоматическое списание"/>');
   expect(detail).toContain('onClick={()=>openRule(current)}');
+  expect(detail).not.toContain('onClick={()=>openOperation(current,"manual_use","detail")}');
+  expect(detail).toContain('className="stock-edit-actions"');
+  expect(css).toContain("grid-template-columns: repeat(2, minmax(0, 1fr))");
+  expect(css).toContain("margin: calc(-1 * var(--space-compact-6))");
   const operation=source.split('{mode==="operation"&&<>')[1]?.split('    </>}')[0]??"";
   expect(operation).toContain('className="stock-form stock-operation-form"');
   expect(operation).toContain('operation!=="manual_use"&&<Field label="Комментарий">');

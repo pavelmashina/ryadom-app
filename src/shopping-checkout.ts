@@ -1,5 +1,13 @@
 import type { Pet } from "./domain";
 
+/** Keep a checked purchase visible on its completion day; hide it from the next day onward.
+ * Old checked entries without a timestamp are treated as completed before this feature existed.
+ * Nothing is deleted from stored purchase history.
+ */
+export function visibleShoppingItems(items: Pet["shopping"], onDate: string): Pet["shopping"] {
+  return items.filter((item) => !item.done || Boolean(item.completedOn && item.completedOn >= onDate));
+}
+
 /** A stock change is explicit: checking an item alone must never guess kilograms. */
 export function completeShoppingItem(pet: Pet, itemId: string, addedKg: number, onDate: string): Pet {
   const item = pet.shopping.find((s) => s.id === itemId);
@@ -18,7 +26,7 @@ export function completeShoppingItem(pet: Pet, itemId: string, addedKg: number, 
     stock,
     stockDate: addedKg > 0 ? onDate : pet.stockDate,
     shopping: pet.shopping.map((s) => s.id === itemId
-      ? { ...s, done: true, stockCreditedKg: Math.round(((s.stockCreditedKg ?? 0) + addedKg) * 1000) / 1000 }
+      ? { ...s, done: true, completedOn: onDate, stockCreditedKg: Math.round(((s.stockCreditedKg ?? 0) + addedKg) * 1000) / 1000 }
       : s),
   };
 }
@@ -26,5 +34,5 @@ export function restoreShoppingItem(pet: Pet, itemId: string): Pet {
   const item = pet.shopping.find((s) => s.id === itemId);
   if (!item) throw new Error("Покупка не найдена.");
   // Undoing the checklist does not automatically subtract food already delivered.
-  return { ...pet, shopping: pet.shopping.map((s) => s.id === itemId ? { ...s, done: false } : s) };
+  return { ...pet, shopping: pet.shopping.map((s) => s.id === itemId ? { ...s, done: false, completedOn: undefined } : s) };
 }
