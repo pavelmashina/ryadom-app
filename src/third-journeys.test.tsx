@@ -100,11 +100,13 @@ describe("R3: purchase-to-stock checkout", () => {
     expect(() => completeShoppingItem(pet, "food", 3, "2026-10-16")).toThrow();
     expect(() => completeShoppingItem(pet, "missing", 0, "2026-10-16")).toThrow();
   });
-  it("renders shopping list and explains explicit stock confirmation", () => {
+  it("renders shopping list without the old stock hint and preserves checkout", () => {
     const html = renderToStaticMarkup(<Stock
       pet={initial()} session={{user:{id:"test",email:"test@example.com"},accessToken:"",refreshToken:"",expiresAt:0}}
       onShop={() => {}} onToggle={() => {}} />);
-    expect(html).toContain("Купленный корм можно сразу внести в запас");
+    expect(html).toContain("Купить");
+    expect(html).toContain("Корм");
+    expect(html).not.toContain("Купленный корм можно сразу внести в запас");
     const app = source("./App.tsx");
     expect(app).toContain('kind: "finishShopping"');
     expect(app).toContain("completeShoppingItem(p, item.id, amount, today())");

@@ -136,7 +136,8 @@ describe("R2: quick planned training actions", () => {
 describe("R2: saving status", () => {
   it("shows saving before a server response and keeps the edit dialog on errors", () => {
     expect(source("./App.tsx")).toContain('setNotice("Сохраняем в облаке…")');
-    expect(source("./App.tsx")).toContain('aria-live="polite" aria-atomic="true"');
+    expect(source("./App.tsx")).toContain('<Toast message={notice}');
+    expect(source("./components.tsx")).toContain('aria-atomic="true"');
     expect(source("./components.tsx")).toContain('setError(e instanceof Error ? e.message : "Не удалось сохранить")');
   });
 });
