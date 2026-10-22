@@ -46,6 +46,8 @@ export default function Stock({
  const [settingsItemId,setSettingsItemId]=useState<string|null>(null);
  const gearTrigger=useRef<HTMLButtonElement|null>(null);
  const gearPopover=useRef<HTMLDivElement|null>(null);
+ const addCloseTrigger=useRef<HTMLButtonElement|null>(null);
+ const [addTriggerRect,setAddTriggerRect]=useState({top:0,left:0,width:44,height:44});
  const [gearPosition,setGearPosition]=useState({top:0,left:0,width:260});
  const [createTarget,setCreateTarget]=useState<"existing"|"new">("new");
  const [createItemId,setCreateItemId]=useState("");
@@ -104,6 +106,9 @@ export default function Stock({
    const trigger=gearTrigger.current;
    if(!trigger)return;
    const rect=trigger.getBoundingClientRect();
+   if(settingsItemId===null)setAddTriggerRect({
+    top:rect.top,left:rect.left,width:rect.width,height:rect.height,
+   });
    const width=Math.min(272,Math.max(0,window.innerWidth-24));
    const left=Math.max(12,Math.min(rect.right-width,window.innerWidth-width-12));
    const height=gearPopover.current?.getBoundingClientRect().height??216;
@@ -113,19 +118,18 @@ export default function Stock({
     : Math.max(12,rect.top-height-6);
    setGearPosition({left,top,width});
   }
-  function dismissOutside(e:PointerEvent){
-   const target=e.target as Node;
-   if(!gearTrigger.current?.contains(target)&&!gearPopover.current?.contains(target))setGearOpen(false);
-  }
   function dismissEscape(e:KeyboardEvent){
    if(e.key==="Escape"){
     e.preventDefault();setGearOpen(false);
     gearTrigger.current?.focus({preventScroll:true});
    }
    if(e.key==="Tab"){
-    const controls=Array.from(gearPopover.current?.querySelectorAll<HTMLElement>(
-     'button:not([disabled]), input:not([disabled]), [tabindex="0"]'
-    )??[]);
+    const controls=[
+     ...(settingsItemId===null&&addCloseTrigger.current?[addCloseTrigger.current]:[]),
+     ...Array.from(gearPopover.current?.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), [tabindex="0"]'
+     )??[]),
+    ];
     if(!controls.length)return;
     const first=controls[0],last=controls[controls.length-1];
     if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
@@ -137,12 +141,10 @@ export default function Stock({
    gearPopover.current?.querySelector<HTMLButtonElement>('button'))?.focus({preventScroll:true});
   window.addEventListener("resize",reposition);
   document.addEventListener("scroll",reposition,true);
-  document.addEventListener("pointerdown",dismissOutside);
   document.addEventListener("keydown",dismissEscape);
   return ()=>{
    window.removeEventListener("resize",reposition);
    document.removeEventListener("scroll",reposition,true);
-   document.removeEventListener("pointerdown",dismissOutside);
    document.removeEventListener("keydown",dismissEscape);
    document.body.style.position=oldBody.position;
    document.body.style.top=oldBody.top;
@@ -152,7 +154,7 @@ export default function Stock({
    window.scrollTo({top:scrollY,behavior:"instant"});
    if(document.contains(gearTrigger.current))gearTrigger.current?.focus({preventScroll:true});
   };
- },[gearOpen]);
+ },[gearOpen,settingsItemId]);
  useEffect(()=>{
   if(!initialItemId||handledLink.current===initialItemId)return;
   if(!visibleItems.some(i=>i.id===initialItemId))return;
@@ -174,7 +176,12 @@ export default function Stock({
  }
  const closeDetails=()=>{setMode("list");setSelectedId(null);setGearOpen(false);setSettingsItemId(null);setError("");};
  function showStockMenu(item:StockItem|null,button:HTMLButtonElement){
+  if(gearOpen&&settingsItemId===(item?.id??null)){setGearOpen(false);return;}
   gearTrigger.current=button;
+  if(!item){
+   const rect=button.getBoundingClientRect();
+   setAddTriggerRect({top:rect.top,left:rect.left,width:rect.width,height:rect.height});
+  }
   setSettingsItemId(item?.id??null);
   setGearOpen(true);
   setError("");
@@ -214,7 +221,7 @@ export default function Stock({
  async function toggleAuto(item:StockItem,enabled:boolean) {
   if(Boolean(activeStockRule(item))===enabled)return;
   const savedRule=activeStockRule(item)??item.rules[0];
-  if(enabled&&!savedRule){setGearOpen(false);openRule(item);return;}
+  if(enabled&&!savedRule){setGearOpen(false);openRule(item,true);return;}
   await mutate("set_rule", {
    id:item.id,enabled,
    ...(enabled&&savedRule ? {
@@ -239,7 +246,7 @@ export default function Stock({
   if(updated)closeDetails();
  }
 
- function openRule(item:StockItem) {
+ function openRule(item:StockItem,enableOnSave=false) {
   const rule=activeStockRule(item)??item.rules[0];
   const starts=rule?.starts_on??today();
   const value=draftForDate(starts);
@@ -249,7 +256,7 @@ export default function Stock({
     endType:rule?.ends_on?"date":"never",endDate:rule?.ends_on??""});
   setStartDate(rule?.enabled?today():starts);
   setUnit(item.display_unit);
-  setRuleEnabled(Boolean(activeStockRule(item))||!rule);
+  setRuleEnabled(enableOnSave||Boolean(activeStockRule(item)));
   openEditor("rule",item);
  }
  function goDetail(item:StockItem) {setSelectedId(item.id);setGearOpen(false);setMode("detail");setError("");}
@@ -367,7 +374,15 @@ export default function Stock({
    </section>
    {gearOpen&&typeof document!=="undefined"&&createPortal(
     <div className="stock-settings-layer">
-     <div className="stock-settings-backdrop" aria-hidden="true" onClick={()=>setGearOpen(false)}/>
+     <div className="stock-settings-backdrop" aria-hidden="true"
+      onPointerDown={e=>{e.preventDefault();setGearOpen(false);}}/>
+     {!settingsItem&&<button type="button" ref={addCloseTrigger}
+      className="stock-add-trigger stock-add-trigger-overlay"
+      aria-label="Закрыть меню добавления"
+      style={addTriggerRect}
+      onClick={()=>setGearOpen(false)}>
+      <Plus aria-hidden="true"/>
+     </button>}
      <div className="stock-gear-panel" id="stock-action-menu" ref={gearPopover}
       role="dialog" aria-modal="true"
       aria-label={settingsItem?"Настройки запаса: "+settingsItem.name:"Добавить"}
@@ -521,13 +536,8 @@ export default function Stock({
     </form>
    </>}
    {mode==="rule"&&<>
-    <h2>Расход корма</h2>
-    <form className="stock-form" onSubmit={onRule}>
-     <label className="stock-switch-row">
-      <span>Автоматическое списание</span>
-      <input type="checkbox" role="switch" className="stock-switch" checked={ruleEnabled}
-       onChange={e=>setRuleEnabled(e.target.checked)}/>
-     </label>
+    <h2 className="stock-rule-heading">Изменить расход</h2>
+    <form className="stock-form stock-rule-form" onSubmit={onRule}>
      <div className="stock-fields-two">
        <Field label="Списывать"><input name="amount" type="number" min={0.001} step="0.001"
         defaultValue={(active??current.rules[0])?
@@ -535,14 +545,11 @@ export default function Stock({
        <Field label="Единица"><select name="unit" value={unit} onChange={e=>setUnit(e.target.value as StockUnit)}>
         {compatibleStockUnits(current.display_unit).map(x=><option key={x}>{x}</option>)}</select></Field>
       </div>
-      <Field label="Начиная с"><input type="date" value={startDate} required
+      <Field label="Начиная с"><input className="stock-rule-date" type="date" value={startDate} required
        onChange={e=>setStartDate(e.target.value)}/></Field>
       <RecurrenceFields date={startDate} value={draft} onChange={setDraft}
        allowedFrequencies={["daily","weekly","monthly"]} allowCount={false}/>
-      <p className="stock-muted">{ruleEnabled
-       ? "При сохранении списание включится. История уже выполненных операций останется."
-       : "Расход сохранится, но автоматическое списание останется выключенным."}</p>
-     <Button type="submit" loading={busy}>Сохранить правило</Button>
+     <Button type="submit" loading={busy}>Сохранить расход</Button>
     </form>
    </>}
   </section>}
