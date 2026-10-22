@@ -282,10 +282,6 @@
 .stock-screen .stock-shopping .btn {
   margin: 0;
 }
-.stock-shopping-help {
-  margin: var(--stock-heading-gap) 0 0 !important;
-  font-size: var(--font-size-xs);
-}
 .stock-detail-actions {
   display: flex;
   align-items: center;
@@ -789,11 +785,14 @@
 }
 .stock-screen .stock-rule-form {
   box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   width: 100%;
   max-width: 100%;
   min-width: 0;
   gap: var(--space-compact-4);
   padding: var(--space-compact-4);
+  overflow-x: clip;
   font-family: var(--font-family-base);
   font-size: var(--font-size-md);
 }
@@ -918,25 +917,43 @@
   font-size: var(--font-size-md);
 }
 .stock-screen .stock-rule-form .stock-rule-date-wrap {
-  display: block;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   box-sizing: border-box;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
+  inline-size: 100%;
+  max-inline-size: min(100%, calc(100dvw - 2 * var(--page-gutter) - 2 * var(--space-compact-4)));
+  min-inline-size: 0;
   overflow: hidden;
   border-radius: var(--radius-sm);
 }
 .stock-screen .stock-rule-form input.stock-rule-date {
   display: block;
   box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  min-inline-size: 0;
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  min-inline-size: 0;
   margin: 0;
+  padding-inline: var(--space-compact-3);
+  overflow: hidden;
 }
 .stock-screen .stock-rule-form input[type="date"]::-webkit-calendar-picker-indicator {
   flex: none;
   margin: 0;
   padding: 0;
+}
+
+/* Prevent native iOS date controls from stretching the grid track. */
+.stock-screen .stock-rule-form > .stock-field,
+.stock-screen .stock-rule-form .recurrence-fields .field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  box-sizing: border-box;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.stock-screen .stock-rule-form input[type="date"]::-webkit-datetime-edit {
+  min-width: 0;
 }

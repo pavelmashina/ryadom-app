@@ -44,6 +44,39 @@ export function Button({
     </button>
   );
 }
+/** A short-lived, non-blocking message above the app, including the iOS safe area. */
+export function Toast({
+  message,
+  tone = "info",
+  duration = 5000,
+}: {
+  message: string;
+  tone?: "info" | "error" | "success";
+  duration?: number;
+}) {
+  const [visible, setVisible] = useState(Boolean(message));
+  useEffect(() => {
+    if (!message) {
+      setVisible(false);
+      return;
+    }
+    setVisible(true);
+    const timer = window.setTimeout(() => setVisible(false), duration);
+    return () => window.clearTimeout(timer);
+  }, [message, duration]);
+  if (!message || !visible) return null;
+  return (
+    <div
+      className={`app-toast app-toast-${tone}`}
+      role={tone === "error" ? "alert" : "status"}
+      aria-live={tone === "error" ? "assertive" : "polite"}
+      aria-atomic="true"
+    >
+      {message}
+    </div>
+  );
+}
+
 export function IconButton({
   label,
   children,

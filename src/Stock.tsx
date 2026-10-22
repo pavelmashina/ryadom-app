@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, Plus, Package, Settings } from "lucide-react";
-import { Badge, Button, Card, Checkbox, Empty, SectionHeader } from "./components";
+import { Badge, Button, Card, Checkbox, Empty, SectionHeader, Toast } from "./components";
 import { today, fmt, type Pet } from "./domain";
 import { rpc, type AuthSession } from "./backend";
 import RecurrenceFields, { draftForDate, type RecurrenceDraft } from "./RecurrenceFields";
@@ -303,6 +303,7 @@ export default function Stock({
  }
  const currentView=mode!=="list"&&mode!=="create"&&current;
  return <div className="stock-screen">
+  <Toast message={error} tone="error"/>
   {mode!=="list"&&(
    <div className="stock-top">
     <button type="button" className="stock-back" onClick={goBack} aria-label="Назад" title="Назад">
@@ -310,7 +311,6 @@ export default function Stock({
     </button>
    </div>
   )}
-  {error&&<p className="stock-error" role="alert">{error}</p>}
   {mode==="list"&&<>
    <section className="stock-section">
     <div className="stock-list-header">
@@ -325,7 +325,7 @@ export default function Stock({
     </div>
     <Card variant="info" className="stock-collection">
      {loading&&<p className="stock-muted">Загружаем запасы…</p>}
-     {!loading&&!visibleItems.length&&<p className="stock-muted">
+     {!loading&&!error&&!visibleItems.length&&<p className="stock-muted">
       Пока нет запасов. Нажмите «+», чтобы добавить первый товар.
      </p>}
      {visibleItems.map(item=>{
@@ -370,7 +370,6 @@ export default function Stock({
        label={<span>{s.name}<small>{s.quantity}</small></span>}/>)}
      </div>
     ):<Empty title="Всё есть дома">Добавляйте покупки по мере необходимости.</Empty>}
-    <p className="stock-muted stock-shopping-help">Купленный корм можно сразу внести в запас при подтверждении покупки.</p>
    </section>
    {gearOpen&&typeof document!=="undefined"&&createPortal(
     <div className="stock-settings-layer">

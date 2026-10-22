@@ -28,6 +28,15 @@ describe("Unified stock and shopping overview",()=>{
   expect(html).not.toContain("Питание и запасы");
   expect(html).not.toContain("Всё под рукой");
  });
+ it("uses top toasts for stock errors and removes the purchased-food caption",()=>{
+  expect(source).toContain('<Toast message={error} tone="error"/>');
+  expect(source).not.toContain('className="stock-error" role="alert"');
+  expect(source).not.toContain("Купленный корм можно сразу внести");
+  expect(source).toContain("!loading&&!error&&!visibleItems.length");
+  const appSource=readFileSync(new URL("./App.tsx",import.meta.url),"utf8");
+  expect(appSource).toContain("<Toast message={notice}");
+  expect(appSource).not.toContain('className="save-status"');
+ });
  it("uses the same row and same parent panel for every stock item",()=>{
   expect(source).toContain('<Card variant="info" className="stock-collection">');
   expect(source).toContain("visibleItems.map(item=>{");
@@ -122,6 +131,9 @@ describe("Unified stock and shopping overview",()=>{
   expect(dates).toContain("min-inline-size: 0");
   expect(dates).toContain("overflow: hidden");
    expect(css).toContain(".stock-screen .stock-rule-form .stock-rule-date-wrap {");
+   expect(css).toContain("grid-template-columns: minmax(0, 1fr)");
+   expect(css).toContain("max-inline-size: min(100%, calc(100dvw");
+   expect(css).toContain('.stock-screen .stock-rule-form input[type="date"]::-webkit-datetime-edit');
   expect(css).toContain("@media (max-width: 420px)");
   for(const token of ["--font-size-xs","--font-size-sm","--font-size-md","--font-size-lg"]){
    expect(css).toContain("var("+token+")");

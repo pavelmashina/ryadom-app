@@ -1,5 +1,6 @@
 import {
   SectionHeader,
+  Toast,
   Button,
   InteractiveCard,
   IconButton,
@@ -1181,6 +1182,8 @@ export default function App({
   }
   return (
     <div className="app" aria-busy={busy}>
+      <Toast message={notice} tone={/не удалось|ошибка|недоступ|прекращён/i.test(notice)
+        ? "error" : notice.includes("Сохранено") ? "success" : "info"}/>
       <fieldset className="app-fields" disabled={busy}>
         <header className="app-header">
           <span className="brand">
@@ -1251,9 +1254,6 @@ export default function App({
             </Button>
           </div>
         )}
-        <div className="save-status" role="status" aria-live="polite" aria-atomic="true">
-          {notice}
-        </div>
         <main>
           {screen === "account" && accountContent}
           {screen === "day" && (showFirstPetSetup ? (
