@@ -58,6 +58,10 @@ import { parseBackup, download } from "./storage";
 import { recurrenceText, previousDay } from "./recurrence";
 import { joinCodeFromUrl } from "./share-invitation";
 import { completeShoppingItem, restoreShoppingItem } from "./shopping-checkout";
+import {
+  applyPendingShopping, readShoppingDrafts, writeShoppingDrafts,
+  unsyncedShoppingError, type PendingShopping,
+} from "./shopping-fast-save";
 type Screen = "day" | "health" | "training" | "stock" | "profile" | "account";
 type EventScope = "single" | "future" | "all";
 type Overlay =
@@ -125,6 +129,10 @@ export default function App({
   onRefresh: () => Promise<State>;
 }) {
   const loaded = { state: initial, error: "" };
+  const shoppingPending = useRef<PendingShopping[]>(readShoppingDrafts(session.user.id));
+  const serverState = useRef(initial);
+  const liveState = useRef(applyPendingShopping(initial, shoppingPending.current));
+  const shoppingSync = useRef<Promise<void> | null>(null);
   const saving = useRef(false);
   const epoch = useRef(0);
   const [openTraining, setOpenTraining] = useState<string | undefined>();
@@ -137,7 +145,7 @@ export default function App({
   const [joinCode, setJoinCode] = useState<string | null>(() => joinCodeFromUrl(location.search));
   const [eventScope, setEventScope] = useState<EventScope>("single");
   const [busy, setBusy] = useState(false);
-  const [state, setState] = useState(loaded.state),
+  const [state, setState] = useState(liveState.current),
     [storageError, setStorageError] = useState(loaded.error),
     [notice, setNotice] = useState(""),
     [screen, setScreen] = useState<Screen>("day"),
@@ -227,6 +235,7 @@ export default function App({
         const next = await refreshRef.current();
         if (stopped || saving.current || stamp !== epoch.current) return;
         setState((previous) => {
+          if (shoppingPending.current.length) return previous;
           const lost = previous.pets.some(
             (p) => !next.pets.some((n) => n.id === p.id),
           );
@@ -244,12 +253,15 @@ export default function App({
           }
           if (JSON.stringify(previous) === JSON.stringify(next))
             return previous;
-          return {
+          const resolved = {
             ...next,
             selectedPet: next.pets.some((p) => p.id === previous.selectedPet)
               ? previous.selectedPet
               : next.selectedPet,
           };
+          serverState.current = resolved;
+          liveState.current = resolved;
+          return resolved;
         });
       } catch {
         /* Keep the current draft during a transient network failure. Writes still require server authorization. */
@@ -270,19 +282,113 @@ export default function App({
     };
   }, []);
   async function refreshNow() {
+    if (shoppingSync.current) await shoppingSync.current;
+    if (shoppingPending.current.length) throw new Error("Дождитесь синхронизации покупок");
     ++epoch.current;
     const next = await onRefresh();
+    serverState.current = next;
+    liveState.current = next;
     setState(next);
     if (!next.pets.some((p) => p.id === pet.id)) close();
   }
+
+  /** Purchased items appear instantly; the cloud transaction is serialized and retried.
+   * The same UUID on retry avoids duplicate rows, including an accepted-but-lost response.
+   */
+  function flushShopping(): Promise<void> {
+    if (shoppingSync.current) return shoppingSync.current;
+    if (!shoppingPending.current.length || saving.current) return Promise.resolve();
+    const task = (async () => {
+      saving.current = true;
+      ++epoch.current; // Cancel any stale refresh that started before this save.
+      try {
+        while (shoppingPending.current.length) {
+          const before = serverState.current;
+          const batch = shoppingPending.current.slice();
+          const next = applyPendingShopping(before, batch);
+          let stored: PersistOutcome | undefined;
+          for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+              stored = await onPersist(next, before);
+              break;
+            } catch (cause) {
+              const transient = cause instanceof Error &&
+                /нет связи|network|fetch|timeout|timed out|abort/i.test(cause.message);
+              if (!transient || attempt === 1) throw cause;
+              await new Promise<void>((resolve) => window.setTimeout(resolve, 350));
+            }
+          }
+          if (!stored) throw new Error("Не удалось подтвердить сохранение");
+          serverState.current = stored.state;
+          const savedIds = new Set(batch.map(({ item }) => item.id));
+          shoppingPending.current = shoppingPending.current.filter(({ item }) => !savedIds.has(item.id));
+          writeShoppingDrafts(session.user.id, shoppingPending.current);
+          const merged = applyPendingShopping(stored.state, shoppingPending.current);
+          const selectedPet = liveState.current.selectedPet;
+          liveState.current = merged.pets.some((p) => p.id === selectedPet)
+            ? { ...merged, selectedPet } : merged;
+          setState(liveState.current);
+          setStorageError("");
+          setNotice("Покупка сохранена в облаке");
+        }
+      } catch (cause) {
+        setNotice(unsyncedShoppingError(cause));
+      } finally {
+        saving.current = false;
+        ++epoch.current;
+      }
+    })();
+    shoppingSync.current = task;
+    void task.finally(() => { shoppingSync.current = null; });
+    return task;
+  }
+
+  function addShoppingInstantly(data: FormData) {
+    const name = text(data, "name");
+    if (!name) throw new Error("Укажите название покупки");
+    const entry: PendingShopping = {
+      petId: pet.id,
+      item: { id: id(), name, quantity: text(data, "quantity"), done: false },
+    };
+    shoppingPending.current.push(entry);
+    writeShoppingDrafts(session.user.id, shoppingPending.current);
+    const next = applyPendingShopping(liveState.current, [entry]);
+    liveState.current = next;
+    setState(next);
+    ++epoch.current;
+    close();
+    setNotice("Покупка добавлена в список");
+    void flushShopping();
+  }
+
+  useEffect(() => {
+    if (shoppingPending.current.length) void flushShopping();
+    const retry = () => {
+      if (shoppingPending.current.length && !document.hidden) void flushShopping();
+    };
+    window.addEventListener("online", retry);
+    window.addEventListener("focus", retry);
+    document.addEventListener("visibilitychange", retry);
+    return () => {
+      window.removeEventListener("online", retry);
+      window.removeEventListener("focus", retry);
+      document.removeEventListener("visibilitychange", retry);
+    };
+  }, []);
+
   async function commit(next: State) {
+    if (shoppingSync.current) await shoppingSync.current;
+    if (shoppingPending.current.length)
+      throw new Error("Покупки ещё не синхронизированы. Проверьте соединение.");
     if (saving.current) throw new Error("Дождитесь завершения сохранения");
     saving.current = true;
     ++epoch.current;
     setBusy(true);
     setNotice("Сохраняем в облаке…");
     try {
-      const stored = await onPersist(next, state);
+      const stored = await onPersist(next, serverState.current);
+      serverState.current = stored.state;
+      liveState.current = stored.state;
       setState(stored.state);
       setStorageError("");
       setNotice(stored.combined
@@ -294,6 +400,7 @@ export default function App({
     } finally {
       saving.current = false;
       setBusy(false);
+      if (shoppingPending.current.length) void flushShopping();
     }
   }
   async function finishFirstPetSetup(details?: PetBasics) {
@@ -301,10 +408,14 @@ export default function App({
     setShowFirstPetSetup(false);
     setScreen("day");
   }
-  function update(fn: (p: Pet) => Pet) {
+  async function update(fn: (p: Pet) => Pet) {
+    if (shoppingSync.current) await shoppingSync.current;
+    if (shoppingPending.current.length)
+      throw new Error("Покупки ещё не синхронизированы. Проверьте соединение.");
+    const previous = liveState.current;
     return commit({
-      ...state,
-      pets: state.pets.map((p) =>
+      ...previous,
+      pets: previous.pets.map((p) =>
         p.id === pet.id ? petSchema.parse(fn(p)) : p,
       ),
     });
@@ -1029,24 +1140,7 @@ export default function App({
       }
       case "shopping":
         return (
-          <Form
-            onSave={async (d) =>
-              await saved(() =>
-                update((p) => ({
-                  ...p,
-                  shopping: [
-                    ...p.shopping,
-                    {
-                      id: id(),
-                      name: text(d, "name"),
-                      quantity: text(d, "quantity"),
-                      done: false,
-                    },
-                  ],
-                })),
-              )
-            }
-          >
+          <Form onSave={addShoppingInstantly}>
             <Field label="Что купить?" name="name" required maxLength={120} />
             <Field
               label="Количество"
