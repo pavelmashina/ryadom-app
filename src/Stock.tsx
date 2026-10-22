@@ -416,13 +416,13 @@ export default function Stock({
        <button type="button" onClick={()=>openOperation(settingsItem,"manual_use","list")}>Списать вручную</button>
       </> : <>
        <button type="button" onClick={()=>{setGearOpen(false);openAdd();}}>Добавить запас</button>
-       <button type="button" onClick={()=>{setGearOpen(false);onShop();}}>Добавить покупку</button>
+       <button type="button" onClick={()=>{setGearOpen(false);onShop();}}>Запланировать покупку</button>
       </>}
      </div>
     </div>,document.body)}
   </>}
   {mode==="create"&&<section className="stock-section">
-   <h2>Добавить запас</h2>
+   <h2 className="stock-editor-heading">Добавить запас</h2>
    {visibleItems.length>0&&<div className="stock-add-modes" role="group" aria-label="Способ добавления">
     <label><input type="radio" name="add-target" checked={createTarget==="existing"}
      onChange={()=>{setCreateTarget("existing");setError("");const item=visibleItems.find(i=>i.id===createItemId)??visibleItems[0];setCreateItemId(item.id);setUnit(item.display_unit);}}/> В существующий</label>
@@ -430,7 +430,7 @@ export default function Stock({
      onChange={()=>{setCreateTarget("new");setError("");setUnit("г");}}/> Новый товар</label>
    </div>}
    {createTarget==="existing"&&visibleItems.length>0 ? (
-    <form className="stock-form" onSubmit={onAddExisting}>
+    <form className="stock-form stock-create-form" onSubmit={onAddExisting}>
      <Field label="Товар">
       <select value={createItemId} onChange={e=>{
        const item=visibleItems.find(i=>i.id===e.target.value);setCreateItemId(e.target.value);
@@ -447,7 +447,7 @@ export default function Stock({
      <Button fullWidth type="submit" loading={busy}>Добавить запас</Button>
     </form>
    ) : (
-   <form className="stock-form" onSubmit={onCreate}>
+   <form className="stock-form stock-create-form" onSubmit={onCreate}>
     <Field label="Название"><input name="name" maxLength={120} required placeholder="Например, Royal Canin Mini"/></Field>
     <Field label="Категория"><select name="category">{categories.map(x=><option key={x}>{x}</option>)}</select></Field>
     <div className="stock-fields-two">

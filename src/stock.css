@@ -1073,3 +1073,72 @@
   min-height: var(--button-height-sm);
   padding: var(--space-compact-3);
 }
+
+/* The stock-only periodicity panel uses the same compact rhythm as the rate form. */
+.stock-screen .stock-rule-form .recurrence-options-flat-frequency {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-compact-3);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.stock-screen .stock-rule-form .recurrence-options-flat-frequency .fields {
+  gap: var(--space-compact-3);
+}
+.stock-screen .stock-rule-form .recurrence-options-flat-frequency .field > label,
+.stock-screen .stock-rule-form .recurrence-options-flat-frequency .weekdays-picker p {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+}
+.stock-screen .stock-rule-form .recurrence-options-flat-frequency .field :is(input,select) {
+  min-height: var(--button-height-sm);
+  font-size: var(--font-size-sm);
+}
+.stock-screen .stock-rule-form .recurrence-options-flat-frequency .weekdays-picker-row .checkbox {
+  font-size: var(--font-size-sm);
+}
+
+/* Both add-stock flows inherit the spacing and typography of the stock editors. */
+.stock-screen .stock-create-form {
+  box-sizing: border-box;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  max-width: 100%;
+  gap: var(--space-compact-3);
+  padding: var(--space-compact-4);
+  font-family: var(--font-family-base);
+}
+.stock-screen .stock-create-form .stock-fields-two {
+  min-width: 0;
+  gap: var(--space-compact-3);
+}
+.stock-screen .stock-create-form .stock-field {
+  min-width: 0;
+  gap: var(--space-compact-2);
+}
+.stock-screen .stock-create-form .stock-field > span:first-child {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-caption);
+}
+.stock-screen .stock-create-form .stock-field :is(input,select,textarea) {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-ui-body);
+}
+.stock-screen .stock-create-form .stock-field :is(input,select) {
+  min-height: var(--button-height-sm);
+}
+.stock-screen .stock-add-modes {
+  gap: var(--space-compact-3);
+  margin-bottom: var(--stock-heading-gap);
+}
+.stock-screen .stock-add-modes label {
+  font-size: var(--font-size-sm);
+}

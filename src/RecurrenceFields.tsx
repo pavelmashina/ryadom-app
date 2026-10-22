@@ -73,8 +73,8 @@ export default function RecurrenceFields({
             {expanded ? "Свернуть настройки" : "Настроить периодичность"}
           </Button>
           {expanded && (
-            <div className="recurrence-options">
-              <h3>Частота</h3>
+            <div className={flatEnd ? "recurrence-options recurrence-options-flat-frequency" : "recurrence-options"}>
+              {!flatEnd && <h3>Частота</h3>}
               <div className="fields">
                 <Field
                   label="Повторять каждые"

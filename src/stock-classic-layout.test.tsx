@@ -65,12 +65,15 @@ describe("Unified stock and shopping overview",()=>{
   expect(source).toContain('setGearOpen(false);openAdd();');
   expect(source).toContain('setGearOpen(false);onShop();');
   expect(source).toContain('>Добавить запас</button>');
-  expect(source).toContain('>Добавить покупку</button>');
+  expect(source).toContain('>Запланировать покупку</button>');
+  expect(source).not.toContain('>Добавить покупку</button>');
   expect(source).not.toContain('><Plus/> Добавить запас</Button>');
   expect(source).not.toContain('><Plus/> Добавить покупку</Button>');
   expect(source).toContain('setCreateTarget(mode==="detail"&&current?"existing":"new");');
   expect(source).toContain('onSubmit={onAddExisting}');
   expect(source).toContain('onSubmit={onCreate}');
+  expect(source).toContain('<h2 className="stock-editor-heading">Добавить запас</h2>');
+  expect(source.match(/className="stock-form stock-create-form"/g)).toHaveLength(2);
  });
  it("uses the same settings action for all stocks, with no loss of operations",()=>{
   expect(source).toContain("const settingsItem=visibleItems.find((i)=>i.id===settingsItemId);");
@@ -192,5 +195,14 @@ describe("Unified stock and shopping overview",()=>{
   expect(recurrenceSource).toContain('flatEnd ? "Конец диапазона" : "Диапазон"');
   expect(recurrenceSource).toContain('label={flatEnd ? "" : "Заканчивается"}');
   expect(css).toContain('.stock-screen .card.stock-detail-card {');
+  expect(recurrenceSource).toContain('{!flatEnd && <h3>Частота</h3>}');
+  expect(recurrenceSource).toContain('recurrence-options-flat-frequency');
+  const frequency=css.split(".stock-screen .stock-rule-form .recurrence-options-flat-frequency {")[1]?.split("}")[0]??"";
+  expect(frequency).toContain("padding: 0");
+  expect(frequency).toContain("border: 0");
+  expect(css).toContain(".stock-screen .stock-rule-form .recurrence-options-flat-frequency .field :is(input,select)");
+  expect(css).toContain(".stock-screen .stock-create-form .stock-field > span:first-child");
+  expect(css).toContain(".stock-screen .stock-create-form .stock-field :is(input,select,textarea)");
  });
+
 });
