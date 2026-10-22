@@ -727,3 +727,65 @@
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
+
+
+/* Uniform overview: one surface for every stocked item, one add action. */
+.stock-list-header {
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:var(--space-compact-3);
+ margin-bottom:var(--stock-heading-gap);
+}
+.stock-list-header h2 {margin:0;font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);}
+.stock-add-trigger {
+ display:grid;place-items:center;
+ width:var(--button-height-sm);height:var(--button-height-sm);
+ flex:none;border:1px solid var(--color-border);border-radius:var(--radius-md);
+ color:var(--color-primary);background:var(--color-surface);
+ cursor:pointer;
+}
+.stock-add-trigger svg {width:var(--icon-size-md);height:var(--icon-size-md);}
+.stock-add-trigger:focus-visible,.stock-gear:focus-visible,.stock-item-open:focus-visible {
+ outline:2px solid var(--color-focus);outline-offset:2px;
+}
+.stock-screen .card.stock-collection {
+ padding:0;
+ margin:0;
+ background:var(--color-surface-secondary);
+ border:1px solid var(--color-border);
+ border-radius:var(--radius-lg);
+ box-shadow:none;
+ overflow:hidden;
+}
+.stock-collection>.stock-muted {padding:var(--space-compact-4);}
+.stock-item {
+ padding:var(--space-compact-4);
+ display:grid;
+ gap:var(--space-compact-2);
+ border-bottom:1px solid var(--color-border);
+}
+.stock-item:last-child {border-bottom:0;}
+.stock-item-top {
+ display:grid;
+ grid-template-columns:minmax(0,1fr) auto var(--button-height-sm);
+ align-items:center;
+ gap:var(--space-compact-3);
+}
+.stock-item-open {
+ background:transparent;border:0;padding:0;min-width:0;
+ display:grid;gap:var(--space-compact-1);
+ text-align:left;font-family:var(--font-family-base);color:var(--color-text-primary);
+ cursor:pointer;
+}
+.stock-item-name {font-size:var(--font-size-md);font-weight:var(--font-weight-semibold);overflow-wrap:anywhere;}
+.stock-item-category {font-size:var(--font-size-xs);color:var(--color-text-secondary);}
+.stock-item-balance {font-size:var(--font-size-sm);font-weight:var(--font-weight-semibold);white-space:nowrap;}
+.stock-item .stock-gear {justify-self:end;}
+.stock-item progress {display:block;width:100%;height:var(--space-compact-2);margin:0;accent-color:var(--color-primary);}
+.stock-item-footer {
+ display:flex;justify-content:space-between;gap:var(--space-compact-3);
+ font-size:var(--font-size-xs);color:var(--color-text-secondary);
+}
+.stock-item-footer em {font-style:normal;color:var(--color-warning);}
+.stock-empty .stock-item-footer em {color:var(--color-danger);}
