@@ -36,7 +36,7 @@ describe("Unified form typography, insets and weekday layout",()=>{
   });
 
   it("uses medium rather than bold typography for form section headings",()=>{
-    const base=global.match(/^h3 \{([^}]*)\}/m)?.[1]??"";
+    const base=global.split("\nh3 {\n  font-size: var(--font-size-h3);")[1]?.split("}")[0]??"";
     expect(base).toContain("font-weight: var(--font-weight-medium)");
     expect(training).toContain(".training-modal-content h3 {font-size:var(--font-size-md);font-weight:var(--font-weight-medium)");
     expect(training).not.toContain(".training-modal-content h3 {font-size:var(--font-size-md);font-weight:var(--font-weight-semibold)");
