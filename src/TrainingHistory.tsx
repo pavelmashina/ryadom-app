@@ -9,7 +9,6 @@ export default function TrainingHistory({
   commands,
   onOpen,
   onEdit,
-  onReschedule,
   readOnly = false,
 }: {
   readOnly?: boolean;
@@ -17,7 +16,6 @@ export default function TrainingHistory({
   commands: Pet["commands"];
   onOpen: (id: string) => void;
   onEdit: (session: TrainingSession) => void;
-  onReschedule?: (session: TrainingSession) => void;
 }) {
   const latest =
     sessions
@@ -200,9 +198,9 @@ export default function TrainingHistory({
             </details>
           )}
           <div className="training-session-actions">
-            <Button size="sm" variant="ghost" onClick={() => onOpen(s.id)}>
+            {s.status !== "planned" && <Button size="sm" variant="ghost" onClick={() => onOpen(s.id)}>
               Подробнее
-            </Button>
+            </Button>}
             <Button
               size="sm"
               variant="ghost"
@@ -211,12 +209,6 @@ export default function TrainingHistory({
             >
               Редактировать
             </Button>
-            {s.status === "planned" && !s.schedule_id && !readOnly && onReschedule && (
-              <Button size="sm" variant="secondary"
-                onClick={() => onReschedule(s)}>
-                Перенести
-              </Button>
-            )}
           </div>
         </Card>
       ))}

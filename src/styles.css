@@ -851,7 +851,7 @@ dialog::backdrop {
   min-height: var(--input-height);
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-regular);
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--field-control-inline);
   margin: 0;
 }
 .field input[type="file"] {

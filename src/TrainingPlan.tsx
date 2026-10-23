@@ -28,7 +28,7 @@ export default function TrainingPlan({
   schedule?: TrainingSchedule;
   onSave: (pet: Pet) => Promise<void>;
 }) {
-  const initial = schedule?.starts_on ?? session?.date ?? initialDate ?? today();
+  const initial = session?.date ?? schedule?.starts_on ?? initialDate ?? today();
   const [startDate, setStartDate] = useState(initial);
   const [intervalText, setIntervalText] = useState(String(schedule?.recurrence_interval ?? 1));
   const [recurrence, setRecurrence] = useState<RecurrenceDraft>(() => ({
@@ -85,6 +85,11 @@ export default function TrainingPlan({
             throw new Error("Проверьте график: " + valid.error.issues[0]?.message);
           await onSave({
             ...pet,
+            // Converting an individual planned session to a recurring schedule
+            // must not leave the old one-off session on that date.
+            workouts: session && !schedule
+              ? pet.workouts.filter(x => x.id !== session.id)
+              : pet.workouts,
             trainingSchedules: [
               ...(pet.trainingSchedules ?? []).filter((x) => x.id !== next.id),
               valid.data,
@@ -136,19 +141,20 @@ export default function TrainingPlan({
         name="time"
         defaultValue={schedule?.time_of_day?.slice(0, 5) ?? session?.time ?? ""}
       />
-      {!session && (
-        <div className="training-planner-recurrence">
+      <div className="training-planner-recurrence">
           <RecurrenceFields
             date={startDate}
             value={recurrence}
             onChange={setRecurrence}
             flatEnd
+            allowedFrequencies={schedule
+              ? ["daily","weekly","monthly","yearly"]
+              : ["once","daily","weekly","monthly","yearly"]}
             simpleFrequencyLabels
             intervalText={intervalText}
             onIntervalTextChange={setIntervalText}
           />
         </div>
-      )}
     </Form>
   );
 }

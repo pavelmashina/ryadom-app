@@ -28,7 +28,7 @@ import {
 } from "./training-domain";
 import "./training.css";
 import TrainingHistory from "./TrainingHistory";
-import { reschedulePlannedTraining } from "./training-actions";
+import { cancelPlannedTraining, reschedulePlannedTraining } from "./training-actions";
 import CommandGrid from "./CommandGrid";
 import TrainingDateField from "./TrainingDateField";
 import { setCommandArchived, selectableCommands } from "./command-catalog";
@@ -36,6 +36,7 @@ type View =
   | { kind: "actions" }
   | { kind: "plan"; session?: TrainingSession; schedule?: TrainingSchedule }
   | { kind: "reschedule"; session: TrainingSession }
+  | { kind: "cancel"; session: TrainingSession }
   | { kind: "reminder"; training?: TrainingSession; schedule?: TrainingSchedule }
   | { kind: "rename"; id: string }
   | { kind: "comments"; id: string }
@@ -73,6 +74,8 @@ export default function Training({
   onOpened?: () => void;
 }) {
   const [view, setView] = useState<View>(null);
+  const [cancelBusy,setCancelBusy]=useState(false);
+  const [cancelError,setCancelError]=useState("");
   useEffect(() => {
     if (openSession) {
       setView({ kind: "session", id: openSession });
@@ -103,6 +106,20 @@ export default function Training({
   const activeCommands = pet.commands.filter((c) => !c.archived);
   function requireEdit() {
     if (!canEdit) throw new Error("Доступно только чтение");
+  }
+  async function confirmCancel(target:TrainingSession,scope:"one"|"following"){
+    if(cancelBusy)return;
+    setCancelBusy(true);
+    setCancelError("");
+    try{
+      requireEdit();
+      await onSave(cancelPlannedTraining(pet,target.id,scope));
+      setView(null);
+    }catch(error){
+      setCancelError(error instanceof Error?error.message:"Не удалось отменить тренировку");
+    }finally{
+      setCancelBusy(false);
+    }
   }
   async function saveCommand(name: string) {
     requireEdit();
@@ -168,57 +185,17 @@ export default function Training({
           );
         })}
       </CommandGrid>
-      {!!pet.trainingSchedules?.length && (
-        <details className="explanation">
-          <summary>Регулярный график</summary>
-          {pet.trainingSchedules.map((sc) => (
-            <Card key={sc.id}>
-              <strong>
-                {sc.name || "Тренировки"} ·{" "}
-                {sc.is_active ? "Активен" : "Остановлен"}
-              </strong>
-              <Button
-                disabled={!canEdit}
-                onClick={() => setView({ kind: "plan", schedule: sc })}
-              >
-                Изменить график
-              </Button>
-              <Button
-                disabled={!canEdit}
-                onClick={() => setView({ kind: "reminder", schedule: sc })}
-              >
-                Напоминание о тренировках
-              </Button>
-              <Button
-                disabled={!canEdit}
-                onClick={async () => {
-                  await onSave({
-                    ...pet,
-                    trainingSchedules: pet.trainingSchedules?.map((x) =>
-                      x.id === sc.id ? { ...x, is_active: !x.is_active } : x,
-                    ),
-                  });
-                }}
-              >
-                {sc.is_active ? "Остановить" : "Возобновить"}
-              </Button>
-            </Card>
-          ))}
-        </details>
-      )}
       <TrainingHistory
         key={pet.id}
         sessions={sessions}
         commands={pet.commands}
         readOnly={!canEdit}
         onOpen={(id) => setView({ kind: "session", id })}
-        onEdit={(session) =>
-          setView({
-            kind: session.status === "planned" ? "plan" : "edit",
-            session,
-          })
+        onEdit={(session) => setView(session.status === "planned"
+          ? {kind:"plan", session,
+             schedule:pet.trainingSchedules?.find(sc => sc.id === session.schedule_id)}
+          : {kind:"edit", session})
         }
-        onReschedule={(session) => setView({ kind: "reschedule", session })}
       />
       {!!pet.sessions.length && (
         <details className="explanation">
@@ -261,6 +238,8 @@ export default function Training({
               ? "Тренировка"
               : view.kind === "plan"
                 ? "План тренировки"
+              : view.kind === "cancel"
+                ? "Отменить тренировку"
               : view.kind === "reminder"
                 ? "Напоминание о тренировке"
               : view.kind === "reschedule"
@@ -337,7 +316,27 @@ export default function Training({
               <p className="hint">Меняется только это разовое занятие. Проведённые тренировки остаются без изменений.</p>
             </Form>
           )}
+          {view.kind === "cancel" && canEdit && (() => {
+            const schedule = pet.trainingSchedules?.find(sc => sc.id === view.session.schedule_id);
+            return (
+              <div className="training-cancel-confirm">
+                <p>Отменить тренировку {fmt(view.session.date, { day:"numeric",month:"long",year:"numeric" })}?</p>
+                <Button fullWidth variant="secondary" disabled={cancelBusy}
+                  onClick={() => void confirmCancel(view.session, "one")}>
+                  Удалить только эту тренировку
+                </Button>
+                {schedule && <Button fullWidth variant="destructive" disabled={cancelBusy}
+                  onClick={() => void confirmCancel(view.session, "following")}>
+                  Удалить эту и все последующие
+                </Button>}
+                {cancelError && <p role="alert" className="notice notice-error">{cancelError}</p>}
+                <Button fullWidth variant="ghost" disabled={cancelBusy}
+                  onClick={() => setView({ kind:"plan", session:view.session, schedule })}>Назад</Button>
+              </div>
+            );
+          })()}
           {view.kind === "plan" && canEdit && (
+            <>
             <TrainingPlan
               pet={pet}
               session={view.session}
@@ -348,6 +347,11 @@ export default function Training({
                 setView(null);
               }}
             />
+            {view.session?.status === "planned" && <Button fullWidth variant="secondary"
+              onClick={() => setView({ kind:"cancel", session:view.session! })}>
+              Отменить тренировку
+            </Button>}
+            </>
           )}
           {view.kind === "rename" && command && canEdit && (
             <Form
@@ -476,6 +480,9 @@ export default function Training({
                   setView({
                     kind: selected.status === "planned" ? "plan" : "edit",
                     session: selected,
+                    ...(selected.status === "planned"
+                      ? {schedule:pet.trainingSchedules?.find(sc=>sc.id===selected.schedule_id)}
+                      : {}),
                   })
                 }
                 fullWidth
@@ -494,14 +501,10 @@ export default function Training({
                     }}>
                     Настроить моё напоминание
                   </Button>
-                  {!selected.schedule_id ? (
-                    <Button fullWidth variant="secondary"
-                      onClick={() => setView({ kind: "reschedule", session: selected })}>
-                      Перенести тренировку
-                    </Button>
-                  ) : (
-                    <p className="hint">Это занятие создано регулярным графиком. Для изменения даты откройте «Регулярный график».</p>
-                  )}
+                  {!selected.schedule_id && <Button fullWidth variant="secondary"
+                    onClick={() => setView({kind:"reschedule",session:selected})}>
+                    Перенести тренировку
+                  </Button>}
                   <Button
                     disabled={!canEdit}
                     fullWidth
@@ -510,23 +513,10 @@ export default function Training({
                   >
                     Отметить проведённой
                   </Button>
-                  <Form
-                    label="Отменить тренировку"
-                    variant="destructive"
-                    onSave={async () => {
-                      await onSave({
-                        ...pet,
-                        workouts: pet.workouts.map((s) =>
-                          s.id === selected.id
-                            ? { ...s, status: "cancelled" }
-                            : s,
-                        ),
-                      });
-                      setView(null);
-                    }}
-                  >
-                    <p>Отмена сохранит запись в базе.</p>
-                  </Form>
+                  <Button fullWidth variant="secondary"
+                    onClick={() => setView({kind:"cancel",session:selected})}>
+                    Отменить тренировку
+                  </Button>
                 </>
               )}
             </>
@@ -739,12 +729,11 @@ export function TrainingForm({
               }
               title={c.name}
             >
-              <span className="command-choice-name">{c.name}</span>
-              {(results.some((r) => r.command_id === c.id) || c.archived) && (
-                <span className="command-choice-state">
-                  {results.some((r) => r.command_id === c.id) ? "✓ Выбрана" : "Из истории"}
-                </span>
-              )}
+              <span className="command-choice-name">
+                {results.some(r=>r.command_id===c.id) && <span className="command-choice-check" aria-hidden="true">✓ </span>}
+                {c.name}
+              </span>
+              {c.archived && <span className="command-choice-state">Из истории</span>}
             </Button>
           ))}
         </CommandGrid>

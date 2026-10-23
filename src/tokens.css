@@ -41,6 +41,8 @@
   --space-compact-4: 12px;
   --space-compact-5: 16px;
   --space-compact-6: 20px;
+  /* Global horizontal inset for form controls and visible date/time shells. */
+  --field-control-inline: var(--space-compact-6);
   --color-background: #f7f6ee;
   --color-canvas: #eeeee5;
   --color-surface: #fffef9;

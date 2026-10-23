@@ -349,7 +349,7 @@
   width: 100%;
   min-width: 0;
   min-height: var(--button-height-sm);
-  padding: var(--space-compact-3) var(--space-compact-4);
+  padding: var(--space-compact-3) var(--field-control-inline);
   border: 1px solid var(--color-input-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
@@ -958,7 +958,7 @@
   max-inline-size: 100%;
   min-inline-size: 0;
   min-height: var(--button-height-sm);
-  padding: var(--space-compact-3) var(--space-compact-4);
+  padding: var(--space-compact-3) var(--field-control-inline);
   border: 1px solid var(--color-input-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
