@@ -1584,3 +1584,9 @@ dialog:has(.new-pet-form) .modal-content {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
+
+/* Account is a content-only screen: no branded header or account trigger.
+   Preserve the safe-area inset and the editor-style back-arrow position. */
+.app main:has(> .account-back-row) {
+  padding-top: calc(var(--space-compact-6) + env(safe-area-inset-top));
+}

@@ -27,6 +27,14 @@ describe("Account layout and return navigation",()=>{
     expect(css).toContain("width: var(--button-height-sm)");
     expect(stock).toContain(".stock-screen .stock-back");
   });
+  it("hides the entire branded header and account icon only on the Account screen",()=>{
+    expect(app).toContain('{screen !== "account" && <header className="app-header">');
+    expect(app).toContain('<span className="brand">');
+    expect(app).toContain('className="account-trigger"');
+    expect(css).toContain(".app main:has(> .account-back-row) {");
+    expect(css).toContain("padding-top: calc(var(--space-compact-6) + env(safe-area-inset-top))");
+    expect(app).toContain('className="account-back" onClick={leaveAccount}');
+  });
   it("returns to the actual source screen, not automatically to Day",()=>{
     expect(app).toContain('[accountReturnScreen, setAccountReturnScreen] = useState<Screen>("day")');
     expect(app).toContain('if (screen !== "account") setAccountReturnScreen(screen)');

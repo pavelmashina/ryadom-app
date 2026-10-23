@@ -1335,7 +1335,7 @@ export default function App({
       <Toast message={notice} tone={/не удалось|ошибка|недоступ|прекращён/i.test(notice)
         ? "error" : notice.includes("Сохранено") ? "success" : "info"}/>
       <fieldset className="app-fields" disabled={busy}>
-        <header className="app-header">
+        {screen !== "account" && <header className="app-header">
           <span className="brand">
             <PawPrint />
             рядом
@@ -1395,7 +1395,7 @@ export default function App({
               </IconButton>
             )}
           </div>
-        </header>
+        </header>}
         {pet.demo && (
           <div className="demo-banner">
             Демонстрационный питомец · все данные вымышлены
