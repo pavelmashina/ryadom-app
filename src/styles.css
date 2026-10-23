@@ -1517,3 +1517,26 @@ dialog:has(.new-pet-form) .modal-content {
   font-family: var(--font-family-base);
   border-radius: var(--radius-sm);
 }
+
+/* One and only one 12px heading-to-card gap, matching Training.
+   The generic .card has 16px vertical margins which previously added on top
+   of the 12px account grid gap, making the effective space 28px. */
+.account-content .account-section-shell,
+.app main > .account-pets-section {
+  gap: var(--space-compact-4);
+}
+.account-content .account-section-shell > .card.account-section,
+.app main > .account-pets-section > .card.account-pets-management {
+  margin: 0;
+}
+.app main > .account-pets-section {
+  margin: var(--space-compact-5) 0 0;
+}
+.app main > .account-pets-section > .section-title {
+  margin: 0;
+  padding: 0;
+}
+.app main > .account-pets-section > .section-title h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+}

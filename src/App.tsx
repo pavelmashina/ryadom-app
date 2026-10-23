@@ -1407,8 +1407,9 @@ export default function App({
         <main>
           {screen === "account" && <>
             {accountContent}
-            <Card className="account-pets-management">
-              <SectionHeader title="Питомцы и доступ" compact/>
+            <section className="account-section-shell account-pets-section">
+              <SectionHeader title="Питомцы и доступ" />
+              <Card className="account-pets-management">
               {state.pets.map(p=><div className="account-pet-row" key={p.id}>
                 <span><strong>{p.name}</strong><small>{p.role==="editor"?"Совместный доступ":"Владелец"}</small></span>
                 <Button size="sm" variant="secondary" onClick={()=>goToPetSettings(p)}>
@@ -1425,7 +1426,8 @@ export default function App({
               {hasPets&&<Button variant="ghost" fullWidth onClick={()=>setOverlay({kind:"pets"})}>
                 Управление всеми питомцами
               </Button>}
-            </Card>
+              </Card>
+            </section>
           </>}
           {!hasPets && screen !== "account" && (
             <Card className="empty-pet-welcome">
