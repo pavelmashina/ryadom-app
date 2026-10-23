@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import { Button, Card, Empty, IconButton, SectionHeader } from "./components";
 import { fmt, today, type Pet } from "./domain";
@@ -9,6 +9,8 @@ export default function TrainingHistory({
   commands,
   onOpen,
   onEdit,
+  onMonthVisible,
+  petId,
   readOnly = false,
 }: {
   readOnly?: boolean;
@@ -16,6 +18,8 @@ export default function TrainingHistory({
   commands: Pet["commands"];
   onOpen: (id: string) => void;
   onEdit: (session: TrainingSession) => void;
+  onMonthVisible?: (month: string) => Promise<void>;
+  petId?: string;
 }) {
   const latest =
     sessions
@@ -29,6 +33,18 @@ export default function TrainingHistory({
   const selected = selection ?? latest;
   const [shownMonth, setMonth] = useState<string | null>(null);
   const month = shownMonth ?? selected.slice(0, 7);
+  const requestedMonths = useRef(new Set<string>());
+  useEffect(() => {
+    if(!onMonthVisible || !petId) return;
+    const key=petId+":"+month;
+    if(requestedMonths.current.has(key))return;
+    requestedMonths.current.add(key);
+    void onMonthVisible(month).catch(error=>{
+      requestedMonths.current.delete(key);
+      console.warn("[PET APP] Cannot materialize visible training month",error);
+    });
+    // Only request when the pet or visible month changes.
+  },[petId,month]);
   const [list, setList] = useState(false);
   const [limit, setLimit] = useState(10);
   const counts = new Map<string, number>();

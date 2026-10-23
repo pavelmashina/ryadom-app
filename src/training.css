@@ -1021,3 +1021,13 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
 .training-screen .training-result-chips {
   padding-bottom: var(--space-compact-4);
 }
+
+/* Repetition interval and period use the same 20px internal text inset
+   as every other app form control. Condensed font and height remain intact. */
+.training-modal-content .training-planner-recurrence
+.recurrence-options-flat-frequency .fields .field input[type="number"],
+.training-modal-content .training-planner-recurrence
+.recurrence-options-flat-frequency .fields .field select {
+  padding-left: var(--field-control-inline);
+  padding-right: var(--field-control-inline);
+}

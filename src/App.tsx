@@ -29,6 +29,8 @@ import {
   Download,
   UserRound,
   ArrowLeft,
+  Plus,
+  Settings,
 } from "lucide-react";
 import Calendar from "./Calendar";
 import Training from "./Training";
@@ -150,10 +152,12 @@ export default function App({
     [notice, setNotice] = useState(""),
     [screen, setScreen] = useState<Screen>("day"),
     [overlay, setOverlay] = useState<Overlay | null>(null),
+    [petMenuOpen, setPetMenuOpen] = useState(false),
     [selected, setSelected] = useState(today()),
     [month, setMonth] = useState(today().slice(0, 7) + "-01"),
     [restore, setRestore] = useState<State | null>(null);
-  const pet = state.pets.find((p) => p.id === state.selectedPet)!;
+  const hasPets = state.pets.length > 0;
+  const pet = state.pets.find((p) => p.id === state.selectedPet) ?? state.pets[0] ?? blankPet("Питомец");
   useEffect(() => {
     if (handledTrainingLink.current) return;
     const params = new URLSearchParams(location.search);
@@ -557,11 +561,23 @@ export default function App({
   function choose(p: Pet) {
     safe(async () => {
       await commit({ ...state, selectedPet: p.id });
+      setPetMenuOpen(false);
       setShowFirstPetSetup(false);
       close();
       setScreen("day");
       setSelected(today());
       setMonth(today().slice(0, 7) + "-01");
+    });
+  }
+  function openPetMenu(){
+    if(!hasPets){setOverlay({kind:"newpet"});return;}
+    setPetMenuOpen(value=>!value);
+  }
+  function goToPetSettings(p:Pet){
+    safe(async()=>{
+      if(p.id!==state.selectedPet)await commit({...state,selectedPet:p.id});
+      setPetMenuOpen(false);
+      setScreen("profile");
     });
   }
   function exportData() {
@@ -1286,21 +1302,33 @@ export default function App({
             рядом
           </span>
           <div className="app-header-actions">
-            {screen !== "account" && (
-              <Button
-                onClick={() => setOverlay({ kind: "pets" })}
-                className="pet-button"
-                variant="secondary"
-                aria-label={"Выбрать питомца: " + pet.name}
-              >
-                <span className="avatar">
-                  <Dog />
-                </span>
-                <span>{pet.name}</span>
-                <ChevronDown />
-              </Button>
+            {(screen !== "account" || !hasPets) && (
+              <div className="pet-switcher">
+                <button type="button" className="pet-button btn btn-secondary"
+                  aria-label={hasPets?"Выбрать питомца: "+pet.name:"Добавить питомца"}
+                  aria-expanded={hasPets?petMenuOpen:undefined}
+                  aria-haspopup={hasPets?"menu":undefined} onClick={openPetMenu}>
+                  {hasPets?<><span className="avatar"><Dog/></span>
+                    <span>{pet.name}</span><ChevronDown/></>:
+                    <><Plus aria-hidden="true"/><span>Добавить питомца</span></>}
+                </button>
+                {petMenuOpen&&hasPets&&<>
+                  <button className="pet-switcher-dismiss" type="button"
+                    aria-label="Закрыть список питомцев" onClick={()=>setPetMenuOpen(false)}/>
+                  <div className="pet-switcher-menu" role="menu" aria-label="Выбор питомца">
+                    {state.pets.map(p=><button type="button" role="menuitemradio"
+                      aria-checked={p.id===state.selectedPet} key={p.id} onClick={()=>choose(p)}>
+                      <Dog aria-hidden="true"/><span>{p.name}</span>
+                      {p.id===state.selectedPet&&<span aria-hidden="true">✓</span>}
+                    </button>)}
+                    <button type="button" role="menuitem"
+                      onClick={()=>{setPetMenuOpen(false);setOverlay({kind:"newpet"});}}>
+                      <Plus aria-hidden="true"/> Добавить питомца
+                    </button>
+                  </div>
+                </>}
+              </div>
             )}
-
             {(screen === "account" || screen === "profile") && (
               <IconButton
                 label="Назад к планам"
@@ -1315,6 +1343,7 @@ export default function App({
               aria-current={screen === "account" ? "page" : undefined}
               onClick={() => {
                 setScreen("account");
+                setPetMenuOpen(false);
                 setNotice("");
                 window.scrollTo({ top: 0 });
               }}
@@ -1324,7 +1353,7 @@ export default function App({
             {state.pets.some((p) => (p.pendingRequests ?? 0) > 0) && (
               <IconButton
                 label="Есть запросы на доступ"
-                onClick={() => setOverlay({ kind: "pets" })}
+                onClick={() => {setScreen("account");setPetMenuOpen(false);}}
               >
                 <span className="request-dot" aria-hidden="true">
                   ●
@@ -1350,8 +1379,41 @@ export default function App({
           </div>
         )}
         <main>
-          {screen === "account" && accountContent}
-          {screen === "day" && (showFirstPetSetup ? (
+          {screen === "account" && <>
+            {accountContent}
+            <Card className="account-pets-management">
+              <SectionHeader title="Питомцы и доступ" compact/>
+              {state.pets.map(p=><div className="account-pet-row" key={p.id}>
+                <span><strong>{p.name}</strong><small>{p.role==="editor"?"Совместный доступ":"Владелец"}</small></span>
+                <Button size="sm" variant="secondary" onClick={()=>goToPetSettings(p)}>
+                  <Settings aria-hidden="true"/> Профиль и доступ
+                </Button>
+              </div>)}
+              {!hasPets&&<p className="hint">У вас пока нет питомцев.</p>}
+              <Button variant="secondary" fullWidth onClick={()=>setOverlay({kind:"newpet"})}>
+                <Plus aria-hidden="true"/> Добавить питомца
+              </Button>
+              <Button variant="secondary" fullWidth onClick={()=>setOverlay({kind:"join"})}>
+                Добавить существующего питомца
+              </Button>
+              {hasPets&&<Button variant="ghost" fullWidth onClick={()=>setOverlay({kind:"pets"})}>
+                Управление всеми питомцами
+              </Button>}
+            </Card>
+          </>}
+          {!hasPets && screen !== "account" && (
+            <Card className="empty-pet-welcome">
+              <h2>Добавьте питомца</h2>
+              <p>После добавления здесь появятся календарь, занятия и запасы питомца.</p>
+              <Button fullWidth onClick={()=>setOverlay({kind:"newpet"})}>
+                <Plus aria-hidden="true"/> Добавить питомца
+              </Button>
+              <Button variant="secondary" fullWidth onClick={()=>setOverlay({kind:"join"})}>
+                Добавить существующего питомца
+              </Button>
+            </Card>
+          )}
+          {hasPets && screen === "day" && (showFirstPetSetup ? (
             <FirstPetSetup
               onSave={(details) => finishFirstPetSetup(details)}
               onSkip={() => finishFirstPetSetup()}
@@ -1376,7 +1438,7 @@ export default function App({
               }
             />
           ))}{" "}
-          {screen === "training" && (
+          {hasPets && screen === "training" && (
             <Training
               session={session}
               openSession={openTraining}
@@ -1384,10 +1446,17 @@ export default function App({
               canEdit={pet.role === "owner" || pet.role === "editor"}
               key={pet.id}
               pet={pet}
+              onMonthVisible={async month=>{
+                if(!pet.trainingSchedules?.some(sc=>sc.is_active))return;
+                const changed=await rpc(session,"materialize_training_month",{
+                  p_pet:pet.id,p_month:month+"-01",
+                });
+                if(changed)await refreshNow();
+              }}
               onSave={(next) => update(() => next)}
             />
           )}{" "}
-          {screen === "health" && (
+          {hasPets && screen === "health" && (
             <Health
               pet={pet}
               onWeight={() => setOverlay({ kind: "weight" })}
@@ -1405,7 +1474,7 @@ export default function App({
               }
             />
           )}{" "}
-          {screen === "stock" && (
+          {hasPets && screen === "stock" && (
             <Stock
               pet={pet}
               session={session}
@@ -1420,7 +1489,7 @@ export default function App({
               }}
             />
           )}{" "}
-          {screen === "profile" && (
+          {hasPets && screen === "profile" && (
             <>
               <div className="profile-hero">
                 <span className="avatar">
@@ -1526,7 +1595,7 @@ export default function App({
             </>
           )}
         </main>
-        {!showFirstPetSetup && <nav className="bottom-nav" aria-label="Разделы приложения">
+        {hasPets && !showFirstPetSetup && <nav className="bottom-nav" aria-label="Разделы приложения">
           {nav.map(([key, label, Icon]) => (
             <Button
               key={key}

@@ -164,11 +164,11 @@ export const stateSchema = z
   .object({
     version: z.literal(1),
     selectedPet: z.string(),
-    pets: z.array(petSchema).min(1),
+    pets: z.array(petSchema),
   })
   .superRefine((s, ctx) => {
     if (
-      !s.pets.some((p) => p.id === s.selectedPet) ||
+      (s.pets.length === 0 ? s.selectedPet !== "" : !s.pets.some((p) => p.id === s.selectedPet)) ||
       new Set(s.pets.map((p) => p.id)).size !== s.pets.length
     )
       ctx.addIssue({ code: "custom", message: "Некорректные питомцы" });
@@ -220,10 +220,7 @@ export const blankPet = (name: string): Pet => ({
   shopping: [],
   documents: [],
 });
-export const initialState = (): State => {
-  const p = blankPet("Мой питомец");
-  return { version: 1, selectedPet: p.id, pets: [p] };
-};
+export const initialState = (): State => ({version: 1, selectedPet: "", pets: []});
 export function occurs(e: PetEvent, s: string) {
   return occursOn(e, s);
 }

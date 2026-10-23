@@ -1140,3 +1140,39 @@ dialog {
 :where(.command-list, .training-result-chips, .score-history, .app-horizontal-scroll)::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* The header switches pets in a compact anchored menu, not a profile modal. */
+.pet-switcher {position:relative;min-width:0;max-width:100%;z-index:20;}
+.pet-switcher .pet-button {display:inline-flex;align-items:center;min-height:var(--button-height-sm);font-family:var(--font-family-base);font-size:var(--font-size-sm);white-space:nowrap;max-width:min(54vw,230px);cursor:pointer;}
+.pet-switcher .pet-button svg {width:var(--icon-size-sm);height:var(--icon-size-sm);flex:none;}
+.pet-switcher-dismiss {position:fixed;inset:0;z-index:19;background:transparent;border:0;cursor:default;}
+.pet-switcher-menu {
+ position:absolute;top:calc(100% + var(--space-compact-2));right:0;z-index:21;
+ display:grid;gap:var(--space-compact-1);width:min(280px,calc(100vw - 2 * var(--page-gutter)));
+ box-sizing:border-box;padding:var(--space-compact-2);background:var(--color-surface);
+ border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);
+ font-family:var(--font-family-base);
+}
+.pet-switcher-menu button {
+ display:flex;align-items:center;gap:var(--space-compact-3);
+ min-height:var(--button-height-sm);width:100%;min-width:0;
+ padding:var(--space-compact-2) var(--space-compact-3);
+ border:0;border-radius:var(--radius-md);background:transparent;
+ color:var(--color-text-primary);text-align:left;font:inherit;font-size:var(--font-size-sm);cursor:pointer;
+}
+.pet-switcher-menu button[aria-checked="true"] {background:var(--color-surface-secondary);}
+.pet-switcher-menu button:hover {background:var(--color-surface-secondary);}
+.pet-switcher-menu button:focus-visible {outline:2px solid var(--color-focus);outline-offset:-2px;}
+.pet-switcher-menu button svg {width:var(--icon-size-sm);height:var(--icon-size-sm);flex:none;}
+.pet-switcher-menu button span:nth-child(2){flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.account-pets-management {display:grid;gap:var(--space-compact-3);}
+.account-pet-row {
+ display:flex;align-items:center;justify-content:space-between;gap:var(--space-compact-3);
+ min-width:0;padding:var(--space-compact-3) 0;border-bottom:1px solid var(--color-border);
+}
+.account-pet-row > span {display:grid;min-width:0;gap:var(--space-compact-1);}
+.account-pet-row strong {font-size:var(--font-size-sm);overflow-wrap:anywhere;}
+.account-pet-row small {font-size:var(--font-size-xs);color:var(--color-text-secondary);}
+.account-pet-row .btn {flex:none;max-width:55%;font-size:var(--font-size-xs);}
+.account-pet-row .btn svg {width:var(--icon-size-sm);height:var(--icon-size-sm);}
+.empty-pet-welcome {display:grid;gap:var(--space-compact-4);}

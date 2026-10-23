@@ -64,6 +64,7 @@ export default function Training({
   onSave,
   openSession,
   onOpened,
+  onMonthVisible,
   canEdit = false,
 }: {
   pet: Pet;
@@ -73,6 +74,7 @@ export default function Training({
   onPlan?: (name: string) => void;
   openSession?: string;
   onOpened?: () => void;
+  onMonthVisible?: (month: string) => Promise<void>;
 }) {
   const [view, setView] = useState<View>(null);
   const [cancelBusy,setCancelBusy]=useState(false);
@@ -188,6 +190,8 @@ export default function Training({
       </CommandGrid>
       <TrainingHistory
         key={pet.id}
+        petId={pet.id}
+        onMonthVisible={onMonthVisible}
         sessions={sessions}
         commands={pet.commands}
         readOnly={!canEdit}

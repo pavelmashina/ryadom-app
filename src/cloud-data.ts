@@ -1,4 +1,4 @@
-import { initialState, stateSchema, type State, type Pet } from "./domain";
+import { stateSchema, type State, type Pet } from "./domain";
 import { rpc, type AuthSession } from "./backend";
 import { sameData } from "./shared-merge";
 export type CloudSnapshot = { state: State; revision: number; tag?: string };
@@ -47,7 +47,6 @@ export async function loadAccount(
   const result = (await rpc(session, "load_shared_state", {})) as {
     state: { pets: unknown[] };
   };
-  if (!result.state.pets.length) return saveAccount(session, initialState());
   return snapshot(result);
 }
 export async function saveAccount(
