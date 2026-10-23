@@ -26,7 +26,8 @@ describe("Training reminders: frontend", () => {
     expect(single).toContain("Только для этой тренировки");
     expect(repeating).toContain("Для всех будущих занятий");
     expect(single).toContain("Загружаем напоминание");
-    expect(training).toContain('setView({ kind: "reminder", schedule: sc })');
+    // Recurring reminders remain accessible from the planned session details,
+    // even though the separate "Регулярный график" block was removed.
     expect(training).toContain('setView(schedule');
     expect(training).toContain("<TrainingReminderSettings");
     expect(app).toContain("session={session}");

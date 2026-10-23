@@ -28,7 +28,7 @@ describe("Unified form typography, insets and weekday layout",()=>{
     for(const styles of [global,training]) {
       const block=styles.split(".weekdays-picker-row {").slice(-1)[0]?.split("}")[0]??"";
       expect(block).toContain("grid-template-columns: repeat(7, minmax(0, 1fr))");
-      expect(block).toContain("gap: calc(var(--space-compact-1) / 2)");
+      expect(block).toContain(styles === training ? "gap: 1px" : "gap: calc(var(--space-compact-1) / 2)");
     }
     expect(global).toContain(".weekdays-picker-row .checkbox-hit {");
     expect(training).toContain(".training-modal-content .weekdays-picker-row .checkbox-hit {");
@@ -43,10 +43,10 @@ describe("Unified form typography, insets and weekday layout",()=>{
   });
 
   it("adds consistent internal left spacing without changing outer form width",()=>{
-    expect(global).toContain("padding: var(--space-3) var(--space-4)");
-    expect(training).toContain("padding:var(--space-compact-3) var(--space-compact-4)");
+    expect(global).toContain("padding: var(--space-3) var(--field-control-inline)");
+    expect(training).toContain("padding:var(--space-compact-3) var(--field-control-inline)");
     expect(training).toContain("padding: var(--space-compact-1) var(--space-compact-3)");
-    expect(stock).toContain("padding: var(--space-compact-3) var(--space-compact-4)");
+    expect(stock).toContain("padding: var(--space-compact-3) var(--field-control-inline)");
     for(const styles of [training,stock]) expect(styles).toContain("min-inline-size: 0");
   });
 });

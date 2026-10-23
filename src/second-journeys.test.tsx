@@ -124,12 +124,13 @@ describe("R2: quick planned training actions", () => {
     pet.workouts[0] = { ...session, schedule_id: crypto.randomUUID() };
     expect(() => reschedulePlannedTraining(pet, session.id, "2026-10-17", "14:00")).toThrow(/графиком/);
   });
-  it("has a direct action in training history", () => {
+  it("keeps only edit on the planned card while preserving the standalone reschedule editor", () => {
     const pet = blankPet("Бублик");pet.workouts = [session];
     const html = renderToStaticMarkup(<TrainingHistory
-      sessions={pet.workouts} commands={[]} onOpen={() => {}} onEdit={() => {}}
-      onReschedule={() => {}} />);
-    expect(html).toContain("Перенести");
+      sessions={pet.workouts} commands={[]} onOpen={() => {}} onEdit={() => {}} />);
+    expect(html).toContain("Редактировать");
+    expect(html).not.toContain(">Перенести</button>");
+    expect(html).not.toContain(">Подробнее</button>");
     expect(source("./Training.tsx")).toContain('view.kind === "reschedule"');
   });
 });
