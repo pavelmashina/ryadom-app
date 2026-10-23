@@ -151,6 +151,7 @@ export default function App({
     [storageError, setStorageError] = useState(loaded.error),
     [notice, setNotice] = useState(""),
     [screen, setScreen] = useState<Screen>("day"),
+    [accountReturnScreen, setAccountReturnScreen] = useState<Screen>("day"),
     [overlay, setOverlay] = useState<Overlay | null>(null),
     [petMenuOpen, setPetMenuOpen] = useState(false),
     [selected, setSelected] = useState(today()),
@@ -592,6 +593,18 @@ export default function App({
       setSelected(today());
       setMonth(today().slice(0, 7) + "-01");
     });
+  }
+  function openAccount() {
+    // Preserve the actual source screen instead of always returning to Day.
+    if (screen !== "account") setAccountReturnScreen(screen);
+    setScreen("account");
+    setPetMenuOpen(false);
+    setNotice("");
+    window.scrollTo({ top: 0 });
+  }
+  function leaveAccount() {
+    setScreen(accountReturnScreen === "account" ? "day" : accountReturnScreen);
+    window.scrollTo({ top: 0 });
   }
   function openPetMenu(){
     if(!hasPets){setOverlay({kind:"newpet"});return;}
@@ -1355,7 +1368,7 @@ export default function App({
                 </>}
               </div>
             )}
-            {(screen === "account" || screen === "profile") && (
+            {screen === "profile" && (
               <IconButton
                 label="Назад к планам"
                 onClick={() => setScreen("day")}
@@ -1367,19 +1380,14 @@ export default function App({
               label="Аккаунт"
               className="account-trigger"
               aria-current={screen === "account" ? "page" : undefined}
-              onClick={() => {
-                setScreen("account");
-                setPetMenuOpen(false);
-                setNotice("");
-                window.scrollTo({ top: 0 });
-              }}
+              onClick={openAccount}
             >
               <UserRound />
             </IconButton>
             {state.pets.some((p) => (p.pendingRequests ?? 0) > 0) && (
               <IconButton
                 label="Есть запросы на доступ"
-                onClick={() => {setScreen("account");setPetMenuOpen(false);}}
+                onClick={openAccount}
               >
                 <span className="request-dot" aria-hidden="true">
                   ●
@@ -1406,6 +1414,12 @@ export default function App({
         )}
         <main>
           {screen === "account" && <>
+            <div className="account-back-row">
+              <button type="button" className="account-back" onClick={leaveAccount}
+                aria-label="Назад" title="Назад">
+                <ArrowLeft aria-hidden="true" />
+              </button>
+            </div>
             {accountContent}
             <section className="account-section-shell account-pets-section">
               <SectionHeader title="Питомцы и доступ" />

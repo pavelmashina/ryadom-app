@@ -1540,3 +1540,47 @@ dialog:has(.new-pet-form) .modal-content {
   font-size: var(--font-size-h2);
   font-weight: var(--font-weight-medium);
 }
+
+/* Account screen uses Training's two distinct layout gaps:
+   12px from section title to card, 16px between completed sections. */
+.account-content {
+  row-gap: var(--space-compact-5);
+}
+.account-content .account-section-shell + .account-section-shell {
+  margin-top: 0;
+}
+.account-content .account-section-shell {
+  gap: var(--space-compact-4);
+}
+/* The back arrow lives above the first heading, in the content area,
+   using the same placement and 44px icon target as Stock's editor. */
+.account-back-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin: calc(-1 * var(--space-compact-6)) 0 var(--space-compact-2);
+}
+.account-back {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  flex: none;
+  width: var(--button-height-sm);
+  height: var(--button-height-sm);
+  margin: 0;
+  padding: var(--space-compact-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+.account-back svg {
+  width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+}
+.account-back:hover { background: var(--color-surface-secondary); }
+.account-back:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
