@@ -89,6 +89,6 @@ describe("Planning regressions", () => {
     const plan = source("./TrainingPlan.tsx");
     expect(plan).toContain("scheduleSchema.safeParse(next)");
     expect(plan).toContain("trainingSchema.safeParse(next)");
-    expect(plan).toContain('const name = get("name") || "Тренировка"');
+    expect(plan).toContain('const name = schedule?.name || session?.name || "Тренировка"');
   });
 });
