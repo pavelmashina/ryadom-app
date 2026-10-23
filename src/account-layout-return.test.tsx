@@ -14,7 +14,7 @@ describe("Account layout and return navigation",()=>{
     expect(account).toContain(".account-content {\n  row-gap: var(--space-compact-5);");
     expect(account).toContain(".account-content .account-section-shell + .account-section-shell {\n  margin-top: 0;");
     expect(account).toContain(".account-content .account-section-shell {\n  gap: var(--space-compact-4);");
-    expect(account).toContain(".app main > .account-pets-section {\n  margin: var(--space-compact-5) 0 0;");
+    expect(css).toContain(".app main > .account-pets-section {\n  margin: var(--space-compact-5) 0 0;");
   });
   it("shows the arrow in content above the first Account heading with Stock editor styling",()=>{
     const section=app.split('{screen === "account" && <>')[1] ?? "";
