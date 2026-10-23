@@ -1101,3 +1101,27 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
 .training-modal-content .training-planner-recurrence .monthly-day-picker .field select {
   font-size: var(--font-size-xs);
 }
+
+/* Align the checkbox and "Последнее число" text to the vertical centre of
+   the 36px month-day selector, regardless of the label above that selector. */
+.training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day {
+  height: 36px;
+  min-height: 36px;
+  max-height: 36px;
+  box-sizing: border-box;
+  align-self: flex-end;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+}
+.training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day .checkbox-hit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  min-height: 36px;
+  max-height: 36px;
+}
+.training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day > span:last-child {
+  align-self: center;
+}

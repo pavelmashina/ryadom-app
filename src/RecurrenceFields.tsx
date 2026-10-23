@@ -155,7 +155,7 @@ export default function RecurrenceFields({
                         <option key={day} value={day}>{day}</option>)}
                     </Select>
                     <Checkbox className="monthly-last-day"
-                      label="Последнее число месяца"
+                      label="Последнее число"
                       checked={value.monthday === 32}
                       onChange={e => patch({monthday:e.target.checked ? 32 : 0})}
                     />

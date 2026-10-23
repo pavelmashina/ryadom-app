@@ -44,7 +44,10 @@ function debug(stage: string) {
   console.info("[push] " + stage);
 }
 
-export function PushSettings({ session }: { session: AuthSession }) {
+export function PushSettings({ session, onEnabledChange }: {
+  session: AuthSession;
+  onEnabledChange?: (enabled: boolean) => void;
+}) {
   const [enabled, setEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -55,6 +58,7 @@ export function PushSettings({ session }: { session: AuthSession }) {
     (navigator as Navigator & { standalone?: boolean }).standalone === true;
   const allowedHere = supportsPush && (!ios || installed);
 
+  useEffect(() => { onEnabledChange?.(enabled); }, [enabled, onEnabledChange]);
   useEffect(() => {
     if (!allowedHere || Notification.permission !== "granted") return;
     let alive = true;
@@ -171,13 +175,15 @@ export function PushSettings({ session }: { session: AuthSession }) {
           оттуда, чтобы включить уведомления.
         </p>
       )}
-      <Button
-        disabled={!allowedHere || busy}
-        loading={busy}
-        onClick={() => void (enabled ? unsubscribe() : subscribe())}
-      >
-        {enabled ? "Выключить уведомления" : "Включить уведомления"}
-      </Button>
+      <label className="notification-toggle-row push-permission-toggle">
+        <span>Допуск уведомлений</span>
+        <input type="checkbox" role="switch" aria-label="Допуск уведомлений"
+          checked={enabled} disabled={!allowedHere || busy}
+          onChange={(event) => {
+            void (event.target.checked ? subscribe() : unsubscribe());
+          }}
+        />
+      </label>
       {notice && <p className="hint" role="status">{notice}</p>}
       {error && <p className="notice notice-error" role="alert">{error}</p>}
     </div>

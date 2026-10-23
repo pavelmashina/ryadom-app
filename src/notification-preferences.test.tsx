@@ -60,11 +60,11 @@ describe("Account notification preferences and compact UI",()=>{
  it("removes the account avatar card and unnecessary notification introduction",()=>{
   expect(account).not.toContain("Ваш аккаунт");
   expect(account).not.toContain("Адрес для входа и восстановления доступа");
-  expect(account).toContain('detail={user.email}');
-  expect(account).toContain('<NotificationPreferencesSettings session={session} />');
+  expect(account).toContain('className="account-email-line"');
+  expect(account).toContain('<NotificationPreferencesSettings session={session} disabled={!pushEnabled} />');
   expect(push).not.toContain("Напоминания о событиях питомца.");
   expect(styles).toContain(".account-content > .heading {");
-  expect(styles).toContain(".account-section-detail {");
+  expect(styles).toContain(".account-section-shell {");
   expect(styles).toContain(".notification-toggle-row {");
   expect(styles).toContain(".notification-training-offset {");
   expect(styles).toContain(".new-pet-form .form-actions {");

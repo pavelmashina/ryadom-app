@@ -1389,3 +1389,68 @@ dialog:has(.new-pet-form) .modal-content {padding-bottom:var(--space-compact-2);
   border: 1px solid var(--color-input-border);
   border-radius: var(--radius-md);
 }
+
+/* Account section titles sit above their cards, consistent with Calendar in Training. */
+.account-content {
+  row-gap: var(--space-compact-2);
+}
+.account-content > .heading {
+  margin: 0;
+  padding: 0;
+}
+.account-section-shell {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
+  gap: var(--space-compact-2);
+  min-width: 0;
+  margin: 0;
+}
+.account-section-shell + .account-section-shell {
+  margin-top: var(--space-compact-2);
+}
+.account-section-shell > .section-title {
+  margin: 0;
+  padding: 0;
+}
+.account-section-shell > .section-title h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+}
+.account-email-line {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-compact-2);
+  min-width: 0;
+}
+.account-email-line h3 {flex: none;}
+.account-content .account-email-line .account-email {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+/* Shrink the modal itself: remove the bottom safe-area spacer, not only
+   the visible gap above the Save button. */
+dialog:has(.new-pet-form) .modal-content {
+  padding-bottom: var(--space-compact-1);
+}
+.new-pet-form,
+.new-pet-form form,
+.new-pet-form .form-fields {margin-bottom: 0; padding-bottom: 0;}
+.new-pet-form form {
+  row-gap: var(--space-compact-2);
+}
+.new-pet-form .form-actions {
+  margin-top: 0;
+  padding: 0;
+}
+.notification-preferences[aria-disabled="true"] {
+  opacity: 0.52;
+}
+.notification-preferences[aria-disabled="true"] .notification-toggle-row {
+  cursor: not-allowed;
+}

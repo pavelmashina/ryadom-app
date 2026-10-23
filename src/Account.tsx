@@ -22,20 +22,15 @@ import {
 export function AccountSection({
   title,
   children,
-  detail,
 }: {
   title: string;
   children: ReactNode;
-  detail?: ReactNode;
 }) {
   return (
-    <Card className="account-section">
-      <div className="account-section-heading">
-        <SectionHeader title={title} compact />
-        {detail && <span className="account-section-detail">{detail}</span>}
-      </div>
-      {children}
-    </Card>
+    <section className="account-section-shell">
+      <SectionHeader title={title} />
+      <Card className="account-section">{children}</Card>
+    </section>
   );
 }
 export default function Account({
@@ -55,6 +50,7 @@ export default function Account({
   const [emailError, setEmailError] = useState(""),
     [passwordError, setPasswordError] = useState("");
   const [leaving, setLeaving] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
   useEffect(() => {
     let stopped = false;
     getAccountUser(session)
@@ -98,11 +94,14 @@ export default function Account({
           {error}
         </p>
       )}
-      <AccountSection title="Вход и безопасность" detail={user.email}>
+      <AccountSection title="Вход и безопасность">
         <div className="account-row">
           <Mail aria-hidden="true" />
           <div>
-            <h3>Email</h3>
+            <div className="account-email-line">
+              <h3>Email</h3>
+              <span className="account-email">{user.email}</span>
+            </div>
           </div>
           <Button
             size="sm"
@@ -132,8 +131,8 @@ export default function Account({
         </div>
       </AccountSection>
       <AccountSection title="Уведомления">
-        <PushSettings session={session} />
-        <NotificationPreferencesSettings session={session} />
+        <PushSettings session={session} onEnabledChange={setPushEnabled} />
+        <NotificationPreferencesSettings session={session} disabled={!pushEnabled} />
       </AccountSection>
       <AccountSection title="Сеанс">
         <p>

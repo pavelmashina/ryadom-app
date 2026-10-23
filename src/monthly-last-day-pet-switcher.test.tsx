@@ -29,7 +29,7 @@ describe("Monthly training plan choices",()=>{
     expect(recurrence).toContain('className="monthly-day-picker"');
     expect(recurrence).toContain('label="Число месяца"');
     expect(recurrence).toContain('Array.from({length:31}');
-    expect(recurrence).toContain('label="Последнее число месяца"');
+    expect(recurrence).toContain('label="Последнее число"');
     expect(recurrence).toContain('checked={value.monthday === 32}');
     expect(recurrence).toContain('disabled={value.monthday === 32}');
     expect(recurrence).toContain('monthday:e.target.checked ? 32 : 0');

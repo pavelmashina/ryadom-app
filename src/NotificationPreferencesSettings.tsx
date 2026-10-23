@@ -16,7 +16,10 @@ const offsets = [
 
 /** Preferences are per account and gate dispatch even if another pet member
  * configured the underlying event reminder. Device subscription is separate. */
-export default function NotificationPreferencesSettings({ session }: { session: AuthSession }) {
+export default function NotificationPreferencesSettings({ session, disabled = false }: {
+  session: AuthSession;
+  disabled?: boolean;
+}) {
   const [prefs,setPrefs] = useState<Choices>({...DEFAULT_NOTIFICATION_PREFERENCES});
   const [busy,setBusy] = useState(false);
   const [loading,setLoading] = useState(true);
@@ -35,7 +38,7 @@ export default function NotificationPreferencesSettings({ session }: { session: 
   },[session.user.id]);
 
   async function save(next:Choices){
-    if(busy||loading)return;
+    if(busy||loading||disabled)return;
     setBusy(true);setError("");setNotice("");
     const previous=prefs;
     setPrefs(next);
@@ -47,7 +50,8 @@ export default function NotificationPreferencesSettings({ session }: { session: 
       setError(e instanceof Error?e.message:"Не удалось сохранить настройки уведомлений");
     }finally{setBusy(false)}
   }
-  return <div className="notification-preferences" aria-busy={busy||loading}>
+  return <div className="notification-preferences" aria-busy={busy||loading}
+    aria-disabled={disabled}>
     {([
       ["trainings_enabled","О тренировках"],
       ["events_enabled","О событиях"],
@@ -56,12 +60,12 @@ export default function NotificationPreferencesSettings({ session }: { session: 
       <label className="notification-toggle-row" key={key}>
         <span>{label}</span>
         <input type="checkbox" role="switch" aria-label={label}
-          checked={prefs[key]} disabled={busy||loading}
+          checked={prefs[key]} disabled={disabled||busy||loading}
           onChange={event=>void save({...prefs,[key]:event.target.checked})}/>
       </label>)}
     {prefs.trainings_enabled&&<label className="notification-training-offset">
       <span>Напомнить о тренировке</span>
-      <select value={prefs.training_offset_minutes} disabled={busy||loading}
+      <select value={prefs.training_offset_minutes} disabled={disabled||busy||loading}
         onChange={event=>void save({...prefs,training_offset_minutes:Number(event.target.value)})}>
         {offsets.map(([offset,label])=><option key={offset} value={offset}>{label}</option>)}
       </select>
