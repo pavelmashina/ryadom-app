@@ -1031,3 +1031,47 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
   padding-left: var(--field-control-inline);
   padding-right: var(--field-control-inline);
 }
+
+/* Monthly training recurrence: compact native day picker beside the exclusive
+   "last calendar day" checkbox. No additional hint beneath the field. */
+.training-modal-content .training-planner-recurrence .monthly-day-picker {
+  display: flex;
+  align-items: end;
+  gap: var(--space-compact-3);
+  min-width: 0;
+  max-width: 100%;
+}
+.training-modal-content .training-planner-recurrence .monthly-day-picker .field {
+  flex: 0 0 104px;
+  width: 104px;
+  min-width: 0;
+  max-width: 104px;
+}
+.training-modal-content .training-planner-recurrence .monthly-day-picker .field select {
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  height: 36px;
+  min-height: 36px;
+  padding: var(--space-compact-1) 24px var(--space-compact-1) var(--space-compact-3);
+  font-size: var(--font-size-sm);
+}
+.training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-compact-1);
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--button-height-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-ui-caption);
+}
+.training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day > span:last-child {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day .checkbox-hit {
+  flex: 0 0 var(--button-height-sm);
+}

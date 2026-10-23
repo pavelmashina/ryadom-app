@@ -156,6 +156,30 @@ export default function App({
     [selected, setSelected] = useState(today()),
     [month, setMonth] = useState(today().slice(0, 7) + "-01"),
     [restore, setRestore] = useState<State | null>(null);
+  useEffect(() => {
+    if (!petMenuOpen) return;
+    const html = document.documentElement;
+    const body = document.body;
+    const oldHtmlOverflow = html.style.overflow;
+    const oldHtmlOverscroll = html.style.overscrollBehavior;
+    const oldBodyOverflow = body.style.overflow;
+    const oldBodyOverscroll = body.style.overscrollBehavior;
+    html.style.overflow = "hidden";
+    html.style.overscrollBehavior = "none";
+    body.style.overflow = "hidden";
+    body.style.overscrollBehavior = "none";
+    const closeOnEscape = (e: KeyboardEvent) => {
+      if(e.key === "Escape") setPetMenuOpen(false);
+    };
+    window.addEventListener("keydown",closeOnEscape);
+    return () => {
+      html.style.overflow = oldHtmlOverflow;
+      html.style.overscrollBehavior = oldHtmlOverscroll;
+      body.style.overflow = oldBodyOverflow;
+      body.style.overscrollBehavior = oldBodyOverscroll;
+      window.removeEventListener("keydown",closeOnEscape);
+    };
+  }, [petMenuOpen]);
   const hasPets = state.pets.length > 0;
   const pet = state.pets.find((p) => p.id === state.selectedPet) ?? state.pets[0] ?? blankPet("Питомец");
   useEffect(() => {
@@ -815,6 +839,7 @@ export default function App({
         );
       case "newpet":
         return (
+          <div className="new-pet-form">
           <Form
             onSave={async (d) => {
               const p = blankPet(text(d, "name"));
@@ -835,6 +860,7 @@ export default function App({
               запасы.
             </p>
           </Form>
+          </div>
         );
       case "editpet":
         return (
@@ -1309,7 +1335,7 @@ export default function App({
                   aria-expanded={hasPets?petMenuOpen:undefined}
                   aria-haspopup={hasPets?"menu":undefined} onClick={openPetMenu}>
                   {hasPets?<><span className="avatar"><Dog/></span>
-                    <span>{pet.name}</span><ChevronDown/></>:
+                    <span>{pet.name}</span><ChevronDown className="pet-switcher-chevron"/></>:
                     <><Plus aria-hidden="true"/><span>Добавить питомца</span></>}
                 </button>
                 {petMenuOpen&&hasPets&&<>

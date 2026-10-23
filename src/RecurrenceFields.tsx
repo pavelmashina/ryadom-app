@@ -37,6 +37,7 @@ export default function RecurrenceFields({
   simpleFrequencyLabels = false,
   intervalText,
   onIntervalTextChange,
+  monthlyDayPicker = false,
 }: {
   date: string;
   value: RecurrenceDraft;
@@ -48,6 +49,7 @@ export default function RecurrenceFields({
   simpleFrequencyLabels?: boolean;
   intervalText?: string;
   onIntervalTextChange?: (next: string) => void;
+  monthlyDayPicker?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const patch = (next: Partial<RecurrenceDraft>) => onChange({ ...value, ...next });
@@ -64,7 +66,8 @@ export default function RecurrenceFields({
             frequency,
             interval: 1,
             weekdays: [weekday],
-            monthday: Number(date.slice(-2)),
+            monthday: monthlyDayPicker && frequency === "monthly" && value.frequency !== "monthly"
+              ? 0 : Number(date.slice(-2)),
           });
           if (frequency !== "once") setExpanded(true);
         }}
@@ -104,7 +107,14 @@ export default function RecurrenceFields({
                 <Select
                   label="Период"
                   value={value.frequency}
-                  onChange={(e) => patch({ frequency: e.target.value as RepeatFrequency })}
+                  onChange={(e) => {
+                    const frequency = e.target.value as RepeatFrequency;
+                    patch({
+                      frequency,
+                      monthday: monthlyDayPicker && frequency === "monthly" && value.frequency !== "monthly"
+                        ? 0 : value.monthday,
+                    });
+                  }}
                 >
                   {allowedFrequencies.includes("daily") && <option value="daily">Дней</option>}
                   {allowedFrequencies.includes("weekly") && <option value="weekly">Недель</option>}
@@ -133,16 +143,32 @@ export default function RecurrenceFields({
                   </div>
                 </div>
               )}
-              {value.frequency === "monthly" && (
-                <Field
-                  label="Число месяца"
-                  type="number"
-                  min={1}
-                  max={31}
-                  value={value.monthday}
-                  onChange={(e) => patch({ monthday: Number(e.target.value) || 1 })}
-                  hint="Если числа нет, событие переносится на последний день месяца."
-                />
+              {value.frequency === "monthly" && (monthlyDayPicker
+                ? <div className="monthly-day-picker">
+                    <Select label="Число месяца"
+                      value={value.monthday >= 1 && value.monthday <= 31 ? String(value.monthday) : ""}
+                      required={value.monthday !== 32}
+                      disabled={value.monthday === 32}
+                      onChange={(e) => patch({ monthday: Number(e.target.value) || 0 })}>
+                      <option value="">Выберите число</option>
+                      {Array.from({length:31},(_,i)=>i+1).map(day=>
+                        <option key={day} value={day}>{day}</option>)}
+                    </Select>
+                    <Checkbox className="monthly-last-day"
+                      label="Последнее число месяца"
+                      checked={value.monthday === 32}
+                      onChange={e => patch({monthday:e.target.checked ? 32 : 0})}
+                    />
+                  </div>
+                : <Field
+                    label="Число месяца"
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={value.monthday}
+                    onChange={(e) => patch({ monthday: Number(e.target.value) || 1 })}
+                    hint="Если числа нет, событие переносится на последний день месяца."
+                  />
               )}
             </div>
           )}

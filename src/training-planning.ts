@@ -8,7 +8,7 @@ export const scheduleSchema = z.object({
   recurrence_interval: z.number().int().min(1).max(366).optional(),
   recurrence_end_type: z.enum(["never","date","count"]).nullable().optional(),
   recurrence_count: z.number().int().min(1).max(10000).nullable().optional(),
-  recurrence_monthday: z.number().int().min(1).max(31).nullable().optional(),
+  recurrence_monthday: z.number().int().min(1).max(32).nullable().optional(),
   weekdays: z.array(z.number().int().min(1).max(7)),
   starts_on: z.string(),
   ends_on: z.string().nullable(),

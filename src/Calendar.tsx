@@ -83,9 +83,7 @@ export default function Calendar({
   }
   return (
     <>
-      <PageHeader title="Наши планы" eyebrow="Забота каждый день">
-        Всё важное для {pet.name} — в одном месте
-      </PageHeader>
+      <PageHeader title="Наши планы" />
       <section className="calendar" aria-label="Календарь месяца">
         <div className="month">
           <h2>

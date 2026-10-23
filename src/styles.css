@@ -1145,7 +1145,11 @@ dialog {
 .pet-switcher {position:relative;min-width:0;max-width:100%;z-index:20;}
 .pet-switcher .pet-button {display:inline-flex;align-items:center;min-height:var(--button-height-sm);font-family:var(--font-family-base);font-size:var(--font-size-sm);white-space:nowrap;max-width:min(54vw,230px);cursor:pointer;}
 .pet-switcher .pet-button svg {width:var(--icon-size-sm);height:var(--icon-size-sm);flex:none;}
-.pet-switcher-dismiss {position:fixed;inset:0;z-index:19;background:transparent;border:0;cursor:default;}
+.pet-switcher-dismiss {
+  position:fixed;inset:0;z-index:19;
+  padding:0;border:0;background:var(--color-overlay);cursor:default;
+  touch-action:none;overscroll-behavior:contain;
+}
 .pet-switcher-menu {
  position:absolute;top:calc(100% + var(--space-compact-2));right:0;z-index:21;
  display:grid;gap:var(--space-compact-1);width:min(280px,calc(100vw - 2 * var(--page-gutter)));
@@ -1176,3 +1180,108 @@ dialog {
 .account-pet-row .btn {flex:none;max-width:55%;font-size:var(--font-size-xs);}
 .account-pet-row .btn svg {width:var(--icon-size-sm);height:var(--icon-size-sm);}
 .empty-pet-welcome {display:grid;gap:var(--space-compact-4);}
+
+/* Keep the pet switcher above its darkened dismiss overlay. */
+.pet-switcher .pet-button {
+  position: relative;
+  z-index: 22;
+}
+.pet-switcher-chevron {
+  transition: transform var(--transition-fast);
+  transform-origin: center;
+}
+.pet-switcher .pet-button[aria-expanded="true"] .pet-switcher-chevron {
+  transform: rotate(180deg);
+}
+.pet-switcher-menu {
+  max-height: min(65vh, 360px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Shared compact style for account and new-pet forms. */
+dialog:has(.new-pet-form) .modal-head,
+dialog:has(.account-content) .modal-head {
+  padding: var(--space-compact-4);
+}
+dialog:has(.new-pet-form) .modal-content,
+dialog:has(.account-content) .modal-content {
+  box-sizing:border-box;
+  min-width:0;
+  max-width:100%;
+  padding:var(--space-compact-4);
+}
+.new-pet-form,
+.new-pet-form form,
+.new-pet-form .form-fields,
+.account-content {
+  box-sizing:border-box;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:var(--space-compact-3);
+  min-width:0;
+  max-width:100%;
+}
+.new-pet-form .field,
+.account-content .field {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:var(--space-compact-2);
+  min-width:0;
+  margin:0;
+}
+.new-pet-form .field > label,
+.account-content .field > label {
+  font-family:var(--font-family-base);
+  font-size:var(--font-size-md);
+  font-weight:var(--font-weight-medium);
+}
+.new-pet-form .field :is(input,select,textarea),
+.account-content .field :is(input,select,textarea) {
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  min-height:var(--button-height-sm);
+  padding:var(--space-compact-3) var(--field-control-inline);
+  font-family:var(--font-family-base);
+  font-size:var(--font-size-sm);
+  font-weight:var(--font-weight-regular);
+}
+.new-pet-form :is(p,.hint),
+.account-content :is(p,.hint,.account-email) {
+  margin:0;
+  font-size:var(--font-size-sm);
+  line-height:var(--line-height-ui-body);
+}
+.new-pet-form .form-actions,
+.account-content .form-actions {
+  margin-top:var(--space-compact-3);
+}
+.new-pet-form .btn,.account-content .btn {font-size:var(--font-size-sm);}
+.account-content > .card,
+.account-content .account-section {
+  display:grid;
+  gap:var(--space-compact-3);
+  padding:var(--space-compact-4);
+  border-radius:var(--radius-md);
+}
+.account-content :is(h2,h3) {
+  font-family:var(--font-family-base);
+  font-size:var(--font-size-md);
+  font-weight:var(--font-weight-medium);
+  line-height:var(--line-height-ui-heading);
+  margin:0;
+}
+.account-content .account-row {
+  gap:var(--space-compact-3);
+  padding:var(--space-compact-3) 0;
+}
+.account-content .account-identity {
+  gap:var(--space-compact-3);
+}
+.account-content .section-title {
+  margin:0;
+}
+.account-content .account-pet-row {
+  padding:var(--space-compact-3) 0;
+}

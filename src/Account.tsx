@@ -73,10 +73,8 @@ export default function Account({
     // A metadata refresh must not restart the request.
   }, [session.user.id]);
   return (
-    <>
-      <PageHeader title="Аккаунт" eyebrow="Ваше пространство">
-        Управление входом и безопасностью
-      </PageHeader>
+    <div className="account-content">
+      <PageHeader title="Аккаунт" />
       <Card variant="info">
         <div className="account-identity">
           <span className="avatar">
@@ -271,6 +269,6 @@ export default function Account({
           )}
         </Modal>
       )}
-    </>
+    </div>
   );
 }

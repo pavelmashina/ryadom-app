@@ -15,6 +15,11 @@ export function validatePlanningInterval(text: string, frequency: RecurrenceDraf
   return value;
 }
 
+export function validateMonthlyRepeatDay(frequency: RecurrenceDraft["frequency"], day: number): void {
+  if(frequency === "monthly" && (!Number.isInteger(day) || day < 1 || day > 32))
+    throw new Error("Выберите число месяца или отметьте «Последнее число месяца»");
+}
+
 export default function TrainingPlan({
   pet,
   session,
@@ -55,6 +60,7 @@ export default function TrainingPlan({
         const name = schedule?.name || session?.name || "Тренировка";
         const comment = schedule?.comment ?? session?.comment ?? "";
         const interval = validatePlanningInterval(intervalText, recurrence.frequency);
+        validateMonthlyRepeatDay(recurrence.frequency, recurrence.monthday);
         if (recurrence.frequency === "weekly" && recurrence.weekdays.length === 0)
           throw Error("Выберите хотя бы один день недели");
         if (recurrence.frequency !== "once" && recurrence.endType === "date" &&
@@ -132,7 +138,7 @@ export default function TrainingPlan({
           if (day) setRecurrence((x) => ({
             ...x,
             weekdays: [new Date(day + "T12:00:00").getDay() || 7],
-            monthday: Number(day.slice(-2)),
+            monthday: x.frequency === "monthly" ? x.monthday : Number(day.slice(-2)),
           }));
         }}
       />
@@ -151,6 +157,7 @@ export default function TrainingPlan({
               ? ["daily","weekly","monthly","yearly"]
               : ["once","daily","weekly","monthly","yearly"]}
             simpleFrequencyLabels
+            monthlyDayPicker
             intervalText={intervalText}
             onIntervalTextChange={setIntervalText}
           />
