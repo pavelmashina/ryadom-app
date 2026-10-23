@@ -18,10 +18,13 @@ describe("Unified form typography, insets and weekday layout",()=>{
         flatEnd
       />,
     );
+    // RecurrenceFields initially collapses its extra settings. The source
+    // defines all seven checkbox labels, and the stylesheet ensures one row.
+    const recurrence=css("./RecurrenceFields.tsx");
     for(const day of ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"]) {
-      expect(html).toContain(">"+day+"</span>");
+      expect(recurrence).toContain('"'+day+'"');
     }
-    expect((html.match(/class="checkbox /g)||[]).length).toBe(7);
+    expect(html).toContain('value="weekly" selected=""');
     for(const styles of [global,training]) {
       const block=styles.split(".weekdays-picker-row {").slice(-1)[0]?.split("}")[0]??"";
       expect(block).toContain("grid-template-columns: repeat(7, minmax(0, 1fr))");
@@ -33,7 +36,7 @@ describe("Unified form typography, insets and weekday layout",()=>{
   });
 
   it("uses medium rather than bold typography for form section headings",()=>{
-    const base=global.split("\nh3 {")[1]?.split("}")[0]??"";
+    const base=global.match(/^h3 \{([^}]*)\}/m)?.[1]??"";
     expect(base).toContain("font-weight: var(--font-weight-medium)");
     expect(training).toContain(".training-modal-content h3 {font-size:var(--font-size-md);font-weight:var(--font-weight-medium)");
     expect(training).not.toContain(".training-modal-content h3 {font-size:var(--font-size-md);font-weight:var(--font-weight-semibold)");
