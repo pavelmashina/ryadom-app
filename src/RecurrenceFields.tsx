@@ -34,6 +34,9 @@ export default function RecurrenceFields({
   allowedFrequencies = ["once","daily","weekly","monthly","yearly"],
   allowCount = true,
   flatEnd = false,
+  simpleFrequencyLabels = false,
+  intervalText,
+  onIntervalTextChange,
 }: {
   date: string;
   value: RecurrenceDraft;
@@ -42,6 +45,9 @@ export default function RecurrenceFields({
   allowCount?: boolean;
   /** Keep the end selector in the same unboxed form layout (stock consumption). */
   flatEnd?: boolean;
+  simpleFrequencyLabels?: boolean;
+  intervalText?: string;
+  onIntervalTextChange?: (next: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const patch = (next: Partial<RecurrenceDraft>) => onChange({ ...value, ...next });
@@ -53,6 +59,7 @@ export default function RecurrenceFields({
         onChange={(e) => {
           const frequency = e.target.value as RepeatFrequency;
           const weekday = new Date(date + "T12:00:00").getDay() || 7;
+          onIntervalTextChange?.("1");
           patch({
             frequency,
             interval: 1,
@@ -63,10 +70,10 @@ export default function RecurrenceFields({
         }}
       >
         {allowedFrequencies.includes("once") && <option value="once">Не повторять</option>}
-        {allowedFrequencies.includes("daily") && <option value="daily">Каждый день</option>}
-        {allowedFrequencies.includes("weekly") && <option value="weekly">Каждую неделю</option>}
-        {allowedFrequencies.includes("monthly") && <option value="monthly">Каждый месяц</option>}
-        {allowedFrequencies.includes("yearly") && <option value="yearly">Каждый год</option>}
+        {allowedFrequencies.includes("daily") && <option value="daily">{simpleFrequencyLabels ? "День" : "Каждый день"}</option>}
+        {allowedFrequencies.includes("weekly") && <option value="weekly">{simpleFrequencyLabels ? "Неделя" : "Каждую неделю"}</option>}
+        {allowedFrequencies.includes("monthly") && <option value="monthly">{simpleFrequencyLabels ? "Месяц" : "Каждый месяц"}</option>}
+        {allowedFrequencies.includes("yearly") && <option value="yearly">{simpleFrequencyLabels ? "Год" : "Каждый год"}</option>}
       </Select>
       {value.frequency !== "once" && (
         <>
@@ -82,8 +89,17 @@ export default function RecurrenceFields({
                   type="number"
                   min={1}
                   max={366}
-                  value={value.interval}
-                  onChange={(e) => patch({ interval: Number(e.target.value) || 1 })}
+                  value={intervalText ?? value.interval}
+                  required={intervalText !== undefined}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    onIntervalTextChange?.(raw);
+                    if (raw !== "" && Number.isInteger(Number(raw))) {
+                      patch({ interval: Number(raw) });
+                    } else if (intervalText === undefined) {
+                      patch({ interval: 1 });
+                    }
+                  }}
                 />
                 <Select
                   label="Период"

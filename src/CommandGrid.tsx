@@ -8,7 +8,7 @@ export default function CommandGrid({
 }: {
   children: ReactNode[];
   title?: string;
-  scrollControls?: "arrows" | "slider";
+  scrollControls?: "arrows" | "native";
 }) {
   const ref = useRef<HTMLDivElement>(null),
     gridId = useId();
@@ -16,7 +16,6 @@ export default function CommandGrid({
     overflow: false,
     left: false,
     right: false,
-    position: 0,
   });
   useEffect(() => {
     const el = ref.current;
@@ -26,9 +25,6 @@ export default function CommandGrid({
         overflow: el.scrollWidth > el.clientWidth + 2,
         left: el.scrollLeft > 2,
         right: el.scrollLeft + el.clientWidth < el.scrollWidth - 2,
-        position: el.scrollWidth > el.clientWidth
-          ? Math.round(100 * el.scrollLeft / (el.scrollWidth - el.clientWidth))
-          : 0,
       });
     measure();
     const observer = new ResizeObserver(measure);
@@ -80,22 +76,6 @@ export default function CommandGrid({
       >
         {children}
       </div>
-      {scrollControls === "slider" && scroll.overflow && (
-        <input
-          className="command-scroll-slider"
-          type="range"
-          min={0}
-          max={100}
-          step={1}
-          value={scroll.position}
-          aria-label="Прокрутить список команд"
-          aria-controls={gridId}
-          onChange={(event) => {
-            const el = ref.current;
-            if (el) el.scrollLeft = (el.scrollWidth - el.clientWidth) * Number(event.target.value) / 100;
-          }}
-        />
-      )}
     </div>
   );
 }

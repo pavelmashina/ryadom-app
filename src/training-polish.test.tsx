@@ -61,10 +61,12 @@ describe("Training screen refinements",()=>{
   const html=renderToStaticMarkup(<TrainingForm pet={pet} onSave={async()=>{}}/>);
   expect(html).not.toContain("Длительность, минут");
   expect(html).not.toContain("Выберите команды, затем поставьте оценку");
-  expect(training).toContain('<CommandGrid scrollControls="slider">');
-  expect(grid).toContain('className="command-scroll-slider"');
-  expect(grid).toContain('onChange={(event) => {');
-  expect(css).toContain(".training-modal-content .command-scroll-slider {");
+  expect(training).toContain('<CommandGrid scrollControls="native">');
+  expect(grid).not.toContain('className="command-scroll-slider"');
+  expect(grid).not.toContain('type="range"');
+  expect(css).not.toContain(".training-modal-content .command-scroll-slider {");
+  expect(css).toContain(".training-modal-content .command-list::-webkit-scrollbar-thumb {");
+  expect(css).toContain("scrollbar-color: color-mix(in srgb, var(--color-primary) 42%, transparent)");
   expect(training).toContain('duration_minutes: session?.duration_minutes ?? null');
   expect(training).toContain('className="training-result-editor-card"');
   expect(css).toContain(".training-modal-content .training-result-editor-card .score-buttons {");

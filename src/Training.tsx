@@ -426,11 +426,8 @@ export default function Training({
                   day: "numeric",
                   month: "long",
                   year: "numeric",
-                })}{" "}
-                ·{" "}
-                {selected.duration_minutes
-                  ? selected.duration_minutes + " мин"
-                  : "Длительность не указана"}
+                })}
+                {selected.duration_minutes ? " · " + selected.duration_minutes + " мин" : ""}
               </p>
               {sourceEntry && (
                 <>
@@ -725,7 +722,7 @@ export function TrainingForm({
         />
         <h3>Выберите команды</h3>
         <p aria-live="polite">Выбрано: {results.length}</p>
-        <CommandGrid scrollControls="slider">
+        <CommandGrid scrollControls="native">
           {selectableCommands(commands, session).map((c) => (
             <Button
               type="button"

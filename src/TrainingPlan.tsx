@@ -1,10 +1,19 @@
 import { useState } from "react";
-import { Form, Field, Textarea } from "./components";
+import { Form } from "./components";
 import RecurrenceFields, { draftForDate, type RecurrenceDraft } from "./RecurrenceFields";
 import TrainingDateField from "./TrainingDateField";
+import TrainingTimeField from "./TrainingTimeField";
 import { id, today, type Pet } from "./domain";
 import { trainingTimestamp, scheduleSchema, type TrainingSchedule } from "./training-planning";
 import { trainingSchema, type TrainingSession } from "./training-domain";
+
+export function validatePlanningInterval(text: string, frequency: RecurrenceDraft["frequency"]): number {
+  if (frequency === "once") return 1;
+  const value = Number(text);
+  if (!text.trim() || !Number.isInteger(value) || value < 1 || value > 366)
+    throw new Error("Укажите периодичность от 1 до 366");
+  return value;
+}
 
 export default function TrainingPlan({
   pet,
@@ -21,6 +30,7 @@ export default function TrainingPlan({
 }) {
   const initial = schedule?.starts_on ?? session?.date ?? initialDate ?? today();
   const [startDate, setStartDate] = useState(initial);
+  const [intervalText, setIntervalText] = useState(String(schedule?.recurrence_interval ?? 1));
   const [recurrence, setRecurrence] = useState<RecurrenceDraft>(() => ({
     ...draftForDate(initial),
     frequency:
@@ -42,8 +52,9 @@ export default function TrainingPlan({
         const get = (k: string) => String(d.get(k) ?? "").trim();
         const day = get("date");
         const time = get("time");
-        const name = get("name") || "Тренировка";
-        const comment = get("comment");
+        const name = schedule?.name || session?.name || "Тренировка";
+        const comment = schedule?.comment ?? session?.comment ?? "";
+        const interval = validatePlanningInterval(intervalText, recurrence.frequency);
         if (recurrence.frequency === "weekly" && recurrence.weekdays.length === 0)
           throw Error("Выберите хотя бы один день недели");
         if (recurrence.frequency !== "once" && recurrence.endType === "date" &&
@@ -60,7 +71,7 @@ export default function TrainingPlan({
             starts_on: day,
             ends_on: recurrence.endType === "date" ? recurrence.endDate : null,
             recurrence_frequency: recurrence.frequency,
-            recurrence_interval: recurrence.interval,
+            recurrence_interval: interval,
             recurrence_end_type: recurrence.endType,
             recurrence_count: recurrence.endType === "count" ? recurrence.count : null,
             recurrence_monthday: recurrence.frequency === "monthly"
@@ -120,32 +131,23 @@ export default function TrainingPlan({
           }));
         }}
       />
-      <Field
+      <TrainingTimeField
         label="Время · необязательно"
         name="time"
-        type="time"
         defaultValue={schedule?.time_of_day?.slice(0, 5) ?? session?.time ?? ""}
       />
-      <Field
-        label="Название · необязательно"
-        name="name"
-        maxLength={120}
-        defaultValue={schedule?.name ?? session?.name ?? ""}
-      />
-      <Textarea
-        label="Комментарий"
-        name="comment"
-        maxLength={5000}
-        defaultValue={schedule?.comment ?? session?.comment ?? ""}
-      />
       {!session && (
-        <RecurrenceFields date={startDate} value={recurrence} onChange={setRecurrence} flatEnd />
-      )}
-      {recurrence.frequency !== "once" && !session && (
-        <p className="hint">
-          Плановые занятия формируются на ближайшие 90 дней. Проведённые занятия
-          и оценки сохраняются при изменении графика.
-        </p>
+        <div className="training-planner-recurrence">
+          <RecurrenceFields
+            date={startDate}
+            value={recurrence}
+            onChange={setRecurrence}
+            flatEnd
+            simpleFrequencyLabels
+            intervalText={intervalText}
+            onIntervalTextChange={setIntervalText}
+          />
+        </div>
       )}
     </Form>
   );
