@@ -85,7 +85,7 @@ p {
 h1,
 h2,
 h3 {
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-heading);
   overflow-wrap: anywhere;
 }
@@ -99,6 +99,7 @@ h2 {
 }
 h3 {
   font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
 }
 p {
   font-size: var(--font-size-small);
@@ -850,7 +851,7 @@ dialog::backdrop {
   min-height: var(--input-height);
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-regular);
-  padding: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   margin: 0;
 }
 .field input[type="file"] {
@@ -1060,13 +1061,32 @@ main,
   margin: 0 0 var(--space-2);
 }
 .weekdays-picker-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: calc(var(--space-compact-1) / 2);
+  width: 100%;
+  min-width: 0;
 }
 .weekdays-picker-row .checkbox {
-  flex: 0 0 auto;
-  font-size: var(--font-size-small);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--space-compact-1) / 2);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--button-height-sm);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+.weekdays-picker-row .checkbox-hit {
+  width: var(--icon-size-sm);
+  height: var(--button-height-sm);
+}
+.weekdays-picker-row .checkbox input {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  flex: none;
 }
 
 /* Fixed 1:1 mobile viewport without shrinking form controls or hiding

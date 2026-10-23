@@ -637,13 +637,13 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
  font-size:var(--font-size-md);font-weight:var(--font-weight-medium);line-height:var(--line-height-ui-caption);
 }
 .training-modal-content .field :is(input:not([type="date"]),select,textarea) {
- box-sizing:border-box;min-width:0;max-width:100%;min-height:var(--button-height-sm);padding:var(--space-compact-3);
+ box-sizing:border-box;min-width:0;max-width:100%;min-height:var(--button-height-sm);padding:var(--space-compact-3) var(--space-compact-4);
  font-family:var(--font-family-base);font-size:var(--font-size-sm);font-weight:var(--font-weight-regular);
 }
 .training-modal-content .field textarea {min-height:72px;}
 .training-modal-content .form-actions {margin-top:var(--space-compact-3);padding-bottom:0;}
 .training-modal-content .btn {margin:0;font-size:var(--font-size-sm);}
-.training-modal-content h3 {font-size:var(--font-size-md);font-weight:var(--font-weight-semibold);margin:var(--space-compact-3) 0 0;}
+.training-modal-content h3 {font-size:var(--font-size-md);font-weight:var(--font-weight-medium);margin:var(--space-compact-3) 0 0;}
 .training-modal-content :is(p,.note,.hint,small) {font-size:var(--font-size-sm);line-height:var(--line-height-ui-body);margin-block:0;}
 .training-modal-content .card {display:grid;gap:var(--space-compact-2);min-width:0;margin:0;padding:var(--space-compact-4);border-radius:var(--radius-lg);}
 .training-modal-content .inline-command {display:flex;align-items:flex-end;gap:var(--space-compact-3);min-width:0;}
@@ -689,7 +689,7 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
 .training-date-wrap {
  position:relative;display:flex;align-items:center;justify-content:space-between;
  box-sizing:border-box;gap:var(--space-compact-3);inline-size:100%;max-inline-size:100%;
- min-inline-size:0;min-height:var(--button-height-sm);padding:var(--space-compact-3);
+ min-inline-size:0;min-height:var(--button-height-sm);padding:var(--space-compact-3) var(--space-compact-4);
  overflow:hidden;border:1px solid var(--color-input-border);border-radius:var(--radius-sm);background:var(--color-surface);
 }
 .training-date-value {min-width:0;overflow-wrap:anywhere;color:var(--color-text-primary);font-size:var(--font-size-sm);font-weight:var(--font-weight-regular);}
@@ -809,7 +809,7 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
   max-width: 100%;
   min-height: calc(var(--button-height-sm) - var(--space-compact-3));
   height: calc(var(--button-height-sm) - var(--space-compact-3));
-  padding: var(--space-compact-1) var(--space-compact-2);
+  padding: var(--space-compact-1) var(--space-compact-3);
   font-size: var(--font-size-xs);
 }
 .training-modal-content .training-planner-recurrence
@@ -835,7 +835,7 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
   max-inline-size: 100%;
   min-inline-size: 0;
   min-height: var(--button-height-sm);
-  padding: var(--space-compact-3);
+  padding: var(--space-compact-3) var(--space-compact-4);
   overflow: hidden;
   border: 1px solid var(--color-input-border);
   border-radius: var(--radius-sm);
@@ -887,4 +887,37 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
   padding: 0;
   opacity: 0;
   cursor: pointer;
+}
+
+/* Compact seven-day chooser: all weekdays fit one line without reducing hit height. */
+.training-modal-content .weekdays-picker {
+  min-width: 0;
+  width: 100%;
+}
+.training-modal-content .weekdays-picker-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: calc(var(--space-compact-1) / 2);
+  min-width: 0;
+  width: 100%;
+}
+.training-modal-content .weekdays-picker-row .checkbox {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: calc(var(--space-compact-1) / 2);
+  width: 100%;
+  min-width: 0;
+  min-height: var(--button-height-sm);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+.training-modal-content .weekdays-picker-row .checkbox-hit {
+  width: var(--icon-size-sm);
+  height: var(--button-height-sm);
+}
+.training-modal-content .weekdays-picker-row .checkbox input {
+  flex: none;
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
 }
