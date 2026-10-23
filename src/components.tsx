@@ -377,10 +377,14 @@ export function Modal({
   title,
   children,
   onClose,
+  restoreFocus = true,
+  dismissOnBackdrop = true,
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
+  restoreFocus?: boolean;
+  dismissOnBackdrop?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null),
     titleId = useId();
@@ -388,12 +392,19 @@ export function Modal({
     const previous = document.activeElement as HTMLElement | null;
     const dialog = ref.current;
     const overflow = document.body.style.overflow;
+    const rootOverflow = document.documentElement.style.overflow;
+    const rootOverscroll = document.documentElement.style.overscrollBehavior;
+    if (!restoreFocus) previous?.blur();
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "none";
     dialog?.showModal();
     return () => {
       dialog?.close();
       document.body.style.overflow = overflow;
-      previous?.focus();
+      document.documentElement.style.overflow = rootOverflow;
+      document.documentElement.style.overscrollBehavior = rootOverscroll;
+      if (restoreFocus) previous?.focus({ preventScroll: true });
     };
   }, []);
   function close() {
@@ -408,7 +419,7 @@ export function Modal({
         close();
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) {
+        if (dismissOnBackdrop && e.target === e.currentTarget) {
           const b = e.currentTarget.getBoundingClientRect();
           if (
             e.clientX < b.left ||

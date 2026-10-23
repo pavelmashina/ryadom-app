@@ -84,10 +84,6 @@ export default function Training({
   function selectedId() {
     return view?.kind === "session" ? view.id : undefined;
   }
-  const learningNotes = Object.assign(
-    {},
-    ...diary.map((d) => d.details.commandNotes ?? {}),
-  ) as Record<string, string>;
   const sessions = [...pet.workouts].sort(
     (a, b) =>
       b.date.localeCompare(a.date) || b.created_at.localeCompare(a.created_at),
@@ -282,6 +278,8 @@ export default function Training({
                         : (command?.name ?? "Тренировка")
           }
           onClose={() => setView(null)}
+          restoreFocus={!["command", "comments", "rename", "archive"].includes(view.kind)}
+          dismissOnBackdrop={!["command", "comments", "rename", "archive"].includes(view.kind)}
         >
           <div className="training-modal-content">
           {view.kind === "reminder" && canEdit &&
@@ -378,19 +376,16 @@ export default function Training({
           )}
           {view.kind === "comments" && progress && (
             <>
-              {progress.history
-                .filter((x) => x.result.comment.trim())
-                .map((x) => (
-                  <InteractiveCard
-                    key={x.session.id}
-                    onClick={() =>
-                      setView({ kind: "session", id: x.session.id })
-                    }
-                  >
-                    <strong>{fmt(x.session.date)}</strong>
-                    <p className="note">{x.result.comment}</p>
-                  </InteractiveCard>
-                ))}
+              <div className="training-command-comments">
+                {progress.history
+                  .filter((x) => x.result.comment.trim())
+                  .map((x) => (
+                    <div className="training-command-comment card" key={x.session.id}>
+                      <strong>{fmt(x.session.date)}</strong>
+                      <p className="note">{x.result.comment}</p>
+                    </div>
+                  ))}
+              </div>
               {!progress.history.some((x) => x.result.comment.trim()) && (
                 <p>Комментариев пока нет.</p>
               )}
@@ -575,9 +570,6 @@ export default function Training({
                 {progress.average !== null &&
                   "· " + progress.average.toFixed(1) + " / 5"}
               </h3>
-              {learningNotes[command.name] && (
-                <p className="note">{learningNotes[command.name]}</p>
-              )}
               {progress.preliminary && (
                 <Badge tone="warning">Предварительная оценка</Badge>
               )}
@@ -705,9 +697,7 @@ export function TrainingForm({
                   trainingTimestamp(text(d, "date"), ""))
                 : trainingTimestamp(text(d, "date"), ""),
             date: text(d, "date"),
-            duration_minutes: text(d, "duration")
-              ? Number(text(d, "duration"))
-              : null,
+            duration_minutes: session?.duration_minutes ?? null,
             comment: text(d, "comment"),
             created_at: session?.created_at ?? new Date().toISOString(),
             updated_at: new Date().toISOString(),
@@ -727,15 +717,6 @@ export function TrainingForm({
           required
           defaultValue={session?.date ?? today()}
         />
-        <Field
-          label="Длительность, минут · необязательно"
-          name="duration"
-          type="number"
-          min={1}
-          max={600}
-          step={1}
-          defaultValue={session?.duration_minutes ?? ""}
-        />
         <Textarea
           label="Общий комментарий"
           name="comment"
@@ -743,9 +724,8 @@ export function TrainingForm({
           defaultValue={session?.comment ?? ""}
         />
         <h3>Выберите команды</h3>
-        <p className="hint">Выберите команды, затем поставьте оценку каждой. Оценки не выставляются автоматически.</p>
         <p aria-live="polite">Выбрано: {results.length}</p>
-        <CommandGrid>
+        <CommandGrid scrollControls="slider">
           {selectableCommands(commands, session).map((c) => (
             <Button
               type="button"
@@ -796,7 +776,7 @@ export function TrainingForm({
           </p>
         )}
         {results.map((r) => (
-          <Card key={r.command_id}>
+          <Card key={r.command_id} className="training-result-editor-card">
             <h3>{commands.find((c) => c.id === r.command_id)?.name}</h3>
             <Select
               label="Что делали"

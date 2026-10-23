@@ -365,10 +365,10 @@
 
 /* The selected date is the sole day heading; cards do not repeat it. */
 .training-screen .training-selected-date {
-  /* Calendar -> selected day equals Commands -> Calendar (16px). */
+  /* Match the "Команды" heading's 20px level. */
   margin: var(--training-section-gap) 0 var(--training-heading-gap);
   color: var(--color-text-primary);
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-ui-heading);
 }
@@ -702,4 +702,112 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
 }
 .training-date-wrap input[type="date"]::-webkit-calendar-picker-indicator {
  position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;opacity:0;cursor:pointer;
+}
+
+/* Training outcomes: restrained, readable score colors. */
+.training-screen .training-result-chip.quality-excellent {
+  background: var(--color-surface-secondary);
+}
+.training-screen .training-result-chip.quality-excellent b {
+  color: var(--color-success);
+}
+.training-screen .training-result-chip.quality-developing {
+  background: var(--color-warning-surface);
+}
+.training-screen .training-result-chip.quality-developing b {
+  color: var(--color-warning);
+}
+.training-screen .training-result-chip.quality-needs-work {
+  background: var(--color-danger-surface);
+}
+.training-screen .training-result-chip.quality-needs-work b {
+  color: var(--color-danger);
+}
+.training-screen .training-result-chip.quality-unrated b {
+  color: var(--color-text-secondary);
+}
+/* Dates and text-only comments on command detail: no navigation or click target. */
+.training-modal-content .training-command-comments {
+  display: grid;
+  gap: var(--space-compact-3);
+}
+.training-modal-content .training-command-comment.card {
+  display: grid;
+  gap: var(--space-compact-2);
+  padding: var(--space-compact-3);
+  border-radius: var(--radius-md);
+}
+.training-modal-content .training-command-comment strong {
+  font-size: var(--font-size-sm);
+}
+.training-modal-content .training-command-comment p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+/* Compact per-command grading cards, especially above and below the score. */
+.training-modal-content .training-result-editor-card.card {
+  gap: var(--space-compact-2);
+  padding: var(--space-compact-3);
+}
+.training-modal-content .training-result-editor-card h3 {
+  margin: 0;
+}
+.training-modal-content .training-result-editor-card .score-buttons {
+  margin: 0;
+  padding: 0;
+  gap: var(--space-compact-2);
+}
+.training-modal-content .training-result-editor-card .score-buttons + p {
+  margin: 0;
+}
+.training-modal-content .training-result-editor-card .field {
+  margin: 0;
+}
+/* Functional horizontal slider below the command chooser (editor only). */
+.training-modal-content .command-scroll-slider {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-height: var(--space-compact-5);
+  height: var(--space-compact-5);
+  margin: var(--space-compact-2) 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.training-modal-content .command-scroll-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+.training-modal-content .command-scroll-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--space-compact-5);
+  height: var(--space-compact-5);
+  margin-top: -5px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+}
+.training-modal-content .command-scroll-slider::-moz-range-track {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-border);
+}
+.training-modal-content .command-scroll-slider::-moz-range-thumb {
+  width: var(--space-compact-5);
+  height: var(--space-compact-5);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+}
+.training-modal-content .command-scroll-slider:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }

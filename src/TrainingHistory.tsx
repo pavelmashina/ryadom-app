@@ -172,7 +172,12 @@ export default function TrainingHistory({
           </div>
           <div className={"training-result-chips" + (s.results.length === 1 ? " single" : "")}>
             {s.results.map((r) => (
-              <span key={r.command_id} className="training-result-chip">
+              <span key={r.command_id}
+                className={"training-result-chip " + (
+                  r.performance_score === 5 ? "quality-excellent"
+                  : r.performance_score !== null && r.performance_score >= 3 ? "quality-developing"
+                  : r.performance_score !== null ? "quality-needs-work" : "quality-unrated"
+                )}>
                 <span>
                   {commands.find((c) => c.id === r.command_id)?.name ??
                     "Команда"}
