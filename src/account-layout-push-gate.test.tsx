@@ -25,7 +25,7 @@ describe("Latest compact account and training refinements",()=>{
  });
  it("reduces the overall new-pet dialog height instead of just the gap above Save",()=>{
   expect(styles).toContain("dialog:has(.new-pet-form) .modal-content {");
-  expect(styles).toContain("padding-bottom: var(--space-compact-1);");
+  expect(styles).toContain("padding-bottom: var(--form-action-bottom-inset);");
   expect(styles).toContain(".new-pet-form .form-actions {");
   expect(styles).toContain("margin-top: 0;");
   expect(styles).toContain("padding: 0;");
@@ -36,7 +36,8 @@ describe("Latest compact account and training refinements",()=>{
   expect(account).toContain('<Card className="account-section">{children}</Card>');
   expect(account).toContain('className="account-email-line"');
   expect(account).toContain('{user.email}');
-  expect(styles).toContain(".account-content > .heading {");
+  expect(styles).toContain(".account-section-shell {");
+  expect(account).not.toContain("<PageHeader title=");
   expect(styles).toContain("margin: 0;");
   expect(styles).toContain(".account-content .account-email-line .account-email {");
   expect(styles).toContain("font-size: var(--font-size-sm);");

@@ -1037,15 +1037,15 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
 .training-modal-content .training-planner-recurrence .monthly-day-picker {
   display: flex;
   align-items: end;
-  gap: var(--space-compact-3);
+  gap: var(--space-compact-1);
   min-width: 0;
   max-width: 100%;
 }
 .training-modal-content .training-planner-recurrence .monthly-day-picker .field {
-  flex: 0 0 104px;
-  width: 104px;
+  flex: 0 1 148px;
+  width: 148px;
   min-width: 0;
-  max-width: 104px;
+  max-width: 148px;
 }
 .training-modal-content .training-planner-recurrence .monthly-day-picker .field select {
   width: 100%;
@@ -1054,7 +1054,7 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
   max-width: 100%;
   height: 36px;
   min-height: 36px;
-  padding: var(--space-compact-1) var(--space-compact-5) var(--space-compact-1) var(--space-compact-3);
+  padding: var(--space-compact-1) var(--field-control-inline);
   font-size: var(--font-size-sm);
 }
 .training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day {
@@ -1094,9 +1094,9 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
   height: 18px;
 }
 .training-modal-content .training-planner-recurrence .monthly-day-picker .field {
-  flex: 0 0 136px;
-  width: 136px;
-  max-width: 136px;
+  flex: 0 1 148px;
+  width: 148px;
+  max-width: 148px;
 }
 .training-modal-content .training-planner-recurrence .monthly-day-picker .field select {
   font-size: var(--font-size-xs);
@@ -1124,4 +1124,10 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
 }
 .training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day > span:last-child {
   align-self: center;
+}
+
+/* Monthly day picker uses the global 20px text inset, including on iPhone. */
+.training-modal-content .training-planner-recurrence .monthly-day-picker .field select {
+  padding-left: var(--field-control-inline);
+  padding-right: var(--field-control-inline);
 }

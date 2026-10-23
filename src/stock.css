@@ -331,6 +331,7 @@
   display: grid;
   gap: var(--space-compact-4);
   padding: var(--space-compact-4);
+  padding-bottom: var(--form-action-bottom-inset);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);

@@ -35,7 +35,7 @@ describe("Monthly training plan choices",()=>{
     expect(recurrence).toContain('monthday:e.target.checked ? 32 : 0');
     expect(recurrence).toContain('frequency === "monthly" && value.frequency !== "monthly"');
     expect(css).toContain(".monthly-day-picker .field select {");
-    expect(css).toContain("flex: 0 0 104px;");
+    expect(css).toContain("flex: 0 1 148px;");
     expect(trainingSchema).toContain('recurrence_monthday: z.number().int().min(1).max(32)');
     expect(migration).toContain("recurrence_monthday between 1 and 32");
     expect(migration).toContain("day_of_month between 1 and 32");
@@ -67,7 +67,8 @@ describe("Unified compact pet menu and screen typography",()=>{
     expect(styles).toContain(".new-pet-form .field > label");
     expect(styles).toContain(".account-content .field > label");
     expect(styles).toContain("padding:var(--space-compact-3) var(--field-control-inline)");
-    expect(account).toContain('<PageHeader title="Аккаунт" />');
+    expect(account).not.toContain('<PageHeader title="Аккаунт" />');
+    expect(account).toContain('<AccountSection title="Вход и безопасность">');
     expect(account).not.toContain("Ваше пространство");
     expect(account).not.toContain("Управление входом и безопасностью");
     expect(calendar).not.toContain("Забота каждый день");

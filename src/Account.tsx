@@ -4,7 +4,6 @@ import {
   Field,
   Form,
   Modal,
-  PageHeader,
   SectionHeader,
   text,
 } from "./components";
@@ -76,7 +75,6 @@ export default function Account({
   }, [session.user.id]);
   return (
     <div className="account-content">
-      <PageHeader title="Аккаунт" />
       {loading && <p role="status" className="hint">Обновляем информацию…</p>}
       {user.new_email && (
         <p className="notice">
@@ -117,7 +115,6 @@ export default function Account({
           <LockKeyhole aria-hidden="true" />
           <div>
             <h3>Пароль</h3>
-            <p>Защитите доступ к вашим данным</p>
           </div>
           <Button
             size="sm"

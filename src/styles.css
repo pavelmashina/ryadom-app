@@ -1436,7 +1436,7 @@ dialog:has(.new-pet-form) .modal-content {padding-bottom:var(--space-compact-2);
 /* Shrink the modal itself: remove the bottom safe-area spacer, not only
    the visible gap above the Save button. */
 dialog:has(.new-pet-form) .modal-content {
-  padding-bottom: var(--space-compact-1);
+  padding-bottom: var(--form-action-bottom-inset);
 }
 .new-pet-form,
 .new-pet-form form,
@@ -1453,4 +1453,19 @@ dialog:has(.new-pet-form) .modal-content {
 }
 .notification-preferences[aria-disabled="true"] .notification-toggle-row {
   cursor: not-allowed;
+}
+
+/* Notifications: separate device permission from individual notification types. */
+.account-section-shell:has(.push-settings) .notification-preferences {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-compact-4);
+}
+.account-section-shell:has(.push-settings) .notification-toggle-row,
+.account-section-shell:has(.push-settings) .notification-training-offset,
+.account-section-shell:has(.push-settings) .notification-training-offset select {
+  font-size: var(--font-size-md);
+}
+.account-section-shell:has(.push-settings) .push-settings :is(.hint,.notice),
+.account-section-shell:has(.push-settings) .notification-preferences :is(.hint,.notice) {
+  font-size: var(--font-size-sm);
 }

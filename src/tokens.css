@@ -43,6 +43,8 @@
   --space-compact-6: 20px;
   /* Global horizontal inset for form controls and visible date/time shells. */
   --field-control-inline: var(--space-compact-6);
+  /* Default space beneath form submit buttons; matches manual stock deduction. */
+  --form-action-bottom-inset: var(--space-compact-4);
   --color-background: #f7f6ee;
   --color-canvas: #eeeee5;
   --color-surface: #fffef9;
