@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Form, Field, Textarea } from "./components";
 import RecurrenceFields, { draftForDate, type RecurrenceDraft } from "./RecurrenceFields";
+import TrainingDateField from "./TrainingDateField";
 import { id, today, type Pet } from "./domain";
 import { trainingTimestamp, scheduleSchema, type TrainingSchedule } from "./training-planning";
 import { trainingSchema, type TrainingSession } from "./training-domain";
@@ -104,12 +105,11 @@ export default function TrainingPlan({
         }
       }}
     >
-      <Field
+      <TrainingDateField
         label="Дата"
         name="date"
-        type="date"
         required
-        defaultValue={initial}
+        value={startDate}
         onChange={(e) => {
           const day = e.target.value;
           setStartDate(day);
@@ -139,7 +139,7 @@ export default function TrainingPlan({
         defaultValue={schedule?.comment ?? session?.comment ?? ""}
       />
       {!session && (
-        <RecurrenceFields date={startDate} value={recurrence} onChange={setRecurrence} />
+        <RecurrenceFields date={startDate} value={recurrence} onChange={setRecurrence} flatEnd />
       )}
       {recurrence.frequency !== "once" && !session && (
         <p className="hint">

@@ -30,6 +30,7 @@ import "./training.css";
 import TrainingHistory from "./TrainingHistory";
 import { reschedulePlannedTraining } from "./training-actions";
 import CommandGrid from "./CommandGrid";
+import TrainingDateField from "./TrainingDateField";
 import { setCommandArchived, selectableCommands } from "./command-catalog";
 type View =
   | { kind: "actions" }
@@ -126,7 +127,10 @@ export default function Training({
           return (
             <InteractiveCard
               key={c.id}
-              onClick={() => setView({ kind: "command", id: c.id })}
+              onClick={(event) => {
+                 if (event.detail > 0) event.currentTarget.blur();
+                 setView({ kind: "command", id: c.id });
+               }}
               className="command-row"
               aria-label={
                 c.name +
@@ -279,6 +283,7 @@ export default function Training({
           }
           onClose={() => setView(null)}
         >
+          <div className="training-modal-content">
           {view.kind === "reminder" && canEdit &&
             (view.schedule || view.training) && (
               <TrainingReminderSettings
@@ -327,7 +332,7 @@ export default function Training({
                 setView({ kind: "session", id: view.session.id });
               }}
             >
-              <Field label="Новая дата" name="date" type="date"
+              <TrainingDateField label="Новая дата" name="date"
                 defaultValue={view.session.date} required />
               <Field label="Новое время · необязательно" name="time" type="time"
                 defaultValue={view.session.time || ""} />
@@ -599,10 +604,10 @@ export default function Training({
                     </div>
                   ))}
               </div>
-              <h3>Комментарий к последней тренировке</h3>
+              <h3>Последний комментарий к команде</h3>
               <p className="note">
-                {progress.history[0]?.result.comment?.trim() ||
-                  "Комментарий к последней тренировке не добавлен."}
+                {progress.history.find((x) => x.result.comment.trim())?.result.comment.trim() ||
+                  "Комментариев к команде пока нет."}
               </p>
               <Button
                 fullWidth
@@ -629,6 +634,7 @@ export default function Training({
               </Button>
             </>
           )}
+          </div>
         </Modal>
       )}
     </div>
@@ -715,10 +721,9 @@ export function TrainingForm({
       }}
     >
       <fieldset disabled={busy} className="training-fields">
-        <Field
+        <TrainingDateField
           label="Дата тренировки"
           name="date"
-          type="date"
           required
           defaultValue={session?.date ?? today()}
         />
@@ -758,13 +763,11 @@ export function TrainingForm({
               title={c.name}
             >
               <span className="command-choice-name">{c.name}</span>
-              <span className="command-choice-state">
-                {results.some((r) => r.command_id === c.id)
-                  ? "✓ Выбрана"
-                  : c.archived
-                    ? "Из истории"
-                    : "Выбрать"}
-              </span>
+              {(results.some((r) => r.command_id === c.id) || c.archived) && (
+                <span className="command-choice-state">
+                  {results.some((r) => r.command_id === c.id) ? "✓ Выбрана" : "Из истории"}
+                </span>
+              )}
             </Button>
           ))}
         </CommandGrid>

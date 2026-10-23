@@ -69,7 +69,7 @@ export default function CommandGrid({
         ref={ref}
         id={gridId}
         className="command-list"
-        tabIndex={0}
+        tabIndex={scroll.overflow ? 0 : undefined}
         aria-label="Команды"
       >
         {children}

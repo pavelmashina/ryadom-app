@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, Field, Select, Checkbox } from "./components";
 import type { RepeatFrequency, RepeatEndType } from "./recurrence";
+import TrainingDateField from "./TrainingDateField";
 
 /** Shared recurrence settings UI; calendars and training planners use the same draft. */
 export type RecurrenceDraft = {
@@ -141,7 +142,16 @@ export default function RecurrenceFields({
               <option value="date">До даты</option>
               {allowCount && <option value="count">После количества повторений</option>}
             </Select>
-            {value.endType === "date" && (
+            {value.endType === "date" && (flatEnd ? (
+              <TrainingDateField
+                label="Последняя дата"
+                name="recurrence-end-date"
+                min={date}
+                value={value.endDate}
+                onChange={(e) => patch({ endDate: e.target.value })}
+                required
+              />
+            ) : (
               <Field
                 label="Последняя дата"
                 type="date"
@@ -150,7 +160,7 @@ export default function RecurrenceFields({
                 onChange={(e) => patch({ endDate: e.target.value })}
                 required
               />
-            )}
+            ))}
             {value.endType === "count" && (
               <Field
                 label="Количество повторений"
