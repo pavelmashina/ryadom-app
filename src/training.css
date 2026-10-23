@@ -1054,7 +1054,7 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
   max-width: 100%;
   height: 36px;
   min-height: 36px;
-  padding: var(--space-compact-1) 24px var(--space-compact-1) var(--space-compact-3);
+  padding: var(--space-compact-1) var(--space-compact-5) var(--space-compact-1) var(--space-compact-3);
   font-size: var(--font-size-sm);
 }
 .training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day {
