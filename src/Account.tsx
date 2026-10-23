@@ -9,8 +9,9 @@ import {
   text,
 } from "./components";
 import { useEffect, useState, type ReactNode } from "react";
-import { Mail, LockKeyhole, LogOut, UserRound } from "lucide-react";
+import { Mail, LockKeyhole, LogOut } from "lucide-react";
 import { PushSettings } from "./PushSettings";
+import NotificationPreferencesSettings from "./NotificationPreferencesSettings";
 import {
   changeEmail,
   changePassword,
@@ -21,13 +22,18 @@ import {
 export function AccountSection({
   title,
   children,
+  detail,
 }: {
   title: string;
   children: ReactNode;
+  detail?: ReactNode;
 }) {
   return (
     <Card className="account-section">
-      <SectionHeader title={title} compact />
+      <div className="account-section-heading">
+        <SectionHeader title={title} compact />
+        {detail && <span className="account-section-detail">{detail}</span>}
+      </div>
       {children}
     </Card>
   );
@@ -75,34 +81,13 @@ export default function Account({
   return (
     <div className="account-content">
       <PageHeader title="Аккаунт" />
-      <Card variant="info">
-        <div className="account-identity">
-          <span className="avatar">
-            <UserRound aria-hidden="true" />
-          </span>
-          <div>
-            <h2>Ваш аккаунт</h2>
-            <p className="account-email">{user.email}</p>
-          </div>
-        </div>
-        {user.created_at && (
-          <p className="hint">
-            С нами с{" "}
-            {new Date(user.created_at).toLocaleDateString("ru-RU", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          </p>
-        )}
-        {loading && <p role="status">Обновляем информацию…</p>}
-        {user.new_email && (
-          <p className="notice">
-            Ожидает подтверждения: {user.new_email}. Проверьте письма на старом
-            и новом адресах.
-          </p>
-        )}
-      </Card>
+      {loading && <p role="status" className="hint">Обновляем информацию…</p>}
+      {user.new_email && (
+        <p className="notice">
+          Ожидает подтверждения: {user.new_email}. Проверьте письма на старом
+          и новом адресах.
+        </p>
+      )}
       {message && (
         <p className="notice" role="status">
           {message}
@@ -113,12 +98,11 @@ export default function Account({
           {error}
         </p>
       )}
-      <AccountSection title="Вход и безопасность">
+      <AccountSection title="Вход и безопасность" detail={user.email}>
         <div className="account-row">
           <Mail aria-hidden="true" />
           <div>
             <h3>Email</h3>
-            <p>Адрес для входа и восстановления доступа</p>
           </div>
           <Button
             size="sm"
@@ -149,6 +133,7 @@ export default function Account({
       </AccountSection>
       <AccountSection title="Уведомления">
         <PushSettings session={session} />
+        <NotificationPreferencesSettings session={session} />
       </AccountSection>
       <AccountSection title="Сеанс">
         <p>

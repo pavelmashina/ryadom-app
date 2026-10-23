@@ -1075,3 +1075,29 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
 .training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day .checkbox-hit {
   flex: 0 0 var(--button-height-sm);
 }
+
+/* Monthly last-day option matches the text inside the adjacent compact selects. */
+.training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day {
+  gap: 1px;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+}
+.training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day .checkbox-hit {
+  flex: 0 0 18px;
+  width: 18px;
+  min-width: 18px;
+  height: var(--button-height-sm);
+}
+.training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day input {
+  width: 18px;
+  height: 18px;
+}
+.training-modal-content .training-planner-recurrence .monthly-day-picker .field {
+  flex: 0 0 136px;
+  width: 136px;
+  max-width: 136px;
+}
+.training-modal-content .training-planner-recurrence .monthly-day-picker .field select {
+  font-size: var(--font-size-xs);
+}

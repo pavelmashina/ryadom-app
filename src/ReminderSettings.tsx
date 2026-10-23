@@ -34,19 +34,18 @@ export default function ReminderSettings({
 
   return (
     <div className="personal-reminder">
-      <h3>Моё напоминание</h3>
+      <h3>Настройка напоминания</h3>
       <p className="hint">
-        Каждый участник питомца выбирает напоминание независимо.
-        Для доставки включите уведомления в разделе «Аккаунт».
+        Напоминание получат участники питомца, у которых включён соответствующий тип уведомлений в разделе «Аккаунт».
       </p>
       <Form
-        label="Сохранить моё напоминание"
+        label="Сохранить напоминание"
         onSave={async () => {
           setError(""); setMessage("");
           try {
             const minutes = reminderOffsetMinutes(mode, amount, unit);
             await setPersonalReminder(session, petId, eventId, minutes, mode !== "none");
-            setMessage("Личное напоминание сохранено.");
+            setMessage("Напоминание сохранено.");
           } catch (e) {
             const note = e instanceof Error ? e.message : "Ошибка сохранения";
             setError(note);

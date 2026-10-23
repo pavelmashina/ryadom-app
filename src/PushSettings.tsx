@@ -161,10 +161,7 @@ export function PushSettings({ session }: { session: AuthSession }) {
 
   return (
     <div className="push-settings">
-      <p className="hint">
-        Напоминания о событиях питомца. Подписка относится только к вашему
-        аккаунту и этому устройству.
-      </p>
+
       {!supportsPush && (
         <p className="hint">Уведомления не поддерживаются в этом браузере.</p>
       )}

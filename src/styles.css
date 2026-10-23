@@ -1285,3 +1285,107 @@ dialog:has(.account-content) .modal-content {
 .account-content .account-pet-row {
   padding:var(--space-compact-3) 0;
 }
+
+/* Consistent compact account heading and security identity. */
+.account-content > .heading {
+  padding: 0;
+  margin: 0 0 var(--space-compact-1);
+  min-width: 0;
+}
+.account-content > .heading h1 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+.account-section-heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-compact-2) var(--space-compact-3);
+  min-width: 0;
+}
+.account-section-heading .section-title {flex: none;min-width: 0;}
+.account-section-detail {
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+/* Make the New Pet save action sit as close to the modal edge as stock editors. */
+.new-pet-form .form-actions {
+  margin-top: var(--space-compact-2);
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+dialog:has(.new-pet-form) .modal-content {padding-bottom:var(--space-compact-2);}
+
+/* Personal push preferences for every account and pet membership. */
+.notification-preferences {
+  display: grid;
+  gap: var(--space-compact-2);
+  min-width: 0;
+}
+.notification-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-compact-3);
+  min-height: var(--button-height-sm);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  cursor: pointer;
+}
+.notification-toggle-row input[role="switch"] {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 24px;
+  min-height: 24px;
+  margin: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-canvas);
+  position: relative;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.notification-toggle-row input[role="switch"]::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  height: 18px;
+  width: 18px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast);
+}
+.notification-toggle-row input[role="switch"]:checked {background:var(--color-primary);border-color:var(--color-primary);}
+.notification-toggle-row input[role="switch"]:checked::after {transform:translateX(16px);}
+.notification-toggle-row input[role="switch"]:focus-visible {outline:2px solid var(--color-focus);outline-offset:2px;}
+.notification-toggle-row input[role="switch"]:disabled {opacity:0.55;cursor:not-allowed;}
+.notification-training-offset {
+  display: grid;
+  gap: var(--space-compact-2);
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+.notification-training-offset select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-3) var(--field-control-inline);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-md);
+}

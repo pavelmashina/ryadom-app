@@ -88,6 +88,43 @@ export async function deleteSubscription(session: AuthSession, endpoint: string)
     "&endpoint=eq." + encodeURIComponent(endpoint), { method: "DELETE" });
 }
 
+export type NotificationPreferences = {
+  user_id: string;
+  trainings_enabled: boolean;
+  events_enabled: boolean;
+  reminders_enabled: boolean;
+  training_offset_minutes: number;
+};
+
+export const DEFAULT_NOTIFICATION_PREFERENCES = {
+  trainings_enabled: false,
+  events_enabled: true,
+  reminders_enabled: true,
+  training_offset_minutes: 60,
+} as const;
+
+export async function getNotificationPreferences(session: AuthSession): Promise<NotificationPreferences> {
+  const result = await rest(session,
+    "notification_preferences?select=user_id,trainings_enabled,events_enabled,reminders_enabled,training_offset_minutes&user_id=eq." +
+    encodeURIComponent(session.user.id),
+  ) as NotificationPreferences[];
+  return result[0] ?? { user_id: session.user.id, ...DEFAULT_NOTIFICATION_PREFERENCES };
+}
+
+export async function updateNotificationPreferences(
+  session: AuthSession,
+  prefs: Omit<NotificationPreferences, "user_id">,
+): Promise<void> {
+  if (!Number.isSafeInteger(prefs.training_offset_minutes) ||
+      prefs.training_offset_minutes < 0 || prefs.training_offset_minutes > 10080)
+    throw new Error("Некорректное время уведомления о тренировке");
+  await rest(session, "notification_preferences?on_conflict=user_id", {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({ ...prefs, user_id: session.user.id }),
+  });
+}
+
 export type PersonalReminder = {
   id: string;
   event_id: string;
@@ -191,6 +228,7 @@ export async function setTrainingReminder(
       method: "PATCH",
       body: JSON.stringify({
         offset_value: minutes, offset_unit: "minutes", enabled,
+        source: "personal",
         updated_at: new Date().toISOString(),
       }),
     });
