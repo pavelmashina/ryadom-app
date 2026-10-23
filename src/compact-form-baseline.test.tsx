@@ -13,7 +13,7 @@ describe("Shared form spacing and compact notification layout",()=>{
     const selector=trainingCss.split(".monthly-day-control {").at(-1)!.split("}")[0];
     expect(selector).toContain("padding: 0 var(--space-compact-3) 0 var(--field-control-inline)");
     expect(trainingCss).toContain(".monthly-day-value {");
-    const layout=trainingCss.split(".monthly-day-picker .field {").at(-1)!.split("}")[0];
+    const layout=trainingCss.split(".monthly-day-picker .monthly-day-field {").at(-1)!.split("}")[0];
     expect(layout).toContain("flex: 0 1 164px");
     expect(layout).toContain("width: 164px");
     expect(recurrence).toContain('label="Число месяца"');
