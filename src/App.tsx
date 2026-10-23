@@ -1341,8 +1341,7 @@ export default function App({
             рядом
           </span>
           <div className="app-header-actions">
-            {(screen !== "account" || !hasPets) && (
-              <div className="pet-switcher">
+            <div className="pet-switcher">
                 <button type="button" className="pet-button btn btn-secondary"
                   aria-label={hasPets?"Выбрать питомца: "+pet.name:"Добавить питомца"}
                   aria-expanded={hasPets?petMenuOpen:undefined}
@@ -1366,8 +1365,7 @@ export default function App({
                     </button>
                   </div>
                 </>}
-              </div>
-            )}
+            </div>
             {screen === "profile" && (
               <IconButton
                 label="Назад к планам"
@@ -1379,7 +1377,6 @@ export default function App({
             <IconButton
               label="Аккаунт"
               className="account-trigger"
-              aria-current={screen === "account" ? "page" : undefined}
               onClick={openAccount}
             >
               <UserRound />
