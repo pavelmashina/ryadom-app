@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useId, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { Button, Field, Select, Checkbox } from "./components";
 import type { RepeatFrequency, RepeatEndType } from "./recurrence";
 import TrainingDateField from "./TrainingDateField";
@@ -52,6 +53,7 @@ export default function RecurrenceFields({
   monthlyDayPicker?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const monthlyDayId = useId();
   const patch = (next: Partial<RecurrenceDraft>) => onChange({ ...value, ...next });
   return (
     <div className="recurrence-fields">
@@ -145,15 +147,24 @@ export default function RecurrenceFields({
               )}
               {value.frequency === "monthly" && (monthlyDayPicker
                 ? <div className="monthly-day-picker">
-                    <Select label="Число месяца"
-                      value={value.monthday >= 1 && value.monthday <= 31 ? String(value.monthday) : ""}
-                      required={value.monthday !== 32}
-                      disabled={value.monthday === 32}
-                      onChange={(e) => patch({ monthday: Number(e.target.value) || 0 })}>
-                      <option value="">Выберите число</option>
-                      {Array.from({length:31},(_,i)=>i+1).map(day=>
-                        <option key={day} value={day}>{day}</option>)}
-                    </Select>
+                    <div className="field monthly-day-field">
+                      <label htmlFor={monthlyDayId}>Число месяца</label>
+                      <div className="monthly-day-control">
+                        <span className="monthly-day-value" aria-hidden="true">
+                          {value.monthday >= 1 && value.monthday <= 31 ? value.monthday : "Выберите число"}
+                        </span>
+                        <ChevronDown className="monthly-day-chevron" aria-hidden="true" />
+                        <select id={monthlyDayId} aria-label="Число месяца"
+                          value={value.monthday >= 1 && value.monthday <= 31 ? String(value.monthday) : ""}
+                          required={value.monthday !== 32}
+                          disabled={value.monthday === 32}
+                          onChange={e => patch({ monthday: Number(e.target.value) || 0 })}>
+                          <option value="">Выберите число</option>
+                          {Array.from({length:31},(_,i)=>i+1).map(day=>
+                            <option key={day} value={day}>{day}</option>)}
+                        </select>
+                      </div>
+                    </div>
                     <Checkbox className="monthly-last-day"
                       label="Последнее число"
                       checked={value.monthday === 32}

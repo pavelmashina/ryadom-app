@@ -34,8 +34,8 @@ describe("Monthly training plan choices",()=>{
     expect(recurrence).toContain('disabled={value.monthday === 32}');
     expect(recurrence).toContain('monthday:e.target.checked ? 32 : 0');
     expect(recurrence).toContain('frequency === "monthly" && value.frequency !== "monthly"');
-    expect(css).toContain(".monthly-day-picker .field select {");
-    expect(css).toContain("flex: 0 1 148px;");
+    expect(css).toContain(".monthly-day-control {");
+    expect(css).toContain("flex: 0 1 164px;");
     expect(trainingSchema).toContain('recurrence_monthday: z.number().int().min(1).max(32)');
     expect(migration).toContain("recurrence_monthday between 1 and 32");
     expect(migration).toContain("day_of_month between 1 and 32");

@@ -73,6 +73,6 @@ describe("Account notification preferences and compact UI",()=>{
   expect(css).toContain(".monthly-day-picker .monthly-last-day");
   expect(css).toContain("gap: 1px;");
   expect(css).toContain("font-size: var(--font-size-xs);");
-  expect(css).toContain("flex: 0 1 148px;");
+  expect(css).toContain("flex: 0 1 164px;");
  });
 });

@@ -57,19 +57,22 @@ export default function NotificationPreferencesSettings({ session, disabled = fa
       ["events_enabled","О событиях"],
       ["reminders_enabled","Напоминания"],
     ] as const).map(([key,label])=>
-      <label className="notification-toggle-row" key={key}>
-        <span>{label}</span>
-        <input type="checkbox" role="switch" aria-label={label}
-          checked={prefs[key]} disabled={disabled||busy||loading}
-          onChange={event=>void save({...prefs,[key]:event.target.checked})}/>
-      </label>)}
-    {prefs.trainings_enabled&&<label className="notification-training-offset">
-      <span>Напомнить о тренировке</span>
-      <select value={prefs.training_offset_minutes} disabled={disabled||busy||loading}
-        onChange={event=>void save({...prefs,training_offset_minutes:Number(event.target.value)})}>
-        {offsets.map(([offset,label])=><option key={offset} value={offset}>{label}</option>)}
-      </select>
-    </label>}
+      <div className="notification-category" key={key}>
+        <label className="notification-toggle-row">
+          <span>{label}</span>
+          <input type="checkbox" role="switch" aria-label={label}
+            checked={prefs[key]} disabled={disabled||busy||loading}
+            onChange={event=>void save({...prefs,[key]:event.target.checked})}/>
+        </label>
+        {key === "trainings_enabled" && prefs.trainings_enabled &&
+          <label className="notification-training-offset">
+            <span>Напомнить о тренировке</span>
+            <select value={prefs.training_offset_minutes} disabled={disabled||busy||loading}
+              onChange={event=>void save({...prefs,training_offset_minutes:Number(event.target.value)})}>
+              {offsets.map(([offset,label])=><option key={offset} value={offset}>{label}</option>)}
+            </select>
+          </label>}
+      </div>)}
     {loading&&<p className="hint" role="status">Загружаем настройки…</p>}
     {notice&&<p className="hint" role="status">{notice}</p>}
     {error&&<p className="notice notice-error" role="alert">{error}</p>}

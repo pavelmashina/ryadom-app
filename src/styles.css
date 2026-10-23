@@ -1469,3 +1469,51 @@ dialog:has(.new-pet-form) .modal-content {
 .account-section-shell:has(.push-settings) .notification-preferences :is(.hint,.notice) {
   font-size: var(--font-size-sm);
 }
+
+/* Account section heading-to-card spacing follows Training's 12px rhythm. */
+.account-content .account-section-shell {
+  gap: var(--space-compact-4);
+}
+.account-content .account-section-shell > .section-title {
+  margin: 0;
+}
+/* Notification switches remain 44px tall for touch, without surplus blank
+   space between categories. Training offset is nested directly beneath its row. */
+.account-section-shell:has(.push-settings) .notification-preferences {
+  gap: 0;
+}
+.account-section-shell:has(.push-settings) .notification-category {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
+.account-section-shell:has(.push-settings) .notification-category .notification-toggle-row {
+  min-height: var(--button-height-sm);
+}
+.account-section-shell:has(.push-settings) .notification-category .notification-training-offset {
+  box-sizing: border-box;
+  display: grid;
+  gap: var(--space-compact-1);
+  justify-items: start;
+  margin: 0 0 var(--space-compact-2) var(--space-compact-4);
+  min-width: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+}
+.account-section-shell:has(.push-settings) .notification-category .notification-training-offset > span {
+  font-size: var(--font-size-sm);
+}
+.account-section-shell:has(.push-settings) .notification-category .notification-training-offset select {
+  box-sizing: border-box;
+  width: min(100%, 208px);
+  max-width: 100%;
+  min-width: 0;
+  height: calc(var(--button-height-sm) - var(--space-compact-3));
+  min-height: calc(var(--button-height-sm) - var(--space-compact-3));
+  padding: var(--space-compact-1) var(--space-compact-3);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  font-family: var(--font-family-base);
+  border-radius: var(--radius-sm);
+}
