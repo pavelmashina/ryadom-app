@@ -253,7 +253,7 @@
 .training-screen .training-day {
   /* Identical tracks in every state: circle + reserved indicator row. */
   display: grid;
-  grid-template-rows: var(--training-day-circle) 6px;
+  grid-template-rows: var(--training-day-circle) 8px;
   align-content: center;
   justify-items: center;
   border: 0;
@@ -302,7 +302,8 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 6px;
+  height: 8px;
+  transform: translateY(1px);
 }
 .training-screen .training-day-dot,
 .training-screen .training-day-planned {
@@ -332,8 +333,12 @@
   margin: auto;
 }
 .training-screen .training-day-markers.both .training-day-planned {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
+}
+.training-screen .training-day-markers.both .training-day-dot {
+  width: 3px;
+  height: 3px;
 }
 .training-screen .calendar-key {
   display: flex;
@@ -950,4 +955,69 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
 }
 .training-modal-content .training-cancel-confirm > .btn {
   margin: 0;
+}
+
+/* Planned sessions: compact title and right-aligned icon, without a second actions row. */
+.training-screen .training-session-summary.planned.card {
+  padding: var(--space-compact-3);
+}
+.training-screen .training-session-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-compact-3);
+  min-width: 0;
+}
+.training-screen .training-session-title-row > strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.training-screen .training-inline-edit {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  flex: none;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+.training-screen .training-inline-edit svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+.training-screen .training-inline-edit:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.training-screen .training-inline-edit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.training-screen .training-session-summary.planned .training-result-chips,
+.training-screen .training-session-summary.planned .training-comment {
+  margin-top: var(--space-compact-2);
+}
+/* Make the end-range select the exact same size and inline inset as other form inputs.
+   Extra specificity beats the condensed settings used for frequency and period. */
+.training-modal-content .training-planner-recurrence
+.recurrence-options.recurrence-options-flat-end .field select {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: var(--button-height-sm);
+  height: var(--button-height-sm);
+  padding: var(--space-compact-3) var(--field-control-inline);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+}
+.training-screen .command-list,
+.training-screen .training-result-chips {
+  padding-bottom: var(--space-compact-4);
 }

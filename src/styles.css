@@ -1122,3 +1122,21 @@ dialog {
 .health-history-row, .health-record-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 .health-history-row { padding: 8px 0; border-bottom: 1px solid var(--border, rgba(0,0,0,.08)); }
 .health-record-actions { justify-content: flex-start; margin-top: 10px; }
+
+
+/* Application-wide horizontal scrolling language: no arrows, a small subdued
+   green native thumb beneath scrollable cards. Native iOS indicators may fade. */
+:where(.command-list, .training-result-chips, .score-history, .app-horizontal-scroll) {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-primary) 42%, transparent) transparent;
+}
+:where(.command-list, .training-result-chips, .score-history, .app-horizontal-scroll)::-webkit-scrollbar {
+  height: var(--space-compact-1);
+}
+:where(.command-list, .training-result-chips, .score-history, .app-horizontal-scroll)::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-primary) 42%, transparent);
+  border-radius: var(--radius-full);
+}
+:where(.command-list, .training-result-chips, .score-history, .app-horizontal-scroll)::-webkit-scrollbar-track {
+  background: transparent;
+}

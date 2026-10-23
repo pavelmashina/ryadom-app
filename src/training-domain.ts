@@ -53,6 +53,14 @@ export const trainingSchema = z
     "Команда выбрана дважды",
   );
 export type TrainingSession = z.infer<typeof trainingSchema>;
+/** Only actual per-command notes should appear on command detail.
+ * Imported diary bookkeeping labels are metadata, not feedback. */
+export function isCommandFeedback(text: string): boolean {
+  const note=text.trim();
+  if (!note) return false;
+  return !/^(?:восстановлено из дневника|связано с дневником|импортировано из дневника|перенесено из дневника|исходная запись)(?:[.!\s]*)$/i.test(note);
+}
+
 export function commandProgress(
   sessions: TrainingSession[],
   commandId: string,

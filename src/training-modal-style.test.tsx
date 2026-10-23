@@ -49,7 +49,7 @@ describe("Compact training editors",()=>{
   ],"one");
   const latest=progress.history.find(x=>x.result.comment.trim())?.result.comment.trim();
   expect(latest).toBe("Улучшилось выполнение");
-  expect(training).toContain('progress.history.find((x) => x.result.comment.trim())');
+  expect(training).toContain('progress.history.find((x) => isCommandFeedback(x.result.comment))');
   expect(training).toContain("Последний комментарий к команде");
  });
 });

@@ -46,7 +46,7 @@ describe("Training mobile composition (requirements 140–161)", () => {
     const html = renderToStaticMarkup(<TrainingHistory
       sessions={[lone]} commands={commands}
       onOpen={() => {}} onEdit={() => {}} />);
-    expect(html).toContain('class="training-result-chips single"');
+    expect(html).toContain('class="training-result-chips app-horizontal-scroll single"');
     expect(css).toContain(".training-screen .training-result-chips.single");
   });
 
@@ -84,7 +84,7 @@ describe("Training mobile composition (requirements 140–161)", () => {
     expect(css).toContain("grid-template-columns: repeat(7, minmax(0, 1fr))");
     expect(css).toContain("grid-auto-rows: var(--training-day-size)");
     const dayRule = css.split(".training-screen .training-day {")[1]?.split("}")[0] ?? "";
-    expect(dayRule).toContain("grid-template-rows: var(--training-day-circle) 6px");
+    expect(dayRule).toContain("grid-template-rows: var(--training-day-circle) 8px");
     expect(dayRule).toContain("align-content: center");
     expect(dayRule).toContain("justify-items: center");
     const numberRule = css.split(".training-screen .training-day-number {")[1]?.split("}")[0] ?? "";
@@ -100,7 +100,8 @@ describe("Training mobile composition (requirements 140–161)", () => {
     const markerRule = css.split(".training-screen .training-day-markers {")[1]?.split("}")[0] ?? "";
     expect(markerRule).toContain("align-items: center");
     expect(markerRule).toContain("justify-content: center");
-    expect(markerRule).toContain("height: 6px");
+    expect(markerRule).toContain("height: 8px");
+    expect(markerRule).toContain("transform: translateY(1px)");
     expect(css).toContain('.training-screen .training-day[aria-pressed="true"] .training-day-number');
     expect(css).toContain('.training-screen .training-day[aria-current="date"] .training-day-number');
     expect(css).not.toContain(".training-day::before");

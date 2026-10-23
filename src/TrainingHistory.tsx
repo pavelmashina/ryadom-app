@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import { Button, Card, Empty, IconButton, SectionHeader } from "./components";
 import { fmt, today, type Pet } from "./domain";
 import type { TrainingSession } from "./training-domain";
@@ -155,7 +155,18 @@ export default function TrainingHistory({
           className={"training-session-summary " + (s.status ?? "completed")}
         >
           <div className="training-session-heading">
-            <strong>{s.name?.trim() || "Тренировка"}</strong>
+            <div className="training-session-title-row">
+              <strong>{s.name?.trim() || "Тренировка"}</strong>
+              {s.status === "planned" && (
+                <button type="button" className="training-inline-edit"
+                  aria-label="Редактировать тренировку"
+                  title="Редактировать тренировку"
+                  disabled={readOnly}
+                  onClick={() => onEdit(s)}>
+                  <Pencil aria-hidden="true" />
+                </button>
+              )}
+            </div>
             <span className="training-session-meta">
               {list && (
                 <span className="training-session-date">
@@ -168,7 +179,7 @@ export default function TrainingHistory({
               {!!s.results.length && <span> · {s.results.length} команд</span>}
             </span>
           </div>
-          <div className={"training-result-chips" + (s.results.length === 1 ? " single" : "")}>
+          <div className={"training-result-chips app-horizontal-scroll" + (s.results.length === 1 ? " single" : "")}>
             {s.results.map((r) => (
               <span key={r.command_id}
                 className={"training-result-chip " + (
@@ -197,19 +208,14 @@ export default function TrainingHistory({
               <p className="note">{s.comment}</p>
             </details>
           )}
-          <div className="training-session-actions">
-            {s.status !== "planned" && <Button size="sm" variant="ghost" onClick={() => onOpen(s.id)}>
+          {s.status !== "planned" && <div className="training-session-actions">
+            <Button size="sm" variant="ghost" onClick={() => onOpen(s.id)}>
               Подробнее
-            </Button>}
-            <Button
-              size="sm"
-              variant="ghost"
-              disabled={readOnly}
-              onClick={() => onEdit(s)}
-            >
+            </Button>
+            <Button size="sm" variant="ghost" disabled={readOnly} onClick={() => onEdit(s)}>
               Редактировать
             </Button>
-          </div>
+          </div>}
         </Card>
       ))}
       {list && ordered.length > limit && (

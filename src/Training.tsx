@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import { fmt, id, today, type Pet } from "./domain";
 import {
   commandProgress,
+  isCommandFeedback,
   SCORE_LABELS,
   trainingSchema,
   validateCommandName,
@@ -382,7 +383,7 @@ export default function Training({
             <>
               <div className="training-command-comments">
                 {progress.history
-                  .filter((x) => x.result.comment.trim())
+                  .filter((x) => isCommandFeedback(x.result.comment))
                   .map((x) => (
                     <div className="training-command-comment card" key={x.session.id}>
                       <strong>{fmt(x.session.date)}</strong>
@@ -390,7 +391,7 @@ export default function Training({
                     </div>
                   ))}
               </div>
-              {!progress.history.some((x) => x.result.comment.trim()) && (
+              {!progress.history.some((x) => isCommandFeedback(x.result.comment)) && (
                 <p>Комментариев пока нет.</p>
               )}
             </>
@@ -435,11 +436,6 @@ export default function Training({
               </p>
               {sourceEntry && (
                 <>
-                  <Badge>
-                    {sourceEntry.status === "linked"
-                      ? "Связано с дневником"
-                      : "Восстановлено из дневника"}
-                  </Badge>
                   <details className="explanation">
                     <summary>Исходная запись</summary>
                     <p className="note">{sourceEntry.original_text}</p>
@@ -585,7 +581,7 @@ export default function Training({
               </div>
               <h3>Последний комментарий к команде</h3>
               <p className="note">
-                {progress.history.find((x) => x.result.comment.trim())?.result.comment.trim() ||
+                {progress.history.find((x) => isCommandFeedback(x.result.comment))?.result.comment.trim() ||
                   "Комментариев к команде пока нет."}
               </p>
               <Button
