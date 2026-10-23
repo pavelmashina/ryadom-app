@@ -153,7 +153,7 @@ export async function setPersonalReminder(
     await rest(session,
       "event_reminders?id=eq." + encodeURIComponent(existing[0].id), {
         method: "PATCH",
-        body: JSON.stringify({ offset_value: minutes, offset_unit: "minutes", enabled }),
+        body: JSON.stringify({ offset_value: minutes, offset_unit: "minutes", enabled, updated_at: new Date().toISOString() }),
       });
   } else if (enabled) {
     await rest(session, "event_reminders", {
