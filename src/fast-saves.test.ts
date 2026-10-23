@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { blankPet, initialState, stateSchema } from "./domain";
+import { blankPet, stateSchema } from "./domain";
 import { sharedChanges } from "./cloud-data";
 import { scheduleSchema, trainingTimestamp } from "./training-planning";
 import { trainingSchema } from "./training-domain";
 
 const source = (p: string) => readFileSync(new URL(p, import.meta.url), "utf8");
+const initialState=()=>{const pet=blankPet("Мой питомец");return {version:1 as const,selectedPet:pet.id,pets:[pet]};};
 const saveMigration = source("../supabase/migrations/20261016124500_fast_training_saves.sql");
 
 describe("Fast cloud saves", () => {

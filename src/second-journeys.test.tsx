@@ -15,7 +15,9 @@ const source = (path: string) => readFileSync(new URL(path, import.meta.url), "u
 
 describe("R2: first visit onboarding", () => {
   it("only prompts for an untouched placeholder, not existing user data", () => {
-    const state = initialState();
+    expect(needsFirstPetSetup(initialState())).toBe(false);
+    const pet=blankPet("Мой питомец");
+    const state={version:1 as const,selectedPet:pet.id,pets:[pet]};
     expect(needsFirstPetSetup(state)).toBe(true);
     state.pets[0].name = "Тузик";
     expect(needsFirstPetSetup(state)).toBe(false);

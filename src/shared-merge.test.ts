@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { blankPet, initialState, stateSchema, type Pet, type State } from "./domain";
+import { blankPet, stateSchema, type Pet, type State } from "./domain";
 import { sharedChanges } from "./cloud-data";
 import { mergeSharedState, sameData, SharedEditConflict } from "./shared-merge";
 
+function initialState(): State {
+  const pet=blankPet("Мой питомец");
+  return {version:1,selectedPet:pet.id,pets:[pet]};
+}
 function states(): [State, State, State] {
   const base = initialState();
   return [base, structuredClone(base), structuredClone(base)];
