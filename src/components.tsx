@@ -391,19 +391,47 @@ export function Modal({
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const dialog = ref.current;
-    const overflow = document.body.style.overflow;
-    const rootOverflow = document.documentElement.style.overflow;
-    const rootOverscroll = document.documentElement.style.overscrollBehavior;
+    const body = document.body;
+    const root = document.documentElement;
+    // Overflow:hidden by itself does not prevent the page behind a <dialog>
+    // from rubber-band scrolling on iOS Safari (especially on empty accounts).
+    // Pin the page at its actual scroll offset while the modal stays scrollable.
+    const scrollY = window.scrollY;
+    const original = {
+      bodyOverflow: body.style.overflow,
+      bodyOverscroll: body.style.overscrollBehavior,
+      bodyPosition: body.style.position,
+      bodyTop: body.style.top,
+      bodyLeft: body.style.left,
+      bodyRight: body.style.right,
+      bodyWidth: body.style.width,
+      rootOverflow: root.style.overflow,
+      rootOverscroll: root.style.overscrollBehavior,
+    };
     if (!restoreFocus) previous?.blur();
     document.body.style.overflow = "hidden";
+    body.style.overscrollBehavior = "none";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
     document.documentElement.style.overflow = "hidden";
-    document.documentElement.style.overscrollBehavior = "none";
+    root.style.overscrollBehavior = "none";
     dialog?.showModal();
     return () => {
       dialog?.close();
-      document.body.style.overflow = overflow;
-      document.documentElement.style.overflow = rootOverflow;
-      document.documentElement.style.overscrollBehavior = rootOverscroll;
+      body.style.overflow = original.bodyOverflow;
+      body.style.overscrollBehavior = original.bodyOverscroll;
+      body.style.position = original.bodyPosition;
+      body.style.top = original.bodyTop;
+      body.style.left = original.bodyLeft;
+      body.style.right = original.bodyRight;
+      body.style.width = original.bodyWidth;
+      root.style.overflow = original.rootOverflow;
+      root.style.overscrollBehavior = original.rootOverscroll;
+      // Restore exactly the same background location after closing.
+      window.scrollTo(0, scrollY);
       if (restoreFocus) previous?.focus({ preventScroll: true });
     };
   }, []);
