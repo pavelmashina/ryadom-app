@@ -197,26 +197,38 @@
   border-radius: var(--radius-md);
 }
 .training-screen .training-month {
+  /* Same left-aligned month and right-aligned Today/arrows as Day. */
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: var(--space-compact-2);
-  margin-bottom: 0;
+  margin: 0;
+  padding: 0 0 var(--space-compact-3);
 }
 .training-screen .training-month h3 {
   margin: 0;
-  text-align: center;
+  text-align: left;
   text-transform: capitalize;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-ui-heading);
 }
-.training-screen .training-month .icon-button {
+.training-screen .training-month-controls {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.training-screen .training-month-controls > .btn:not(.icon-button) {
+  padding-inline: var(--space-compact-2);
+  font-size: var(--font-size-xs);
+}
+.training-screen .training-month-controls .icon-button {
   flex: none;
-  min-height: var(--training-day-size);
-  min-width: var(--training-day-size);
-  width: var(--training-day-size);
-  height: var(--training-day-size);
+  min-height: var(--button-height-sm);
+  min-width: var(--button-height-sm);
+  width: var(--button-height-sm);
+  height: var(--button-height-sm);
 }
 .training-screen .training-weekdays,
 .training-screen .training-days {
@@ -341,13 +353,16 @@
   height: 3px;
 }
 .training-screen .calendar-key {
+  /* Reserve the same divided legend footer as the Day calendar. */
   display: flex;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
   gap: var(--space-compact-4);
-  margin: var(--space-compact-2) 0 0;
-  color: var(--color-text-muted);
+  margin: var(--space-compact-3) 0 0;
+  padding-top: var(--space-compact-3);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
   line-height: var(--line-height-ui-caption);
 }

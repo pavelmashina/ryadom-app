@@ -76,24 +76,31 @@ export default function TrainingHistory({
     setMonth(next);
     setSelection(next + "-01");
   }
+  function chooseToday() {
+    const day = today();
+    setMonth(day.slice(0, 7));
+    setSelection(day);
+  }
   return (
     <section className="training-history" aria-label="История тренировок">
       <SectionHeader title={list ? "История тренировок" : "Календарь"} />
       {!list && (
         <div className="training-calendar">
-          <div className="training-month">
-            <IconButton
-              label="Предыдущий месяц"
-              onClick={() => changeMonth(-1)}
-            >
-              <ChevronLeft aria-hidden="true" />
-            </IconButton>
+          <div className="month training-month">
             <h3 aria-live="polite">
               {fmt(month + "-01", { month: "long", year: "numeric" }).replace(" г.", "")}
             </h3>
-            <IconButton label="Следующий месяц" onClick={() => changeMonth(1)}>
-              <ChevronRight aria-hidden="true" />
-            </IconButton>
+            <div className="month-controls training-month-controls">
+              <Button size="sm" variant="secondary" onClick={chooseToday}>
+                Сегодня
+              </Button>
+              <IconButton label="Предыдущий месяц" onClick={() => changeMonth(-1)}>
+                <ChevronLeft aria-hidden="true" />
+              </IconButton>
+              <IconButton label="Следующий месяц" onClick={() => changeMonth(1)}>
+                <ChevronRight aria-hidden="true" />
+              </IconButton>
+            </div>
           </div>
           <div className="training-weekdays" aria-hidden="true">
             {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].map((d) => (
@@ -139,7 +146,7 @@ export default function TrainingHistory({
               );
             })}
           </div>
-          <div className="calendar-key" aria-label="Обозначения календаря">
+          <div className="legend calendar-key" aria-label="Обозначения календаря">
             <span className="training-legend-item">
               <span className="training-legend-dot" aria-hidden="true" />
               Проведено
