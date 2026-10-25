@@ -18,7 +18,7 @@ function declaration(selector: string): string {
 
 describe("Add Existing Pet UI refinements", () => {
   it("keeps the normal lookup form and adds space before found pet", () => {
-    const html = renderToStaticMarkup(<JoinPet session={session} onChanged={() => {}} />);
+    const html = renderToStaticMarkup(<JoinPet session={session} onChanged={async () => {}} />);
     expect(html).toContain("Найти питомца");
     expect(html).toContain("ID питомца");
     expect(sharing).toContain('className="pet-join-result"');
