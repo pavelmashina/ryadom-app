@@ -2716,3 +2716,42 @@ dialog:has(.event-detail-modal) .modal-head h2 {
   background: transparent;
   color: var(--color-danger);
 }
+
+/* Change-scope selector uses exactly the same field rhythm and type
+   scale as Category / Type within the event edit form. */
+.event-modify-modal {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-compact-4);
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--font-family-base);
+}
+.event-modify-modal > .field {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-compact-2);
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+}
+.event-modify-modal > .field > label {
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-caption);
+}
+.event-modify-modal > .field select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-3) var(--field-control-inline);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+}

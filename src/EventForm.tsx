@@ -196,6 +196,7 @@ export default function EventForm({
           flatEnd
           simpleFrequencyLabels
           monthlyDayPicker
+          initiallyExpanded={!!existing && existing.repeat !== "once"}
           intervalText={intervalText}
           onIntervalTextChange={setIntervalText}
         />

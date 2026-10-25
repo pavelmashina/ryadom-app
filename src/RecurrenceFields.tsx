@@ -39,6 +39,7 @@ export default function RecurrenceFields({
   intervalText,
   onIntervalTextChange,
   monthlyDayPicker = false,
+  initiallyExpanded = false,
 }: {
   date: string;
   value: RecurrenceDraft;
@@ -51,8 +52,10 @@ export default function RecurrenceFields({
   intervalText?: string;
   onIntervalTextChange?: (next: string) => void;
   monthlyDayPicker?: boolean;
+  /** Reveal saved recurrence details when opening an existing repeating event. */
+  initiallyExpanded?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(initiallyExpanded);
   const monthlyDayId = useId();
   const patch = (next: Partial<RecurrenceDraft>) => onChange({ ...value, ...next });
   return (

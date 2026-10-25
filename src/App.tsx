@@ -483,7 +483,9 @@ export default function App({
     setScreen("day");
   }
   function modifyEvent(e: PetEvent, on: string, action: "edit" | "delete") {
-    setEventScope(e.repeat === "once" ? "all" : "single");
+    // Editing a recurring series must show its saved recurrence/end settings
+    // on opening; the one-occurrence option remains available explicitly.
+    setEventScope(e.repeat === "once" ? "all" : action === "edit" ? "all" : "single");
     setOverlay({ kind: "modifyEvent", eventId: e.id, on, action });
   }
   async function syncSharedReminder(eventId: string, event: PetEvent) {
@@ -720,7 +722,7 @@ export default function App({
               exceptions: undefined,
             };
         return (
-          <>
+          <div className="event-modify-modal">
             {current.repeat !== "once" && (
               <Select
                 label={overlay.action === "edit" ? "Изменить" : "Удалить"}
@@ -749,7 +751,7 @@ export default function App({
                 </Button>
               </div>
             )}
-          </>
+          </div>
         );
       }
       case "detail": {
