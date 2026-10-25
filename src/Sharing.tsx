@@ -108,11 +108,11 @@ export function JoinPet({
           ) : found.status === "pending" ? (
             <p role="status">Запрос уже отправлен. Владелец должен подтвердить доступ.</p>
           ) : (
-            <Form label="Отправить запрос на добавление" onSave={async () => {
+            <Form label="Отправить запрос на добавление" variant="secondary" onSave={async () => {
               setFound(await petAccess<AccessResult>(session, "request", { code }));
               await refreshRequests();
             }}>
-              <p>Добавить питомца {found.name}?</p>
+              {null}
             </Form>
           )}
         </Card>
@@ -123,7 +123,7 @@ export function JoinPet({
         <Card key={request.id} className="pet-join-request">
           <h3>{request.name}</h3>
           <p className="pet-join-request-status">Ожидает подтверждения</p>
-          <Form children={null} label="Отменить запрос" onSave={async () => {
+          <Form children={null} label="Отменить запрос" variant="destructive" onSave={async () => {
             await petAccess(session, "cancel", { subject: request.id });
             await refreshRequests();
             setFound(null);

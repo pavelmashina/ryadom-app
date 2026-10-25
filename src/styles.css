@@ -2093,6 +2093,24 @@ dialog:has(.standard-pet-modal) .modal-content {
   font-size: var(--font-size-sm);
 }
 
+/* Give the search result breathing room below "Найти питомца". */
+.pet-join-modal > .card.pet-join-result {
+  margin-top: var(--space-compact-5);
+}
+
+/* Join requests use semantic outline actions: primary for request, danger for cancel. */
+.pet-join-modal .pet-join-result .form-actions .btn {
+  border: 1px solid var(--color-primary);
+  background: transparent;
+  color: var(--color-primary);
+}
+.pet-join-modal .pet-join-request .form-actions .btn {
+  border: 1px solid var(--color-danger);
+  background: transparent;
+  color: var(--color-danger);
+}
+
+
 /* Day screen uses the Training calendar's 44px tracks / 36px date circles,
    while preserving its own month header and category legend. */
 .day-screen {
