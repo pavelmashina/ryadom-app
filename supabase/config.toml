@@ -1,0 +1,4 @@
+# Invitation emails validate the user's JWT against Supabase Auth and check
+# pet ownership in PostgreSQL; disable legacy gateway JWT checks for ES256 keys.
+[functions.pet-invitation-email]
+verify_jwt = false

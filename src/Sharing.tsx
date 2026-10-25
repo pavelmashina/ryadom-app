@@ -10,7 +10,7 @@ import {
 } from "./sharing-api";
 import type { AuthSession } from "./backend";
 import type { Pet } from "./domain";
-import { inviteLink, invitationMailto } from "./share-invitation";
+import { sendPetInvitation } from "./invitation-email";
 
 export function JoinPet({
   session, onChanged, initialCode,
@@ -194,8 +194,6 @@ export function Sharing({
     }),
     [error, setError] = useState(""),
     [message, setMessage] = useState("");
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteUrl, setInviteUrl] = useState("");
   const [confirm, setConfirm] = useState<{
       action: string;
       subject?: string;
@@ -292,36 +290,17 @@ export function Sharing({
         <>
           <Card>
             <h3>Пригласить по email</h3>
-            <Form label="Подготовить приглашение"
+            <Form label="Отправить приглашение"
               onSave={async (data) => {
                 const email = text(data, "email");
-                const url = inviteLink(location.origin, import.meta.env.BASE_URL, pet.shareCode || "");
-                invitationMailto(email, pet.name, url);
-                setInviteEmail(email);
-                setInviteUrl(url);
-                setMessage("Приглашение готово. Откройте письмо или скопируйте ссылку.");
+                setMessage("");
+                await sendPetInvitation(session, pet.id, email);
+                setMessage(`Приглашение отправлено на ${email}. Доступ появится после вашего подтверждения.`);
               }}
             >
               <Field label="Email получателя" name="email" type="email" required
-                maxLength={254} placeholder="email@example.com" autoComplete="email"
-                onChange={() => { setInviteEmail(""); setInviteUrl(""); }} />
+                maxLength={254} placeholder="email@example.com" autoComplete="email" />
             </Form>
-            {inviteUrl && (
-              <div className="invitation-actions">
-                <Button variant="primary" fullWidth
-                  onClick={() => {
-                    window.location.href = invitationMailto(inviteEmail, pet.name, inviteUrl);
-                  }}>Открыть письмо</Button>
-                <Button fullWidth onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(inviteUrl);
-                    setMessage("Ссылка скопирована. Отправьте её человеку, которому хотите открыть доступ.");
-                  } catch {
-                    setError("Не удалось скопировать ссылку. Попробуйте открыть письмо.");
-                  }
-                }}>Скопировать ссылку</Button>
-              </div>
-            )}
           </Card>
           <SectionHeader
             title={`Запросы на доступ · ${details.requests.length}`}
