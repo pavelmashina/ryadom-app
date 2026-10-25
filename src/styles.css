@@ -1590,3 +1590,117 @@ dialog:has(.new-pet-form) .modal-content {
 .app main:has(> .account-back-row) {
   padding-top: calc(var(--space-compact-6) + env(safe-area-inset-top));
 }
+
+/* Account: one list of pets, then one action; muted red sign-out is last. */
+.account-pets-management .account-pet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-compact-3);
+  min-width: 0;
+  padding: var(--space-compact-3) 0;
+}
+.account-pets-management .account-pet-row > span {flex: 1 1 auto;}
+.account-pets-management .account-pet-row .btn {
+  flex: none;
+  min-height: var(--button-height-sm);
+  max-width: 54%;
+  white-space: nowrap;
+}
+.account-logout.btn,
+.account-logout.btn-ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-compact-2);
+  width: 100%;
+  margin: var(--space-compact-5) 0 0;
+  background: var(--color-danger-surface);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 25%, transparent);
+  color: color-mix(in srgb, var(--color-danger) 72%, var(--color-text-secondary));
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+.account-logout svg {width:var(--icon-size-sm);height:var(--icon-size-sm);}
+.account-logout.btn:hover {background:var(--color-danger-surface);}
+/* Selection menu and its add action use the same compact modal choice. */
+.pet-add-choices {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-compact-3);
+}
+.pet-add-choices .btn {justify-content:flex-start;gap:var(--space-compact-3);font-size:var(--font-size-sm);}
+.pet-add-choices .btn svg {width:var(--icon-size-md);height:var(--icon-size-md);flex:none;}
+.pet-access-list {display:grid;gap:var(--space-compact-3);}
+/* Full-screen pet management is a content screen, without branded header. */
+.app main:has(> .pet-profile-screen) {
+  padding-top: calc(var(--space-compact-6) + env(safe-area-inset-top));
+}
+.pet-profile-screen {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-compact-5);
+  min-width: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+}
+.pet-profile-screen .account-back-row {margin-bottom:var(--space-compact-2);}
+.pet-profile-screen .profile-hero {
+  display:flex;
+  align-items:center;
+  gap:var(--space-compact-4);
+  margin:0;
+  padding:0;
+}
+.pet-profile-screen .profile-hero .avatar {
+  width:var(--button-height-lg);
+  height:var(--button-height-lg);
+  border-radius:var(--radius-md);
+}
+.pet-profile-screen .profile-hero .avatar svg {width:var(--icon-size-lg);height:var(--icon-size-lg);}
+.pet-profile-screen .profile-hero h1 {
+  margin:0;
+  font-size:var(--font-size-lg);
+  font-weight:var(--font-weight-semibold);
+  line-height:var(--line-height-ui-heading);
+}
+.pet-profile-screen .profile-hero p {
+  margin:var(--space-compact-1) 0 0;
+  font-size:var(--font-size-sm);
+  color:var(--color-text-secondary);
+}
+.pet-profile-screen > .card,
+.pet-profile-screen .pet-profile-section > .card {
+  box-sizing:border-box;
+  margin:0;
+  padding:var(--space-compact-4);
+  border-radius:var(--radius-md);
+}
+.pet-profile-screen .pet-profile-section {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:var(--space-compact-4);
+  min-width:0;
+}
+.pet-profile-screen .pet-profile-section > .section-title {
+  margin:0;
+  padding:0;
+}
+.pet-profile-screen .pet-profile-section > .section-title h2 {
+  margin:0;
+  font-size:var(--font-size-lg);
+  font-weight:var(--font-weight-semibold);
+}
+.pet-profile-screen .pet-profile-section > .card {display:grid;gap:var(--space-compact-3);}
+.pet-profile-screen .pet-profile-section p,
+.pet-profile-screen .pet-profile-section .hint {
+  margin:0;
+  font-size:var(--font-size-sm);
+  line-height:var(--line-height-ui-body);
+}
+.pet-profile-screen .pet-profile-section .empty {margin:0;}
+.pet-profile-screen .pet-profile-section .btn {font-size:var(--font-size-sm);}
+.pet-profile-screen dl {display:grid;gap:0;margin:0;}
+.pet-profile-screen dl > div {padding:var(--space-compact-3) 0;gap:var(--space-compact-3);}
+.pet-profile-screen dl :is(dt,dd) {font-size:var(--font-size-sm);overflow-wrap:anywhere;}

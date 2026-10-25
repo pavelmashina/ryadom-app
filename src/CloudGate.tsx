@@ -318,10 +318,10 @@ export default function CloudGate() {
         return result.state;
       }}
       onPersist={persist}
+      onLogout={logout}
       accountContent={
         <Account
           session={account.session}
-          onLogout={logout}
           onUserUpdated={(user) => {
             if (active.current?.user.id === user.id) {
               active.current = { ...active.current, user };

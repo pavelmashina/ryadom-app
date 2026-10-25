@@ -47,7 +47,7 @@ describe("Infinite recurrence and new account state",()=>{
   it("uses a compact header picker and moves profile and sharing management to Account",()=>{
     expect(app).toContain('className="pet-switcher-menu"');
     expect(app).toContain('role="menuitemradio"');
-    expect(app).toContain('{screen !== "account" && <header className="app-header">');
+    expect(app).toContain('{screen !== "account" && screen !== "profile" && <header className="app-header">');
     expect(app).toContain('<Plus aria-hidden="true"/><span>Добавить питомца</span>');
     expect(app).toContain('SectionHeader title="Питомцы и доступ"');
     expect(app).toContain('goToPetSettings(p)');

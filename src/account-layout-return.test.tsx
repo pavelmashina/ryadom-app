@@ -28,7 +28,7 @@ describe("Account layout and return navigation",()=>{
     expect(stock).toContain(".stock-screen .stock-back");
   });
   it("hides the entire branded header and account icon only on the Account screen",()=>{
-    expect(app).toContain('{screen !== "account" && <header className="app-header">');
+    expect(app).toContain('{screen !== "account" && screen !== "profile" && <header className="app-header">');
     expect(app).toContain('<span className="brand">');
     expect(app).toContain('className="account-trigger"');
     expect(css).toContain(".app main:has(> .account-back-row) {");

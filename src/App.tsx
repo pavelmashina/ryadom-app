@@ -2,7 +2,6 @@ import {
   SectionHeader,
   Toast,
   Button,
-  InteractiveCard,
   IconButton,
   Card,
   Empty,
@@ -29,6 +28,7 @@ import {
   Download,
   UserRound,
   ArrowLeft,
+  LogOut,
   Plus,
   Settings,
 } from "lucide-react";
@@ -44,7 +44,6 @@ import { saveWeight, deleteWeight, saveMedicalRecord, deleteMedicalRecord, delet
 import { setPersonalReminder } from "./push-api";
 import {
   blankPet,
-  demoPet,
   today,
   fmt,
   id,
@@ -102,6 +101,7 @@ type Overlay =
         | "sharing"
         | "join"
         | "newpet"
+        | "addPetChoice"
         | "editpet"
         | "command"
         | "weight"
@@ -121,12 +121,14 @@ export default function App({
   initial,
   onPersist,
   accountContent,
+  onLogout,
   session,
   onRefresh,
 }: {
   initial: State;
   onPersist: (next: State, before: State) => Promise<PersistOutcome>;
   accountContent: ReactNode;
+  onLogout: () => Promise<void>;
   session: AuthSession;
   onRefresh: () => Promise<State>;
 }) {
@@ -147,11 +149,13 @@ export default function App({
   const [joinCode, setJoinCode] = useState<string | null>(() => joinCodeFromUrl(location.search));
   const [eventScope, setEventScope] = useState<EventScope>("single");
   const [busy, setBusy] = useState(false);
+  const [leavingAccount, setLeavingAccount] = useState(false);
   const [state, setState] = useState(liveState.current),
     [storageError, setStorageError] = useState(loaded.error),
     [notice, setNotice] = useState(""),
     [screen, setScreen] = useState<Screen>("day"),
     [accountReturnScreen, setAccountReturnScreen] = useState<Screen>("day"),
+    [profileReturnScreen, setProfileReturnScreen] = useState<Screen>("account"),
     [overlay, setOverlay] = useState<Overlay | null>(null),
     [petMenuOpen, setPetMenuOpen] = useState(false),
     [selected, setSelected] = useState(today()),
@@ -606,16 +610,27 @@ export default function App({
     setScreen(accountReturnScreen === "account" ? "day" : accountReturnScreen);
     window.scrollTo({ top: 0 });
   }
-  function openPetMenu(){
-    if(!hasPets){setOverlay({kind:"newpet"});return;}
-    setPetMenuOpen(value=>!value);
+  function openPetMenu() {
+    if (!hasPets) { setOverlay({ kind: "addPetChoice" }); return; }
+    setPetMenuOpen(value => !value);
   }
-  function goToPetSettings(p:Pet){
-    safe(async()=>{
-      if(p.id!==state.selectedPet)await commit({...state,selectedPet:p.id});
+  function addPetChoice() {
+    setPetMenuOpen(false);
+    setOverlay({ kind: "addPetChoice" });
+  }
+  function goToPetSettings(p: Pet) {
+    safe(async () => {
+      if (p.id !== state.selectedPet) await commit({ ...state, selectedPet: p.id });
+      setProfileReturnScreen(screen);
       setPetMenuOpen(false);
+      close();
       setScreen("profile");
+      window.scrollTo({ top: 0 });
     });
+  }
+  function leavePetProfile() {
+    setScreen(profileReturnScreen === "profile" ? "account" : profileReturnScreen);
+    window.scrollTo({ top: 0 });
   }
   function exportData() {
     download(`ryadom-backup-${today()}.json`, JSON.stringify(state, null, 2));
@@ -636,6 +651,7 @@ export default function App({
                 sharing: "Совместный доступ",
                 join: "Добавить существующего питомца",
                 newpet: "Новый питомец",
+                addPetChoice: "Добавить питомца",
                 editpet: "Данные питомца",
                 command: "Новая команда",
                 weight: "Записать вес",
@@ -655,6 +671,15 @@ export default function App({
   function modalBody() {
     if (!overlay) return null;
     switch (overlay.kind) {
+      case "addPetChoice":
+        return <div className="pet-add-choices">
+          <Button fullWidth variant="secondary" onClick={() => setOverlay({ kind: "newpet" })}>
+            <Plus aria-hidden="true" /> Создать нового питомца
+          </Button>
+          <Button fullWidth variant="secondary" onClick={() => setOverlay({ kind: "join" })}>
+            <Dog aria-hidden="true" /> Добавить с помощью кода
+          </Button>
+        </div>;
       case "sharing":
         return <Sharing session={session} pet={pet} onChanged={refreshNow} />;
       case "join":
@@ -782,74 +807,17 @@ export default function App({
         );
       }
       case "pets":
-        return (
-          <>
-            {state.pets.map((p) => (
-              <InteractiveCard
-                key={p.id}
-                onClick={() => choose(p)}
-                className="pet-row"
-              >
-                <span className="avatar">
-                  <Dog />
-                </span>
-                <span>
-                  <strong>{p.name}</strong>
-                  <small>
-                    {p.role === "editor" ? "Совместный доступ" : "Владелец"}
-                    {p.pendingRequests
-                      ? ` · Запросы: ${p.pendingRequests}`
-                      : ""}
-                  </small>
-                </span>
-                {p.id === pet.id ? "✓" : "→"}
-              </InteractiveCard>
-            ))}
-            <Button
-              onClick={() => setOverlay({ kind: "newpet" })}
-              fullWidth
-              variant="primary"
-            >
-              Добавить питомца
+        return <div className="pet-access-list">
+          {state.pets.map(p=><div className="account-pet-row" key={p.id}>
+            <span><strong>{p.name}</strong><small>{p.role==="editor"?"Совместный доступ":"Владелец"}</small></span>
+            <Button size="sm" variant="secondary" onClick={()=>goToPetSettings(p)}>
+              <Settings aria-hidden="true" /> Управление
             </Button>
-            <Button fullWidth onClick={() => setOverlay({ kind: "join" })}>
-              Добавить существующего питомца
-            </Button>
-            <Button fullWidth onClick={() => setOverlay({ kind: "sharing" })}>
-              Совместный доступ
-              {pet.pendingRequests ? ` · ${pet.pendingRequests}` : ""}
-            </Button>
-            <Button
-              onClick={() => {
-                close();
-                setScreen("profile");
-              }}
-              fullWidth
-              variant="secondary"
-            >
-              Профиль · {pet.name}
-            </Button>
-            {!state.pets.some((p) => p.demo) && (
-              <Button
-                onClick={() =>
-                  safe(async () => {
-                    const p = demoPet();
-                    await commit({
-                      ...state,
-                      pets: [...state.pets, p],
-                      selectedPet: p.id,
-                    });
-                    close();
-                    setScreen("day");
-                  })
-                }
-                variant="ghost"
-              >
-                Открыть отдельный демонстрационный пример
-              </Button>
-            )}
-          </>
-        );
+          </div>)}
+          <Button fullWidth variant="secondary" onClick={addPetChoice}>
+            <Plus aria-hidden="true" /> Добавить питомца
+          </Button>
+        </div>;
       case "newpet":
         return (
           <div className="new-pet-form">
@@ -864,6 +832,7 @@ export default function App({
                   selectedPet: p.id,
                 }),
               );
+              setProfileReturnScreen(screen);
               setScreen("profile");
             }}
           >
@@ -1335,7 +1304,7 @@ export default function App({
       <Toast message={notice} tone={/не удалось|ошибка|недоступ|прекращён/i.test(notice)
         ? "error" : notice.includes("Сохранено") ? "success" : "info"}/>
       <fieldset className="app-fields" disabled={busy}>
-        {screen !== "account" && <header className="app-header">
+        {screen !== "account" && screen !== "profile" && <header className="app-header">
           <span className="brand">
             <PawPrint />
             рядом
@@ -1360,20 +1329,12 @@ export default function App({
                       {p.id===state.selectedPet&&<span aria-hidden="true">✓</span>}
                     </button>)}
                     <button type="button" role="menuitem"
-                      onClick={()=>{setPetMenuOpen(false);setOverlay({kind:"newpet"});}}>
+                      onClick={addPetChoice}>
                       <Plus aria-hidden="true"/> Добавить питомца
                     </button>
                   </div>
                 </>}
             </div>
-            {screen === "profile" && (
-              <IconButton
-                label="Назад к планам"
-                onClick={() => setScreen("day")}
-              >
-                <ArrowLeft />
-              </IconButton>
-            )}
             <IconButton
               label="Аккаунт"
               className="account-trigger"
@@ -1422,33 +1383,33 @@ export default function App({
               <SectionHeader title="Питомцы и доступ" />
               <Card className="account-pets-management">
               {state.pets.map(p=><div className="account-pet-row" key={p.id}>
-                <span><strong>{p.name}</strong><small>{p.role==="editor"?"Совместный доступ":"Владелец"}</small></span>
-                <Button size="sm" variant="secondary" onClick={()=>goToPetSettings(p)}>
-                  <Settings aria-hidden="true"/> Профиль и доступ
-                </Button>
-              </div>)}
-              {!hasPets&&<p className="hint">У вас пока нет питомцев.</p>}
-              <Button variant="secondary" fullWidth onClick={()=>setOverlay({kind:"newpet"})}>
-                <Plus aria-hidden="true"/> Добавить питомца
-              </Button>
-              <Button variant="secondary" fullWidth onClick={()=>setOverlay({kind:"join"})}>
-                Добавить существующего питомца
-              </Button>
-              {hasPets&&<Button variant="ghost" fullWidth onClick={()=>setOverlay({kind:"pets"})}>
-                Управление всеми питомцами
-              </Button>}
+                 <span><strong>{p.name}</strong><small>{p.role==="editor"?"Совместный доступ":"Владелец"}</small></span>
+                 <Button size="sm" variant="secondary" aria-label={"Управлять питомцем "+p.name} onClick={()=>goToPetSettings(p)}>
+                   <Settings aria-hidden="true"/> Управление
+                 </Button>
+               </div>)}
+               {!hasPets&&<p className="hint">У вас пока нет питомцев.</p>}
+               <Button variant="secondary" fullWidth onClick={addPetChoice}>
+                 <Plus aria-hidden="true"/> Добавить питомца
+               </Button>
               </Card>
             </section>
+            <Button type="button" variant="ghost" className="account-logout" fullWidth
+              loading={leavingAccount} loadingText="Выходим…"
+              onClick={() => safe(async () => {
+                if (leavingAccount) return;
+                setLeavingAccount(true);
+                try { await onLogout(); } finally { setLeavingAccount(false); }
+              })}>
+              <LogOut aria-hidden="true"/> Выйти из аккаунта
+            </Button>
           </>}
-          {!hasPets && screen !== "account" && (
+          {!hasPets && screen !== "account" && screen !== "profile" && (
             <Card className="empty-pet-welcome">
               <h2>Добавьте питомца</h2>
               <p>После добавления здесь появятся календарь, занятия и запасы питомца.</p>
-              <Button fullWidth onClick={()=>setOverlay({kind:"newpet"})}>
+              <Button fullWidth onClick={addPetChoice}>
                 <Plus aria-hidden="true"/> Добавить питомца
-              </Button>
-              <Button variant="secondary" fullWidth onClick={()=>setOverlay({kind:"join"})}>
-                Добавить существующего питомца
               </Button>
             </Card>
           )}
@@ -1529,13 +1490,16 @@ export default function App({
             />
           )}{" "}
           {hasPets && screen === "profile" && (
-            <>
+            <section className="pet-profile-screen">
+              <div className="account-back-row">
+                <button type="button" className="account-back" onClick={leavePetProfile}
+                  aria-label="Назад" title="Назад"><ArrowLeft aria-hidden="true"/></button>
+              </div>
               <div className="profile-hero">
                 <span className="avatar">
                   <Dog />
                 </span>
                 <div>
-                  <span className="eyebrow">Мой питомец</span>
                   <h1>{pet.name}</h1>
                   <p>{pet.breed || "Порода не указана"}</p>
                 </div>
@@ -1571,8 +1535,9 @@ export default function App({
                   Редактировать профиль
                 </Button>
               </Card>
-              <Card>
-                <SectionHeader title="Совместный доступ" compact />
+              <section className="pet-profile-section">
+                <SectionHeader title="Совместный доступ" />
+                <Card>
                 <p>
                   {pet.role === "editor"
                     ? "У вас совместный доступ к этой карточке."
@@ -1585,7 +1550,9 @@ export default function App({
                   Управлять доступом
                   {pet.pendingRequests ? ` · ${pet.pendingRequests}` : ""}
                 </Button>
-              </Card>
+                </Card>
+              </section>
+              <section className="pet-profile-section">
               <SectionHeader title="Документы">
                 <Button
                   onClick={() => setOverlay({ kind: "document" })}
@@ -1617,13 +1584,7 @@ export default function App({
                   Добавьте ветпаспорт или результаты обследований.
                 </Empty>
               )}
-              <Button
-                onClick={() => setOverlay({ kind: "pets" })}
-                fullWidth
-                variant="secondary"
-              >
-                Все питомцы
-              </Button>
+
               <Button
                 onClick={() => setOverlay({ kind: "backup" })}
                 fullWidth
@@ -1631,10 +1592,11 @@ export default function App({
               >
                 Резервные копии и восстановление
               </Button>
-            </>
+              </section>
+            </section>
           )}
         </main>
-        {hasPets && !showFirstPetSetup && <nav className="bottom-nav" aria-label="Разделы приложения">
+        {hasPets && !showFirstPetSetup && screen !== "profile" && <nav className="bottom-nav" aria-label="Разделы приложения">
           {nav.map(([key, label, Icon]) => (
             <Button
               key={key}

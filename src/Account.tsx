@@ -8,7 +8,7 @@ import {
   text,
 } from "./components";
 import { useEffect, useState, type ReactNode } from "react";
-import { Mail, LockKeyhole, LogOut } from "lucide-react";
+import { Mail, LockKeyhole } from "lucide-react";
 import { PushSettings } from "./PushSettings";
 import NotificationPreferencesSettings from "./NotificationPreferencesSettings";
 import {
@@ -34,11 +34,9 @@ export function AccountSection({
 }
 export default function Account({
   session,
-  onLogout,
   onUserUpdated,
 }: {
   session: AuthSession;
-  onLogout: () => Promise<void>;
   onUserUpdated: (user: AuthUser) => void;
 }) {
   const [user, setUser] = useState(session.user),
@@ -48,7 +46,6 @@ export default function Account({
     [error, setError] = useState("");
   const [emailError, setEmailError] = useState(""),
     [passwordError, setPasswordError] = useState("");
-  const [leaving, setLeaving] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
   useEffect(() => {
     let stopped = false;
@@ -130,29 +127,6 @@ export default function Account({
       <AccountSection title="Уведомления">
         <PushSettings session={session} onEnabledChange={setPushEnabled} />
         <NotificationPreferencesSettings session={session} disabled={!pushEnabled} />
-      </AccountSection>
-      <AccountSection title="Сеанс">
-        <p>
-          Данные питомцев останутся в вашем аккаунте. Вы сможете вернуться к ним
-          после входа.
-        </p>
-        <Button
-          variant="ghost"
-          loading={leaving}
-          loadingText="Выходим…"
-          onClick={async () => {
-            if (leaving) return;
-            setLeaving(true);
-            try {
-              await onLogout();
-            } finally {
-              setLeaving(false);
-            }
-          }}
-        >
-          <LogOut aria-hidden="true" />
-          Выйти из аккаунта
-        </Button>
       </AccountSection>
       {view && (
         <Modal
