@@ -700,7 +700,8 @@ export default function App({
             selected={selected}
             session={session}
             pet={pet}
-            onTrainingSave={(next) => saved(() => update(() => next))}
+            onTrainingSave={(next) => update(() => next)}
+            onTrainingComplete={close}
             category={overlay.category}
             name={overlay.name}
             linkedRecord={overlay.linkedRecord}

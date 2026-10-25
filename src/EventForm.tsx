@@ -19,12 +19,14 @@ export default function EventForm({
   onSave,
   pet,
   onTrainingSave,
+  onTrainingComplete,
   existing,
   session,
 }: {
   selected: string;
   pet?: Pet;
   onTrainingSave?: (pet: Pet) => Promise<void>;
+  onTrainingComplete?: () => void;
   category?: PetEvent["category"];
   name?: string;
   linkedRecord?: string;
@@ -91,6 +93,8 @@ export default function EventForm({
         <TrainingPlan
           pet={pet}
           initialDate={selected}
+          auth={session}
+          onComplete={onTrainingComplete}
           onSave={onTrainingSave}
         />
       </div>

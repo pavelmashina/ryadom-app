@@ -352,11 +352,12 @@ export default function Training({
               pet={pet}
               session={view.session}
               schedule={view.schedule}
+              auth={session}
               onSave={async (p) => {
                 requireEdit();
                 await onSave(p);
-                setView(null);
               }}
+              onComplete={() => setView(null)}
             />
             {view.session?.status === "planned" && <Button fullWidth variant="secondary"
               onClick={() => setView({ kind:"cancel", session:view.session! })}>

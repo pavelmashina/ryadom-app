@@ -212,7 +212,9 @@ export async function setTrainingReminder(
         updated_at: new Date().toISOString(),
       }),
     });
-  } else if (enabled) {
+  } else {
+    // A disabled explicit choice must suppress the legacy account-wide default
+    // rather than allowing the background enqueue job to recreate it.
     await rest(session, "training_reminders", {
       method: "POST",
       body: JSON.stringify({
@@ -220,7 +222,7 @@ export async function setTrainingReminder(
         pet_id: petId,
         session_id: target.sessionId ?? null,
         schedule_id: target.scheduleId ?? null,
-        offset_value: minutes, offset_unit: "minutes", enabled: true,
+        offset_value: minutes, offset_unit: "minutes", enabled, source: "personal",
       }),
     });
   }

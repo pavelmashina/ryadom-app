@@ -11,6 +11,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Mail, LockKeyhole } from "lucide-react";
 import { PushSettings } from "./PushSettings";
 import NotificationPreferencesSettings from "./NotificationPreferencesSettings";
+import type { Pet } from "./domain";
 import {
   changeEmail,
   changePassword,
@@ -35,9 +36,11 @@ export function AccountSection({
 export default function Account({
   session,
   onUserUpdated,
+  pets,
 }: {
   session: AuthSession;
   onUserUpdated: (user: AuthUser) => void;
+  pets: Pet[];
 }) {
   const [user, setUser] = useState(session.user),
     [view, setView] = useState<"email" | "password" | null>(null);
@@ -126,7 +129,7 @@ export default function Account({
       </AccountSection>
       <AccountSection title="Уведомления">
         <PushSettings session={session} onEnabledChange={setPushEnabled} />
-        <NotificationPreferencesSettings session={session} disabled={!pushEnabled} />
+        <NotificationPreferencesSettings session={session} disabled={!pushEnabled} pets={pets} />
       </AccountSection>
       {view && (
         <Modal

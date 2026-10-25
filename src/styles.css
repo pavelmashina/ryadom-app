@@ -2755,3 +2755,24 @@ dialog:has(.event-detail-modal) .modal-head h2 {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-regular);
 }
+
+/* Per-pet subscription picker, compact and consistent with Account controls. */
+.notification-pet-filter { margin: 0 0 var(--space-compact-3) var(--space-compact-4); min-width:0; }
+.notification-pet-filter summary {
+  display:flex;align-items:center;justify-content:space-between;gap:var(--space-compact-2);
+  min-height:var(--button-height-sm);padding:var(--space-compact-3) var(--space-compact-4);
+  border:1px solid var(--color-input-border);border-radius:var(--radius-sm);
+  background:var(--color-surface);color:var(--color-text-primary);
+  font-family:var(--font-family-base);font-size:var(--font-size-sm);font-weight:var(--font-weight-regular);
+  list-style:none;cursor:pointer;
+}
+.notification-pet-filter summary::-webkit-details-marker {display:none;}
+.notification-pet-filter summary svg {height:var(--icon-size-sm);width:var(--icon-size-sm);transition:transform var(--transition-fast);}
+.notification-pet-filter[open] summary svg {transform:rotate(180deg);}
+.notification-pet-filter-summary {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.notification-pet-filter-options {display:grid;gap:var(--space-compact-2);margin-top:var(--space-compact-2);
+  padding:var(--space-compact-3);border:1px solid var(--color-border);border-radius:var(--radius-sm);}
+.notification-pet-option {display:flex;align-items:center;gap:var(--space-compact-3);
+  min-height:var(--button-height-sm);font-size:var(--font-size-sm);font-weight:var(--font-weight-regular);cursor:pointer;}
+.notification-pet-option input {width:18px;height:18px;flex:none;accent-color:var(--color-primary);}
+.training-reminder-custom {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-compact-3);}

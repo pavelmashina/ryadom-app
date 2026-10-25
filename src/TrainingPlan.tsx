@@ -1,5 +1,8 @@
-import { useState } from "react";
-import { Form } from "./components";
+import { useEffect, useState } from "react";
+import { Form, Select, Field } from "./components";
+import type { AuthSession } from "./backend";
+import { getTrainingReminder, setTrainingReminder } from "./push-api";
+import { reminderChoice, reminderOffsetMinutes, REMINDER_MULTIPLIER, type ReminderUnit } from "./reminder-choice";
 import RecurrenceFields, { draftForDate, type RecurrenceDraft } from "./RecurrenceFields";
 import TrainingDateField from "./TrainingDateField";
 import TrainingTimeField from "./TrainingTimeField";
@@ -25,6 +28,8 @@ export default function TrainingPlan({
   session,
   schedule,
   onSave,
+  onComplete,
+  auth,
   initialDate,
 }: {
   pet: Pet;
@@ -32,6 +37,8 @@ export default function TrainingPlan({
   session?: TrainingSession;
   schedule?: TrainingSchedule;
   onSave: (pet: Pet) => Promise<void>;
+  onComplete?: () => void;
+  auth?: AuthSession;
 }) {
   const initial = session?.date ?? schedule?.starts_on ?? initialDate ?? today();
   const [startDate, setStartDate] = useState(initial);
@@ -50,6 +57,29 @@ export default function TrainingPlan({
     endDate: schedule?.ends_on ?? "",
     count: schedule?.recurrence_count ?? 10,
   }));
+  const [reminderMode, setReminderMode] = useState("none");
+  const [reminderAmount, setReminderAmount] = useState(1);
+  const [reminderUnit, setReminderUnit] = useState<ReminderUnit>("hours");
+  const [reminderLoading, setReminderLoading] = useState(!!auth && !!(schedule || session));
+  const [reminderError, setReminderError] = useState("");
+  const targetId = schedule?.id ?? session?.id;
+  useEffect(() => {
+    if (!auth || !targetId) return;
+    let alive = true;
+    setReminderLoading(true);
+    void getTrainingReminder(auth, pet.id, schedule ? {scheduleId:targetId} : {sessionId:targetId})
+      .then((saved) => {
+        if (!alive) return;
+        const minutes = saved ? saved.offset_value * REMINDER_MULTIPLIER[saved.offset_unit] : 0;
+        const choice = reminderChoice(minutes, saved?.enabled ?? false);
+        setReminderMode(choice.mode);
+        setReminderAmount(choice.amount);
+        setReminderUnit(choice.unit);
+      }).catch((error) => {
+        if (alive) setReminderError(error instanceof Error ? error.message : "Не удалось загрузить напоминание");
+      }).finally(() => { if (alive) setReminderLoading(false); });
+    return () => { alive = false; };
+  }, [auth?.user.id, pet.id, targetId, !!schedule]);
   return (
     <Form
       label={schedule || session ? "Сохранить изменения" : "Запланировать"}
@@ -66,6 +96,9 @@ export default function TrainingPlan({
         if (recurrence.frequency !== "once" && recurrence.endType === "date" &&
             (!recurrence.endDate || recurrence.endDate < day))
           throw Error("Конец графика раньше начала");
+        if (reminderLoading || reminderError)
+          throw new Error(reminderError || "Загружаем напоминание. Повторите сохранение.");
+        const reminderMinutes = reminderOffsetMinutes(reminderMode, reminderAmount, reminderUnit);
         if (recurrence.frequency !== "once") {
           const next: TrainingSchedule = {
             id: schedule?.id ?? id(),
@@ -101,6 +134,8 @@ export default function TrainingPlan({
               valid.data,
             ],
           });
+          if (auth) await setTrainingReminder(auth, pet.id, {scheduleId: valid.data.id},
+            reminderMinutes, reminderMode !== "none");
         } else {
           const next: TrainingSession = {
             ...session,
@@ -124,7 +159,10 @@ export default function TrainingPlan({
             ...pet,
             workouts: [...pet.workouts.filter((s) => s.id !== next.id), valid.data],
           });
+          if (auth) await setTrainingReminder(auth, pet.id, {sessionId: valid.data.id},
+            reminderMinutes, reminderMode !== "none");
         }
+        onComplete?.();
       }}
     >
       <TrainingDateField
@@ -162,6 +200,33 @@ export default function TrainingPlan({
             onIntervalTextChange={setIntervalText}
           />
         </div>
+      <Select label="Напомнить" value={reminderMode} disabled={reminderLoading || !!reminderError}
+        onChange={event => setReminderMode(event.target.value)}>
+        <option value="none">Не напоминать</option>
+        <option value="0">В момент тренировки</option>
+        <option value="10">За 10 минут</option>
+        <option value="30">За 30 минут</option>
+        <option value="60">За 1 час</option>
+        <option value="1440">За 1 день</option>
+        <option value="custom">Настроить</option>
+      </Select>
+      {reminderMode === "custom" && (
+        <div className="fields training-reminder-custom">
+          <Field label="За сколько" type="number" min={1}
+            max={reminderUnit === "minutes" ? 525600 : reminderUnit === "hours" ? 8760 : reminderUnit === "days" ? 365 : 52}
+            value={reminderAmount}
+            onChange={event => setReminderAmount(Number(event.target.value) || 1)} />
+          <Select label="Единицы" value={reminderUnit}
+            onChange={event => setReminderUnit(event.target.value as ReminderUnit)}>
+            <option value="minutes">Минут</option>
+            <option value="hours">Часов</option>
+            <option value="days">Дней</option>
+            <option value="weeks">Недель</option>
+          </Select>
+        </div>
+      )}
+      {reminderLoading && <p role="status" className="hint">Загружаем напоминание…</p>}
+      {reminderError && <p role="alert" className="notice notice-error">{reminderError}</p>}
     </Form>
   );
 }
