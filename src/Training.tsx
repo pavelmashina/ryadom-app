@@ -248,7 +248,7 @@ export default function Training({
             view.kind === "actions"
               ? "Тренировка"
               : view.kind === "plan"
-                ? "План тренировки"
+                ? view.session || view.schedule ? "Редактировать тренировку" : "План тренировки"
               : view.kind === "cancel"
                 ? "Отменить тренировку"
               : view.kind === "reminder"
@@ -356,13 +356,12 @@ export default function Training({
               onSave={async (p) => {
                 requireEdit();
                 await onSave(p);
+                if (view.schedule && view.session) {
+                  await onMonthVisible?.(view.session.date.slice(0, 7));
+                }
               }}
               onComplete={() => setView(null)}
             />
-            {view.session?.status === "planned" && <Button fullWidth variant="secondary"
-              onClick={() => setView({ kind:"cancel", session:view.session! })}>
-              Отменить тренировку
-            </Button>}
             </>
           )}
           {view.kind === "rename" && command && canEdit && (

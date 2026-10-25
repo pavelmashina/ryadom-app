@@ -824,11 +824,21 @@ export default function App({
           return <p>Эта тренировка больше не запланирована.</p>;
         const schedule = pet.trainingSchedules?.find(s => s.id === workout.schedule_id);
         return (
-          <div className="event-modify-modal training-day-modify">
+          <div className={overlay.action === "edit"
+            ? "training-modal-content training-day-modify"
+            : "event-modify-modal training-day-modify"}>
             {overlay.action === "edit" ? (
               <TrainingPlan pet={pet} auth={session} session={workout}
                 schedule={schedule}
-                onSave={next => update(() => next)}
+                onSave={async next => {
+                  await update(() => next);
+                  if (schedule) {
+                    const changed = await rpc(session, "materialize_training_month", {
+                      p_pet: pet.id, p_month: workout.date.slice(0, 7) + "-01",
+                    });
+                    if (changed) await refreshNow();
+                  }
+                }}
                 onComplete={close} />
             ) : (
               <>

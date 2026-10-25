@@ -88,7 +88,8 @@ describe("Scheduled training editor and cancellation",()=>{
   expect(training).toContain("Удалить эту и все последующие");
   expect(training).toContain('confirmCancel(view.session, "following")');
   expect(training).toContain("cancelBusy");
-  expect(planner).toContain('allowedFrequencies={schedule');
+  expect(planner).toContain('onlySingle');
+  expect(planner).toContain('allowedFrequencies={onlySingle');
   expect(planner).toContain("workouts: session && !schedule");
  });
  it("uses an inline check without the extra selected label",()=>{

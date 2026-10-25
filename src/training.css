@@ -1151,3 +1151,54 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
   align-self: center;
   overflow-wrap: break-word;
 }
+
+/* Shared edit dialog design: both Day and Training mount the same planner.
+   Follow the five-level typography and compact spacing tokens by default. */
+dialog:has(.training-modal-content) .modal-head h2 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-heading);
+}
+.training-plan-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-compact-3);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  font-family: var(--font-family-base);
+}
+.training-plan-editor > .field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-compact-2);
+  margin: 0;
+}
+.training-plan-editor > .field > label {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-caption);
+}
+.training-plan-editor > .field select {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-3) var(--field-control-inline);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+}
+.training-plan-editor > form {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  width: 100%;
+  gap: var(--space-compact-3);
+  margin: 0;
+}

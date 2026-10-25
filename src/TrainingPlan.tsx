@@ -7,6 +7,7 @@ import RecurrenceFields, { draftForDate, type RecurrenceDraft } from "./Recurren
 import TrainingDateField from "./TrainingDateField";
 import TrainingTimeField from "./TrainingTimeField";
 import { id, today, type Pet } from "./domain";
+import { applyTrainingEditScope, continuationSchedule, type TrainingEditScope } from "./training-edit-scope";
 import { trainingTimestamp, scheduleSchema, type TrainingSchedule } from "./training-planning";
 import { trainingSchema, type TrainingSession } from "./training-domain";
 
@@ -23,14 +24,11 @@ export function validateMonthlyRepeatDay(frequency: RecurrenceDraft["frequency"]
     throw new Error("Выберите число месяца или отметьте «Последнее число месяца»");
 }
 
+/** Shared entry point: Day and Training use the very same scope chooser,
+ * form, validation and layout. Only the parent modal's title differs for new plans.
+ */
 export default function TrainingPlan({
-  pet,
-  session,
-  schedule,
-  onSave,
-  onComplete,
-  auth,
-  initialDate,
+  pet, session, schedule, onSave, onComplete, auth, initialDate,
 }: {
   pet: Pet;
   initialDate?: string;
@@ -39,6 +37,59 @@ export default function TrainingPlan({
   onSave: (pet: Pet) => Promise<void>;
   onComplete?: () => void;
   auth?: AuthSession;
+}) {
+  const recurring = !!session && !!schedule;
+  const [scope, setScope] = useState<TrainingEditScope>("all");
+  const [continuationId] = useState(() => id());
+  const chosenSchedule = recurring && scope === "future"
+    ? continuationSchedule(schedule, session, continuationId)
+    : recurring && scope === "single" ? undefined : schedule;
+  const chosenSession = recurring && scope !== "single" ? undefined : session;
+  const chosenDate = recurring
+    ? scope === "all" ? schedule.starts_on : session.date
+    : initialDate;
+  return (
+    <div className="training-plan-editor">
+      {recurring && (
+        <Select label="Изменить" value={scope}
+          onChange={event => setScope(event.target.value as TrainingEditScope)}>
+          <option value="single">Только эту тренировку</option>
+          <option value="future">Эту и все последующие</option>
+          <option value="all">Все тренировки серии</option>
+        </Select>
+      )}
+      <TrainingPlanFields
+        key={recurring ? scope : session?.id ?? schedule?.id ?? "new"}
+        pet={pet}
+        session={chosenSession}
+        schedule={chosenSchedule}
+        initialDate={chosenDate}
+        auth={auth}
+        reminderFromScheduleId={recurring && scope === "future" ? schedule.id : undefined}
+        onlySingle={recurring && scope === "single"}
+        onSave={async next => {
+          await onSave(recurring
+            ? applyTrainingEditScope(next, session, schedule, scope)
+            : next);
+        }}
+        onComplete={onComplete}
+      />
+    </div>
+  );
+}
+function TrainingPlanFields({
+  pet, session, schedule, onSave, onComplete, auth, initialDate,
+  reminderFromScheduleId, onlySingle = false,
+}: {
+  pet: Pet;
+  initialDate?: string;
+  session?: TrainingSession;
+  schedule?: TrainingSchedule;
+  onSave: (pet: Pet) => Promise<void>;
+  onComplete?: () => void;
+  auth?: AuthSession;
+  reminderFromScheduleId?: string;
+  onlySingle?: boolean;
 }) {
   const initial = session?.date ?? schedule?.starts_on ?? initialDate ?? today();
   const [startDate, setStartDate] = useState(initial);
@@ -63,11 +114,14 @@ export default function TrainingPlan({
   const [reminderLoading, setReminderLoading] = useState(!!auth && !!(schedule || session));
   const [reminderError, setReminderError] = useState("");
   const targetId = schedule?.id ?? session?.id;
+  const sourceId = reminderFromScheduleId ?? targetId;
   useEffect(() => {
     if (!auth || !targetId) return;
     let alive = true;
     setReminderLoading(true);
-    void getTrainingReminder(auth, pet.id, schedule ? {scheduleId:targetId} : {sessionId:targetId})
+    void getTrainingReminder(auth, pet.id,
+      reminderFromScheduleId ? {scheduleId:reminderFromScheduleId}
+        : schedule ? {scheduleId:targetId} : {sessionId:targetId})
       .then((saved) => {
         if (!alive) return;
         const minutes = saved ? saved.offset_value * REMINDER_MULTIPLIER[saved.offset_unit] : 0;
@@ -79,7 +133,7 @@ export default function TrainingPlan({
         if (alive) setReminderError(error instanceof Error ? error.message : "Не удалось загрузить напоминание");
       }).finally(() => { if (alive) setReminderLoading(false); });
     return () => { alive = false; };
-  }, [auth?.user.id, pet.id, targetId, !!schedule]);
+  }, [auth?.user.id, pet.id, targetId, sourceId, !!schedule, reminderFromScheduleId]);
   return (
     <Form
       label={schedule || session ? "Сохранить изменения" : "Запланировать"}
@@ -191,11 +245,13 @@ export default function TrainingPlan({
             value={recurrence}
             onChange={setRecurrence}
             flatEnd
-            allowedFrequencies={schedule
-              ? ["daily","weekly","monthly","yearly"]
-              : ["once","daily","weekly","monthly","yearly"]}
+            allowedFrequencies={onlySingle
+              ? ["once"]
+              : schedule ? ["daily","weekly","monthly","yearly"]
+                : ["once","daily","weekly","monthly","yearly"]}
             simpleFrequencyLabels
             monthlyDayPicker
+            initiallyExpanded={!!schedule}
             intervalText={intervalText}
             onIntervalTextChange={setIntervalText}
           />
