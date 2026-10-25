@@ -45,7 +45,7 @@ describe("Day calendar unified with Training calendar layout", () => {
     expect(html).toContain('type="date"');
     expect(html).toContain('type="time"');
     expect(html).toContain('disabled=""');
-    expect(html).toContain("Выберите дату");
+    expect(html).toContain('class="training-date-value"');
     expect(source("./EventForm.tsx")).toContain("value={startDate}");
     expect(source("./EventForm.tsx")).toContain("disabled={allDay}");
     expect(source("./EventForm.tsx")).toContain('allDay ? "" : text(d, "time")');

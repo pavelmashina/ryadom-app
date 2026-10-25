@@ -26,7 +26,7 @@ describe("Unified form typography, insets and weekday layout",()=>{
     }
     expect(html).toContain('value="weekly" selected=""');
     for(const styles of [global,training]) {
-      const block=styles.split(".weekdays-picker-row {").slice(-1)[0]?.split("}")[0]??"";
+      const block=styles.split(".weekdays-picker-row {")[1]?.split("}")[0]??"";
       expect(block).toContain("grid-template-columns: repeat(7, minmax(0, 1fr))");
       expect(block).toContain(styles === training ? "gap: 1px" : "gap: calc(var(--space-compact-1) / 2)");
     }
