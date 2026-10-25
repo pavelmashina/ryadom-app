@@ -1,4 +1,4 @@
-import type { PersonalReminder } from "./push-api";
+import type { SharedEventReminder } from "./push-api";
 
 export const REMINDER_MULTIPLIER = {
   minutes: 1,
@@ -24,7 +24,7 @@ export function reminderChoice(minutes: number, enabled: boolean): ReminderChoic
     : minutes >= 60 && minutes % 60 === 0 ? "hours" : "minutes";
   return { mode: "custom", amount: minutes / REMINDER_MULTIPLIER[unit], unit };
 }
-export function savedReminderChoice(rows: PersonalReminder[]): ReminderChoice {
+export function savedReminderChoice(rows: SharedEventReminder[]): ReminderChoice {
   // Native per-user subscription overrides the shared/legacy event fields.
   const reminder = rows.find((row) => row.enabled);
   if (!reminder) return reminderChoice(0, false);

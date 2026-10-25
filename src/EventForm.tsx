@@ -6,7 +6,7 @@ import RecurrenceFields, { draftForDate, type RecurrenceDraft } from "./Recurren
 import type { Pet } from "./domain";
 import { useEffect, useState } from "react";
 import type { AuthSession } from "./backend";
-import { getPersonalReminders } from "./push-api";
+import { getSharedEventReminder } from "./push-api";
 import { reminderChoice, savedReminderChoice, reminderOffsetMinutes, type ReminderUnit } from "./reminder-choice";
 import { eventSchema, id, type PetEvent } from "./domain";
 import { categories } from "./Calendar";
@@ -59,7 +59,7 @@ export default function EventForm({
     let alive = true;
     setReminderReady(false);
     setReminderError("");
-    void getPersonalReminders(session, existing.id)
+    void getSharedEventReminder(session, existing.id)
       .then((rows) => {
         if (!alive) return;
         const choice = savedReminderChoice(rows);

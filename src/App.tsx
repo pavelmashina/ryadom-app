@@ -43,7 +43,7 @@ import ReminderSettings from "./ReminderSettings";
 import FirstPetSetup from "./FirstPetSetup";
 import { needsFirstPetSetup, type PetBasics } from "./first-pet-setup";
 import { saveWeight, deleteWeight, saveMedicalRecord, deleteMedicalRecord, deletePetDocument } from "./health-actions";
-import { setPersonalReminder } from "./push-api";
+import { setSharedEventReminder } from "./push-api";
 import {
   blankPet,
   today,
@@ -475,7 +475,7 @@ export default function App({
   }
   async function addEvent(e: PetEvent) {
     await saved(() => update((p) => ({ ...p, events: [...p.events, e] })));
-    if (e.reminderEnabled) await syncPersonalReminder(e.id, e);
+    if (e.reminderEnabled) await syncSharedReminder(e.id, e);
     setSelected(e.date);
     setMonth(e.date.slice(0, 7) + "-01");
     setScreen("day");
@@ -484,9 +484,9 @@ export default function App({
     setEventScope(e.repeat === "once" ? "all" : "single");
     setOverlay({ kind: "modifyEvent", eventId: e.id, on, action });
   }
-  async function syncPersonalReminder(eventId: string, event: PetEvent) {
+  async function syncSharedReminder(eventId: string, event: PetEvent) {
     try {
-      await setPersonalReminder(session, pet.id, eventId, Number(event.reminder), !!event.reminderEnabled);
+      await setSharedEventReminder(session, pet.id, eventId, Number(event.reminder), !!event.reminderEnabled);
     } catch (error) {
       console.warn("[reminder] event saved but personal reminder sync failed", error);
       setNotice("Событие сохранено, но личное напоминание не обновилось. Откройте карточку события и сохраните напоминание повторно.");
@@ -545,7 +545,7 @@ export default function App({
         };
       }),
     );
-    await syncPersonalReminder(targetId, next);
+    await syncSharedReminder(targetId, next);
     setSelected(next.date);
     setMonth(next.date.slice(0, 7) + "-01");
   }

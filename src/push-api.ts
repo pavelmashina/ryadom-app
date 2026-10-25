@@ -125,7 +125,7 @@ export async function updateNotificationPreferences(
   });
 }
 
-export type PersonalReminder = {
+export type SharedEventReminder = {
   id: string;
   event_id: string;
   user_id: string;
@@ -133,42 +133,22 @@ export type PersonalReminder = {
   offset_unit: "minutes" | "hours" | "days" | "weeks";
   enabled: boolean;
 };
-export async function getPersonalReminders(session: AuthSession, eventId: string) {
-  return await rest(session, "event_reminders?select=id,event_id,user_id,offset_value,offset_unit,enabled" +
-    "&event_id=eq." + encodeURIComponent(eventId) +
-    "&user_id=eq." + encodeURIComponent(session.user.id) +
-    "&source=eq.native") as PersonalReminder[];
+/** A single effective reminder is shared by the pet's active participants. */
+export async function getSharedEventReminder(session: AuthSession, eventId: string): Promise<SharedEventReminder[]> {
+  return await rest(session, "rpc/get_shared_event_reminder", {
+    method: "POST",
+    body: JSON.stringify({ p_event: eventId }),
+  }) as SharedEventReminder[];
 }
-export async function setPersonalReminder(
-  session: AuthSession,
-  petId: string,
-  eventId: string,
-  minutes: number,
-  enabled: boolean,
-) {
+export async function setSharedEventReminder(
+  session: AuthSession, _petId: string, eventId: string, minutes: number, enabled: boolean,
+): Promise<void> {
   if (!Number.isSafeInteger(minutes) || minutes < 0 || minutes > 525600)
     throw new Error("Некорректное время напоминания");
-  const existing = await getPersonalReminders(session, eventId);
-  if (existing.length) {
-    await rest(session,
-      "event_reminders?id=eq." + encodeURIComponent(existing[0].id), {
-        method: "PATCH",
-        body: JSON.stringify({ offset_value: minutes, offset_unit: "minutes", enabled, updated_at: new Date().toISOString() }),
-      });
-  } else if (enabled) {
-    await rest(session, "event_reminders", {
-      method: "POST",
-      body: JSON.stringify({
-        user_id: session.user.id,
-        pet_id: petId,
-        event_id: eventId,
-        offset_value: minutes,
-        offset_unit: "minutes",
-        enabled: true,
-        source: "native",
-      }),
-    });
-  }
+  await rest(session, "rpc/set_shared_event_reminder", {
+    method: "POST",
+    body: JSON.stringify({ p_event: eventId, p_minutes: minutes, p_enabled: enabled }),
+  });
 }
 
 /** Drop this device's push subscription before signing out on shared devices. */

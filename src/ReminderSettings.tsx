@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Field, Form, Select } from "./components";
 import type { AuthSession } from "./backend";
-import { getPersonalReminders, setPersonalReminder } from "./push-api";
+import { getSharedEventReminder, setSharedEventReminder } from "./push-api";
 import { savedReminderChoice, reminderOffsetMinutes, type ReminderUnit } from "./reminder-choice";
 
 export default function ReminderSettings({
@@ -20,7 +20,7 @@ export default function ReminderSettings({
   const [error, setError] = useState("");
   useEffect(() => {
     let alive = true;
-    void getPersonalReminders(session, eventId)
+    void getSharedEventReminder(session, eventId)
       .then((rows) => {
         if (!alive) return;
         const choice = savedReminderChoice(rows);
@@ -44,7 +44,7 @@ export default function ReminderSettings({
           setError(""); setMessage("");
           try {
             const minutes = reminderOffsetMinutes(mode, amount, unit);
-            await setPersonalReminder(session, petId, eventId, minutes, mode !== "none");
+            await setSharedEventReminder(session, petId, eventId, minutes, mode !== "none");
             setMessage("Напоминание сохранено.");
           } catch (e) {
             const note = e instanceof Error ? e.message : "Ошибка сохранения";
