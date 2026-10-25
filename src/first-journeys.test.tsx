@@ -37,8 +37,8 @@ describe("Release 1: cross-screen training journey", () => {
     expect(html).toContain("Запланирована");
     expect(html).toContain("Проведена");
     expect(source("./App.tsx")).toContain("onTraining={(id) => {");
-    expect(source("./App.tsx")).toContain('setOpenTraining(id);');
-    expect(source("./App.tsx")).toContain('setScreen("training");');
+    expect(source("./App.tsx")).toContain('setOverlay({ kind: "trainingDetail", sessionId: id })');
+    expect(source("./App.tsx")).toContain('case "trainingDetail": {');
     expect(source("./Training.tsx")).toContain('setView({ kind: "session", id: openSession })');
   });
 });

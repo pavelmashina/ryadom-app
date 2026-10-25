@@ -19,6 +19,7 @@ import { petAccess } from "./sharing-api";
 import TrainingDateField from "./TrainingDateField";
 import { rpc, type AuthSession } from "./backend";
 import type { PersistOutcome } from "./cloud-data";
+import type { TrainingSession } from "./training-domain";
 import {
   PawPrint,
   Dog,
@@ -38,6 +39,9 @@ import Calendar from "./Calendar";
 import AccountTrigger from "./AccountTrigger";
 import { formatEventDetailDate } from "./event-detail-date";
 import Training from "./Training";
+import TrainingPlan from "./TrainingPlan";
+import { cancelPlannedTraining, reschedulePlannedTraining } from "./training-actions";
+import { trainingScheduleText } from "./training-detail";
 import Health from "./Health";
 import Stock from "./Stock";
 import EventForm from "./EventForm";
@@ -80,6 +84,8 @@ type Overlay =
       event: PetEvent;
       on: string;
     }
+  | { kind: "trainingDetail"; sessionId: string }
+  | { kind: "modifyTraining"; sessionId: string; action: "edit" | "delete" }
   | {
       kind: "session";
       command: string;
@@ -152,6 +158,7 @@ export default function App({
   const [stockTarget,setStockTarget] = useState<string | undefined>();
   const [joinCode, setJoinCode] = useState<string | null>(() => joinCodeFromUrl(location.search));
   const [eventScope, setEventScope] = useState<EventScope>("single");
+  const [trainingDeleteScope, setTrainingDeleteScope] = useState<"one" | "following">("one");
   const [busy, setBusy] = useState(false);
   const [leavingAccount, setLeavingAccount] = useState(false);
   const [state, setState] = useState(liveState.current),
@@ -481,6 +488,13 @@ export default function App({
     setMonth(e.date.slice(0, 7) + "-01");
     setScreen("day");
   }
+  function modifyTraining(workout: TrainingSession, action: "edit" | "delete") {
+    setTrainingDeleteScope("one");
+    setOverlay({ kind: "modifyTraining", sessionId: workout.id, action });
+  }
+  async function deleteTraining(workout: TrainingSession, scope: "one" | "following") {
+    await saved(() => update(p => cancelPlannedTraining(p, workout.id, scope)));
+  }
   function modifyEvent(e: PetEvent, on: string, action: "edit" | "delete") {
     // Editing a recurring series must show its saved recurrence/end settings
     // on opening; the one-occurrence option remains available explicitly.
@@ -649,6 +663,10 @@ export default function App({
       ? "Новое событие"
       : overlay?.kind === "detail"
         ? overlay.event.name
+        : overlay?.kind === "trainingDetail"
+          ? pet.workouts.find(w => w.id === overlay.sessionId)?.name || "Тренировка"
+        : overlay?.kind === "modifyTraining"
+          ? overlay.action === "edit" ? "Редактировать тренировку" : "Удалить тренировку"
         : overlay?.kind === "modifyEvent"
           ? overlay.action === "edit" ? "Редактировать событие" : "Удалить событие"
         : overlay?.kind === "session"
@@ -731,7 +749,7 @@ export default function App({
               >
                 <option value="single">Только это событие</option>
                 <option value="future">Это и последующие</option>
-                <option value="all">Все события серии</option>
+                {overlay.action === "edit" && <option value="all">Все события серии</option>}
               </Select>
             )}
             {overlay.action === "edit" ? (
@@ -750,6 +768,83 @@ export default function App({
                   Удалить
                 </Button>
               </div>
+            )}
+          </div>
+        );
+      }
+      case "trainingDetail": {
+        const workout = pet.workouts.find(w => w.id === overlay.sessionId);
+        if (!workout || workout.status === "cancelled")
+          return <p>Тренировка больше недоступна.</p>;
+        const schedule = pet.trainingSchedules?.find(s => s.id === workout.schedule_id);
+        const time = workout.time || schedule?.time_of_day?.slice(0, 5) || "";
+        const comment = workout.comment || schedule?.comment || "";
+        return (
+          <div className="event-detail-modal training-day-detail">
+            <Card className="event-detail-summary">
+              <h3 className="event-detail-datetime">
+                <Clock aria-hidden="true" />
+                <span>{formatEventDetailDate(workout.date, time)}</span>
+              </h3>
+              <p>Тренировка · {trainingScheduleText(schedule)}</p>
+              {comment.trim() && <p className="note">{comment}</p>}
+            </Card>
+            <div className="fields event-detail-actions">
+              <Button variant="secondary" onClick={() =>
+                workout.status === "planned"
+                  ? modifyTraining(workout, "edit")
+                  : (setOpenTraining(workout.id), setScreen("training"), close())}>
+                Изменить
+              </Button>
+              <Button variant="destructive" className="event-detail-delete"
+                disabled={workout.status !== "planned"}
+                onClick={() => modifyTraining(workout, "delete")}>
+                Удалить
+              </Button>
+            </div>
+            {workout.status === "planned" && !schedule && (
+              <Form label="Перенести" onSave={async data => {
+                const to = text(data, "date");
+                await saved(() => update(p => reschedulePlannedTraining(
+                  p, workout.id, to, workout.time || "",
+                )));
+                setSelected(to);
+                setMonth(to.slice(0, 7) + "-01");
+              }}>
+                <TrainingDateField label="Перенести на дату" name="date"
+                  defaultValue={workout.date} required />
+              </Form>
+            )}
+          </div>
+        );
+      }
+      case "modifyTraining": {
+        const workout = pet.workouts.find(w => w.id === overlay.sessionId);
+        if (!workout || workout.status !== "planned")
+          return <p>Эта тренировка больше не запланирована.</p>;
+        const schedule = pet.trainingSchedules?.find(s => s.id === workout.schedule_id);
+        return (
+          <div className="event-modify-modal training-day-modify">
+            {overlay.action === "edit" ? (
+              <TrainingPlan pet={pet} auth={session} session={workout}
+                schedule={schedule}
+                onSave={next => update(() => next)}
+                onComplete={close} />
+            ) : (
+              <>
+                {schedule && <Select label="Удалить" value={trainingDeleteScope}
+                  onChange={e => setTrainingDeleteScope(e.target.value as "one" | "following")}>
+                  <option value="one">Только эту тренировку</option>
+                  <option value="following">Эту и все последующие</option>
+                </Select>}
+                <p>{schedule
+                  ? "Выбранные тренировки будут удалены из календаря."
+                  : "Удалить запланированную тренировку?"}</p>
+                <Button fullWidth variant="destructive"
+                  onClick={() => safe(() => deleteTraining(workout, schedule ? trainingDeleteScope : "one"))}>
+                  Удалить
+                </Button>
+              </>
             )}
           </div>
         );
@@ -1433,10 +1528,7 @@ export default function App({
               readOnly={!hasPets}
               onAdd={() => { if (hasPets) setOverlay({ kind: "event" }); }}
               onTraining={(id) => {
-                setOpenTraining(id);
-                setScreen("training");
-                setNotice("");
-                window.scrollTo({ top: 0 });
+                setOverlay({ kind: "trainingDetail", sessionId: id });
               }}
               onToggle={toggle}
               onDetail={(event, on) =>
