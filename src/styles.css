@@ -2559,15 +2559,22 @@ dialog:has(.event-detail-modal) .modal-head h2 {
   border-radius: var(--radius-md);
   box-shadow: none;
 }
-.event-detail-modal .event-detail-summary .eyebrow {
-  display: block;
-  margin: 0;
+.event-detail-modal .event-detail-summary .event-detail-datetime {
+  display: flex;
+  align-items: center;
+  gap: var(--space-compact-2);
+  min-width: 0;
+  color: var(--color-text-primary);
+}
+.event-detail-modal .event-detail-datetime svg {
+  flex: none;
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
   color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  line-height: var(--line-height-ui-caption);
-  letter-spacing: normal;
-  text-transform: none;
+}
+.event-detail-modal .event-detail-datetime span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .event-detail-modal .event-detail-summary h3 {
   margin: 0;
@@ -2700,4 +2707,12 @@ dialog:has(.event-detail-modal) .modal-head h2 {
   padding: 0;
   opacity: 0;
   cursor: pointer;
+}
+
+/* Deletion in event details is a restrained red outline, not a filled action. */
+.event-detail-modal .event-detail-actions .event-detail-delete.btn,
+.event-detail-modal .event-detail-actions .event-detail-delete.btn:hover {
+  border: 1px solid var(--color-danger);
+  background: transparent;
+  color: var(--color-danger);
 }

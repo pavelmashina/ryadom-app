@@ -24,6 +24,7 @@ import {
   Dog,
   ChevronDown,
   CalendarDays,
+  Clock,
   HeartPulse,
   GraduationCap,
   Package,
@@ -35,6 +36,7 @@ import {
 } from "lucide-react";
 import Calendar from "./Calendar";
 import AccountTrigger from "./AccountTrigger";
+import { formatEventDetailDate } from "./event-detail-date";
 import Training from "./Training";
 import Health from "./Health";
 import Stock from "./Stock";
@@ -756,18 +758,12 @@ export default function App({
         return (
           <div className="event-detail-modal">
             <Card className="event-detail-summary">
-              <span className="eyebrow">
-                {fmt(overlay.on, {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </span>
-              <h3>
-                {e.time || "Весь день"} · {done ? "Выполнено" : "Запланировано"}
+              <h3 className="event-detail-datetime">
+                <Clock aria-hidden="true" />
+                <span>{formatEventDetailDate(overlay.on, e.time)}</span>
               </h3>
               <p>{e.kind === "reminder" ? "Напоминание" : "Событие"} · {recurrenceText(e)}</p>
-              <p className="note">{e.note || "Заметка не добавлена"}</p>
+              {e.note?.trim() && <p className="note">{e.note}</p>}
             </Card>
             <Button
               onClick={() => toggle(e, overlay.on)}
@@ -785,7 +781,8 @@ export default function App({
               <Button onClick={() => modifyEvent(e, overlay.on, "edit")} variant="secondary">
                 Изменить
               </Button>
-              <Button onClick={() => modifyEvent(e, overlay.on, "delete")} variant="ghost">
+              <Button onClick={() => modifyEvent(e, overlay.on, "delete")}
+                variant="destructive" className="event-detail-delete">
                 Удалить
               </Button>
             </div>
