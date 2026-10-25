@@ -26,9 +26,13 @@ describe("Unified form typography, insets and weekday layout",()=>{
     }
     expect(html).toContain('value="weekly" selected=""');
     for(const styles of [global,training]) {
-      const block=styles.split(".weekdays-picker-row {")[1]?.split("}")[0]??"";
-      expect(block).toContain("grid-template-columns: repeat(7, minmax(0, 1fr))");
-      expect(block).toContain(styles === training ? "gap: 1px" : "gap: calc(var(--space-compact-1) / 2)");
+      // Several scoped weekday pickers can exist; verify the standard
+      // seven-column rule without relying on CSS rule ordering.
+      const blocks=Array.from(styles.matchAll(/\\.weekdays-picker-row\\s*\\{([^}]*)\\}/g),match=>match[1]);
+      expect(blocks.some(block =>
+        block.includes("grid-template-columns: repeat(7, minmax(0, 1fr))") &&
+        block.includes(styles === training ? "gap: 1px" : "gap: calc(var(--space-compact-1) / 2)")
+      )).toBe(true);
     }
     expect(global).toContain(".weekdays-picker-row .checkbox-hit {");
     expect(training).toContain(".training-modal-content .weekdays-picker-row .checkbox-hit {");
