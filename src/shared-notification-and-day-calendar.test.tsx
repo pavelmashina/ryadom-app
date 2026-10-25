@@ -52,7 +52,8 @@ describe("Day calendar matches Training and notifications follow category permis
     const detail = renderToStaticMarkup(<ReminderSettings session={session} petId="pet" eventId="event" />);
     expect(detail).not.toContain("Уведомление получат");
     expect(detail).not.toContain("все участники питомца");
-    expect(detail).toContain("Настройка напоминания");
+    expect(detail).toContain("Настройки напоминания");
+    expect(detail).not.toContain(">Напомнить</label>");
   });
 
   it("stores one effective shared event reminder without exposing anonymous writes", () => {

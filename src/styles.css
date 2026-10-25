@@ -2592,13 +2592,7 @@ dialog:has(.event-detail-modal) .modal-head h2 {
 }
 .event-detail-modal .personal-reminder {
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-compact-3);
-}
-.event-detail-modal .personal-reminder > h3 {
-  margin: 0;
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-ui-heading);
+  gap: var(--space-compact-4);
 }
 .event-detail-modal :is(form, .form-fields) {
   grid-template-columns: minmax(0, 1fr);
@@ -2626,7 +2620,7 @@ dialog:has(.event-detail-modal) .modal-head h2 {
   padding: var(--space-compact-3) var(--field-control-inline);
   border-radius: var(--radius-sm);
   font-family: var(--font-family-base);
-  font-size: 16px; /* iOS: no focus zoom */
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-regular);
 }
 .event-detail-modal .fields.event-detail-actions {

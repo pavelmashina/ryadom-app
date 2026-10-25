@@ -34,7 +34,6 @@ export default function ReminderSettings({
 
   return (
     <div className="personal-reminder">
-      <h3>Настройка напоминания</h3>
       <Form
         label="Сохранить напоминание"
         onSave={async () => {
@@ -51,7 +50,7 @@ export default function ReminderSettings({
         }}
       >
         <Select
-          label="Напомнить"
+          label="Настройки напоминания"
           value={mode}
           onChange={(e) => setMode(e.target.value)}
         >
