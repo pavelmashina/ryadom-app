@@ -35,7 +35,7 @@ describe("Unified form typography, insets and weekday layout",()=>{
       )).toBe(true);
     }
     expect(global).toContain(".weekdays-picker-row .checkbox-hit {");
-    expect(training).toContain(".training-modal-content .weekdays-picker-row .checkbox-hit {");
+    expect(training).toContain(":is(.training-modal-content, .event-editor-modal) .weekdays-picker-row .checkbox-hit {");
     expect(training).toContain("min-height: var(--button-height-sm)");
   });
 
