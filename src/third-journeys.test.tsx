@@ -45,7 +45,8 @@ describe("R3: email invitation links", () => {
       <JoinPet session={session} onChanged={async () => {}} initialCode={code} />,
     );
     expect(owner).toContain("Пригласить по email");
-    expect(owner).toContain("не автоматически");
+    expect(owner).not.toContain("Сформируйте письмо со ссылкой");
+    expect(owner).not.toContain("Отправьте этот ID человеку");
     expect(guest).toContain(code);
     expect(source("./App.tsx")).toContain('setOverlay({ kind: "join" })');
     expect(source("./App.tsx")).toContain('initialCode={joinCode}');
