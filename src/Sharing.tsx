@@ -1,143 +1,180 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, Card, Field, Form, SectionHeader, text } from "./components";
 import {
   petAccess,
   type AccessDetails,
   type AccessResult,
   type OutgoingRequest,
+  getPetMembers,
 } from "./sharing-api";
 import type { AuthSession } from "./backend";
 import type { Pet } from "./domain";
 import { inviteLink, invitationMailto } from "./share-invitation";
 
 export function JoinPet({
-  session,
-  onChanged,
-  initialCode,
+  session, onChanged, initialCode,
 }: {
   session: AuthSession;
   onChanged: () => Promise<void>;
   initialCode?: string | null;
 }) {
-  const [code, setCode] = useState(initialCode ?? ""),
-    [found, setFound] = useState<AccessResult | null>(null),
-    [requests, setRequests] = useState<OutgoingRequest[]>([]),
-    [error, setError] = useState("");
-  async function refresh() {
-    setRequests(await petAccess(session, "outgoing"));
+  const [code, setCode] = useState(initialCode ?? "");
+  const [found, setFound] = useState<AccessResult | null>(null);
+  const [notFound, setNotFound] = useState(false);
+  const [requests, setRequests] = useState<OutgoingRequest[]>([]);
+  const [error, setError] = useState("");
+  const approvedSignature = useRef("");
+  const isNotFound = (error: unknown) =>
+    error instanceof Error && /Питомец с таким ID не найден/i.test(error.message);
+
+  async function lookup(value: string) {
+    setFound(null);
+    setNotFound(false);
+    setError("");
+    try {
+      setFound(await petAccess<AccessResult>(session, "lookup", { code: value }));
+    } catch (error) {
+      if (isNotFound(error)) setNotFound(true);
+      else throw error;
+    }
+  }
+
+  function updateRequests(next: OutgoingRequest[]) {
+    setRequests(next);
+    const approved = next.filter(r => r.status === "approved").map(r => r.id).sort().join(",");
+    if (approved !== approvedSignature.current) {
+      approvedSignature.current = approved;
+      if (approved) void onChanged().catch(error =>
+        setError(error instanceof Error ? error.message : "Не удалось обновить питомцев."));
+    }
+  }
+  async function refreshRequests() {
+    updateRequests(await petAccess<OutgoingRequest[]>(session, "outgoing"));
   }
   useEffect(() => {
     if (!initialCode) return;
     let alive = true;
     void petAccess<AccessResult>(session, "lookup", { code: initialCode })
-      .then((result) => { if (alive) { setCode(initialCode); setFound(result); } })
-      .catch((err) => { if (alive) setError(err instanceof Error ? err.message : "Приглашение недоступно."); });
+      .then(result => {
+        if (alive) { setCode(initialCode); setFound(result); setNotFound(false); }
+      })
+      .catch(error => {
+        if (!alive) return;
+        if (isNotFound(error)) { setNotFound(true); setFound(null); }
+        else setError(error instanceof Error ? error.message : "Приглашение недоступно.");
+      });
     return () => { alive = false; };
   }, [initialCode, session.user.id]);
   useEffect(() => {
     let stopped = false;
-    const read = () =>
-      petAccess<OutgoingRequest[]>(session, "outgoing")
-        .then((x) => {
-          if (!stopped) setRequests(x);
+    const read = () => {
+      void petAccess<OutgoingRequest[]>(session, "outgoing")
+        .then(next => {
+          if (stopped) return;
+          updateRequests(next);
         })
-        .catch((e) => {
-          if (!stopped) setError(e.message);
+        .catch(error => {
+          if (!stopped) setError(error instanceof Error ? error.message : "Не удалось загрузить запросы.");
         });
-    void read();
-    const timer = setInterval(read, 5000);
-    return () => {
-      stopped = true;
-      clearInterval(timer);
     };
+    read();
+    const timer = window.setInterval(read, 5000);
+    return () => { stopped = true; window.clearInterval(timer); };
   }, [session.user.id]);
+
   return (
-    <>
-      <p>
-        Введите ID, который вам передал владелец. Данные питомца станут доступны
-        только после его подтверждения.
-      </p>
-      <Form
-        label="Найти питомца"
-        onSave={async (d) => {
-          const value = text(d, "code").toUpperCase();
-          setCode(value);
-          setFound(await petAccess(session, "lookup", { code: value }));
-        }}
-      >
-        <Field
-          label="ID питомца"
-          name="code"
-          placeholder="RYD-…"
-          defaultValue={initialCode ?? ""}
-          required
-          maxLength={30}
-          autoCapitalize="characters"
-          autoComplete="off"
-          onChange={() => setFound(null)}
-        />
+    <div className="standard-pet-modal pet-join-modal">
+      <Form label="Найти питомца" onSave={async data => {
+        const value = text(data, "code").toUpperCase();
+        setCode(value);
+        await lookup(value);
+      }}>
+        <Field label="ID питомца" name="code" placeholder="RYD-…"
+          defaultValue={initialCode ?? ""} required maxLength={30}
+          autoCapitalize="characters" autoComplete="off"
+          onChange={() => { setFound(null); setNotFound(false); setError(""); }} />
       </Form>
+      {notFound && (
+        <p role="status" className="notice notice-error">
+          Питомец с таким ID не найден. Попробуйте другой код.
+        </p>
+      )}
       {found && (
-        <Card>
+        <Card className="pet-join-result">
           <h3>{found.name}</h3>
           {found.status === "active" ? (
             <p>Этот питомец уже добавлен в ваш аккаунт.</p>
           ) : found.status === "pending" ? (
-            <p role="status">
-              Запрос уже отправлен. Владелец должен подтвердить доступ.
-            </p>
+            <p role="status">Запрос уже отправлен. Владелец должен подтвердить доступ.</p>
           ) : (
-            <Form
-              label="Отправить запрос"
-              onSave={async () => {
-                setFound(await petAccess(session, "request", { code }));
-                await refresh();
-              }}
-            >
-              <p>Запросить доступ к этому питомцу?</p>
+            <Form label="Отправить запрос на добавление" onSave={async () => {
+              setFound(await petAccess<AccessResult>(session, "request", { code }));
+              await refreshRequests();
+            }}>
+              <p>Добавить питомца {found.name}?</p>
             </Form>
           )}
         </Card>
       )}
-      {error && (
-        <p role="alert" className="notice notice-error">
-          {error}
-        </p>
-      )}
+      {error && <p role="alert" className="notice notice-error">{error}</p>}
       {!!requests.length && <SectionHeader title="Ваши запросы" />}
-      {requests.map((r) => (
-        <Card key={r.id}>
-          <h3>{r.name}</h3>
-          <p>
-            {
-              {
-                pending: "Ожидает подтверждения",
-                approved: "Доступ разрешён",
-                rejected: "Запрос отклонён",
-                cancelled: "Запрос отменён",
-              }[r.status]
-            }
-          </p>
-          {r.status === "pending" && (
-            <Form
-              children={null}
-              label="Отменить запрос"
-              onSave={async () => {
-                await petAccess(session, "cancel", { subject: r.id });
-                await refresh();
-                setFound(null);
-              }}
-            />
+      {requests.map(request => (
+        <Card key={request.id} className="pet-join-request">
+          <h3>{request.name}</h3>
+          <p>{{
+            pending: "Ожидает подтверждения",
+            approved: "Доступ разрешён",
+            rejected: "Запрос отклонён",
+            cancelled: "Запрос отменён",
+          }[request.status]}</p>
+          {request.status === "pending" && (
+            <Form children={null} label="Отменить запрос" onSave={async () => {
+              await petAccess(session, "cancel", { subject: request.id });
+              await refreshRequests();
+              setFound(null);
+            }} />
           )}
         </Card>
       ))}
-      <Button
-        fullWidth
-        onClick={() => onChanged().catch((e) => setError(e.message))}
-      >
-        Обновить список питомцев
-      </Button>
-    </>
+    </div>
+  );
+}
+
+export function PetMembersSummary({
+  session, pet,
+}: {
+  session: AuthSession;
+  pet: Pet;
+}) {
+  const [members, setMembers] = useState<AccessDetails["members"] | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let stopped = false;
+    setMembers(null);
+    setError("");
+    const read = () => {
+      void getPetMembers(session, pet.id)
+        .then(result => { if (!stopped) { setMembers(result); setError(""); } })
+        .catch(error => {
+          if (!stopped) setError(error instanceof Error ? error.message : "Не удалось загрузить участников.");
+        });
+    };
+    read();
+    const timer = window.setInterval(read, 15000);
+    return () => { stopped = true; window.clearInterval(timer); };
+  }, [pet.id, session.user.id]);
+  return (
+    <div className="pet-member-summary">
+      {error && <p role="alert" className="notice notice-error">{error}</p>}
+      {members === null && !error && <p className="hint">Загружаем пользователей…</p>}
+      {members?.length === 0 && <p className="hint">Участников пока нет.</p>}
+      {members?.map(member => (
+        <div key={member.user_id} className="pet-member-row">
+          <span>{member.email}</span>
+          <span>{member.role === "owner" ? "Владелец" : "Совместный доступ"}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -224,10 +261,6 @@ export function Sharing({
         >
           Скопировать ID
         </Button>
-        <p>
-          Отправьте этот ID человеку, которому хотите дать возможность запросить
-          доступ к питомцу. Доступ подтверждает владелец.
-        </p>
       </Card>
       {message && (
         <p role="status" className="notice">
@@ -243,7 +276,6 @@ export function Sharing({
         <>
           <Card>
             <h3>Пригласить по email</h3>
-            <p className="hint">Сформируйте письмо со ссылкой. Получатель войдёт в аккаунт и отправит запрос; вы подтвердите доступ. Письмо отправляется через вашу почтовую программу, не автоматически.</p>
             <Form label="Подготовить приглашение"
               onSave={async (data) => {
                 const email = text(data, "email");
@@ -299,9 +331,8 @@ export function Sharing({
           ))}
           <SectionHeader title="Пользователи с доступом" />
           {details.members.map((m) => (
-            <Card key={m.user_id}>
-              <h3>{m.email}</h3>
-              <p>{m.role === "owner" ? "Владелец" : "Совместный доступ"}</p>
+            <Card key={m.user_id} className="sharing-member-card">
+              <div className="pet-member-row"><span>{m.email}</span><span>{m.role === "owner" ? "Владелец" : "Совместный доступ"}</span></div>
               {m.role === "editor" && (
                 <Button
                   disabled={busy}

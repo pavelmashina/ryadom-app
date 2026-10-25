@@ -14,7 +14,7 @@ import {
   number,
 } from "./components";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Sharing, JoinPet } from "./Sharing";
+import { Sharing, JoinPet, PetMembersSummary } from "./Sharing";
 import { rpc, type AuthSession } from "./backend";
 import type { PersistOutcome } from "./cloud-data";
 import {
@@ -681,7 +681,7 @@ export default function App({
           </Button>
         </div>;
       case "sharing":
-        return <Sharing session={session} pet={pet} onChanged={refreshNow} />;
+        return <div className="standard-pet-modal pet-sharing-modal"><Sharing session={session} pet={pet} onChanged={refreshNow} /></div>;
       case "join":
         return <JoinPet session={session} onChanged={refreshNow} initialCode={joinCode} />;
       case "event":
@@ -846,6 +846,7 @@ export default function App({
         );
       case "editpet":
         return (
+          <div className="standard-pet-modal pet-editor-modal">
           <Form
             onSave={async (d) =>
               await saved(() =>
@@ -892,6 +893,7 @@ export default function App({
               maxLength={100}
             />
           </Form>
+          </div>
         );
       case "command":
         return (
@@ -1177,6 +1179,7 @@ export default function App({
         );
       case "document":
         return (
+          <div className="standard-pet-modal pet-document-modal">
           <Form
             onSave={async (d) => {
               const file = d.get("file") as File;
@@ -1227,10 +1230,11 @@ export default function App({
               Доступен активным участникам питомца после входа.
             </p>
           </Form>
+          </div>
         );
       case "backup":
         return (
-          <>
+          <div className="standard-pet-modal pet-backup-modal">
             <p>
               Данные сохраняются в вашем аккаунте. Резервная копия включает всех
               питомцев и документы.
@@ -1295,7 +1299,7 @@ export default function App({
                 </Button>
               </Card>
             )}
-          </>
+          </div>
         );
     }
   }
@@ -1537,19 +1541,18 @@ export default function App({
               </Card>
               <section className="pet-profile-section">
                 <SectionHeader title="Совместный доступ" />
-                <Card>
-                <p>
-                  {pet.role === "editor"
-                    ? "У вас совместный доступ к этой карточке."
-                    : "Вы владелец этой карточки."}
-                </p>
-                <Button
-                  fullWidth
-                  onClick={() => setOverlay({ kind: "sharing" })}
-                >
-                  Управлять доступом
-                  {pet.pendingRequests ? ` · ${pet.pendingRequests}` : ""}
-                </Button>
+                <Card className="pet-members-card">
+                  <PetMembersSummary session={session} pet={pet} />
+                  {pet.role === "owner" ? (
+                    <Button fullWidth onClick={() => setOverlay({ kind: "sharing" })}>
+                      Управлять доступом
+                      {pet.pendingRequests ? ` · ${pet.pendingRequests}` : ""}
+                    </Button>
+                  ) : (
+                    <Button fullWidth variant="ghost" onClick={() => setOverlay({ kind: "sharing" })}>
+                      Покинуть питомца
+                    </Button>
+                  )}
                 </Card>
               </section>
               <section className="pet-profile-section">

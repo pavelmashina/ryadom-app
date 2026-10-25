@@ -25,3 +25,12 @@ export async function petAccess<T>(
   if (result?.error) throw new Error(result.error);
   return result;
 }
+
+export async function getPetMembers(
+  session: AuthSession,
+  target: string,
+): Promise<AccessDetails["members"]> {
+  const result = await rpc(session, "pet_members_summary", { target });
+  if (!Array.isArray(result)) throw new Error("Не удалось загрузить список участников.");
+  return result as AccessDetails["members"];
+}

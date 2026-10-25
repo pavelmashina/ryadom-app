@@ -1615,14 +1615,14 @@ dialog:has(.new-pet-form) .modal-content {
   gap: var(--space-compact-2);
   width: 100%;
   margin: var(--space-compact-5) 0 0;
-  background: var(--color-danger-surface);
-  border: 1px solid color-mix(in srgb, var(--color-danger) 25%, transparent);
+  background: transparent;
+  border: 0;
   color: color-mix(in srgb, var(--color-danger) 72%, var(--color-text-secondary));
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
 }
 .account-logout svg {width:var(--icon-size-sm);height:var(--icon-size-sm);}
-.account-logout.btn:hover {background:var(--color-danger-surface);}
+.account-logout.btn:hover {background:transparent;color:var(--color-danger);}
 /* Selection menu and its add action use the same compact modal choice. */
 .pet-add-choices {
   display: grid;
@@ -1704,3 +1704,145 @@ dialog:has(.new-pet-form) .modal-content {
 .pet-profile-screen dl {display:grid;gap:0;margin:0;}
 .pet-profile-screen dl > div {padding:var(--space-compact-3) 0;gap:var(--space-compact-3);}
 .pet-profile-screen dl :is(dt,dd) {font-size:var(--font-size-sm);overflow-wrap:anywhere;}
+
+/* Unified pet/account forms: match the five type sizes and compact grid spacing. */
+.app main > .account-pets-section .account-pet-row strong {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-ui-heading);
+  font-weight: var(--font-weight-medium);
+}
+.pet-add-choices { gap: var(--space-compact-2); }
+.pet-add-choices .btn {
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-3) var(--space-compact-4);
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+}
+dialog:has(.pet-add-choices) .modal-head,
+dialog:has(.standard-pet-modal) .modal-head {
+  padding: var(--space-compact-4);
+}
+dialog:has(.pet-add-choices) .modal-content,
+dialog:has(.standard-pet-modal) .modal-content {
+  box-sizing: border-box;
+  padding: var(--space-compact-4);
+  min-width: 0;
+  max-width: 100%;
+}
+.standard-pet-modal,
+.standard-pet-modal form,
+.standard-pet-modal .form-fields {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-compact-3);
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+}
+.standard-pet-modal .field {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-compact-2);
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+}
+.standard-pet-modal .field > label {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+}
+.standard-pet-modal .field :is(input, select, textarea) {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-3) var(--space-compact-4);
+  font-family: var(--font-family-base);
+  font-size: 16px; /* prevent iOS form zoom */
+  font-weight: var(--font-weight-regular);
+}
+.standard-pet-modal .field input[type="date"] {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding-inline: var(--space-compact-3);
+  overflow: hidden;
+}
+.standard-pet-modal .field input[type="date"]::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
+}
+.standard-pet-modal .field input[type="file"] {
+  padding-inline: var(--space-compact-3);
+  overflow: hidden;
+}
+.standard-pet-modal :is(p, .hint) {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-ui-body);
+  overflow-wrap: anywhere;
+}
+.standard-pet-modal h3 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-heading);
+}
+.standard-pet-modal .form-actions { margin: var(--space-compact-2) 0 0; padding: 0; }
+.standard-pet-modal .btn { font-size: var(--font-size-sm); }
+.standard-pet-modal .card {
+  margin: 0;
+  padding: var(--space-compact-4);
+  border-radius: var(--radius-md);
+}
+.pet-join-result, .pet-join-request, .pet-backup-modal .card {
+  display: grid;
+  gap: var(--space-compact-3);
+  min-width: 0;
+}
+.pet-member-summary { display: grid; gap: 0; min-width: 0; }
+.pet-member-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-compact-1) var(--space-compact-4);
+  min-width: 0;
+  padding: var(--space-compact-3) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+}
+.pet-member-row:last-child { border-bottom: 0; }
+.pet-member-row > span:first-child {
+  flex: 1 1 180px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text-primary);
+}
+.pet-member-row > span:last-child {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+.pet-members-card { display: grid; gap: var(--space-compact-4); }
+.pet-sharing-modal .sharing-member-card {
+  display: grid;
+  gap: var(--space-compact-3);
+}
+.pet-sharing-modal .sharing-actions,
+.pet-sharing-modal .invitation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-compact-3);
+}
+.pet-sharing-modal .sharing-actions > *,
+.pet-sharing-modal .invitation-actions > * { flex: 1 1 160px; }
+.pet-sharing-modal .share-code { font-size: var(--font-size-lg); }
+.pet-backup-modal .field, .pet-backup-modal > .btn { width: 100%; }
