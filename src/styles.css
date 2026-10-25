@@ -2092,3 +2092,351 @@ dialog:has(.standard-pet-modal) .modal-content {
 .pet-join-modal .pet-join-request .btn {
   font-size: var(--font-size-sm);
 }
+
+/* Day screen uses the Training calendar's 44px tracks / 36px date circles,
+   while preserving its own month header and category legend. */
+.day-screen {
+  min-width: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-ui-body);
+}
+.day-screen > .heading {
+  margin: 0 0 var(--space-compact-4);
+}
+.day-screen > .heading h1 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-heading);
+}
+.day-screen > .calendar {
+  --day-cell-size: 44px;
+  --day-circle-size: 36px;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: var(--space-compact-3);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+.day-screen .calendar .month {
+  gap: var(--space-compact-2);
+  padding: 0 0 var(--space-compact-3);
+}
+.day-screen .calendar .month h2 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-heading);
+}
+.day-screen .calendar .month-controls > .btn:not(.icon-button) {
+  font-size: var(--font-size-xs);
+}
+.day-screen .calendar :is(.weekdays, .dates) {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0;
+}
+.day-screen .calendar .weekdays span {
+  display: grid;
+  place-items: center;
+  height: 20px;
+  padding: 0;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-ui-caption);
+}
+.day-screen .calendar .dates {
+  grid-auto-rows: var(--day-cell-size);
+}
+.day-screen .calendar .date.btn {
+  display: grid;
+  box-sizing: border-box;
+  grid-template-rows: var(--day-circle-size) 8px;
+  align-content: center;
+  justify-items: center;
+  justify-self: center;
+  gap: 0;
+  width: min(var(--day-cell-size), 100%);
+  height: var(--day-cell-size);
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.day-screen .calendar .date.outside.btn { color: var(--color-text-muted); }
+.day-screen .calendar .date.btn .day-date-number {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: min(var(--day-circle-size), 100%);
+  height: var(--day-circle-size);
+  min-width: 0;
+  min-height: 0;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  line-height: 1;
+}
+.day-screen .calendar .date.today:not([aria-pressed="true"]) { box-shadow: none; }
+.day-screen .calendar .date.today:not([aria-pressed="true"]) .day-date-number {
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+.day-screen .calendar .date.btn[aria-pressed="true"],
+.day-screen .calendar .date.btn[aria-pressed="true"]:hover {
+  background: transparent;
+  color: var(--color-text-primary);
+}
+.day-screen .calendar .date.btn[aria-pressed="true"] .day-date-number {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: var(--font-weight-semibold);
+}
+.day-screen .calendar .date.btn:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+.day-screen .calendar .date.btn .dots {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  height: 8px;
+  min-height: 8px;
+}
+.day-screen .calendar .date.btn .dot {
+  width: 5px;
+  height: 5px;
+  flex: none;
+}
+.day-screen .calendar .date[aria-pressed="true"] .dot { box-shadow: none; }
+.day-screen .calendar .legend {
+  margin-top: var(--space-compact-3);
+  padding-top: var(--space-compact-3);
+  gap: var(--space-compact-4);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-ui-caption);
+}
+.day-screen > .day-selected-title {
+  gap: var(--space-compact-3);
+  margin: var(--space-compact-5) 0 var(--space-compact-4);
+}
+.day-screen > .day-selected-title h2 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-ui-heading);
+  font-weight: var(--font-weight-medium);
+}
+.day-screen > .day-selected-title p {
+  margin: var(--space-compact-1) 0 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-ui-body);
+}
+.day-screen > .day-selected-title svg {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+}
+.day-screen .task {
+  gap: var(--space-compact-3);
+  padding: var(--space-compact-3) 0;
+}
+.day-screen .task .task-body.btn {
+  margin: 0;
+  padding: var(--space-compact-2);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-ui-body);
+}
+.day-screen .task strong { font-size: var(--font-size-md); font-weight: var(--font-weight-medium); }
+.day-screen .task small { font-size: var(--font-size-xs); line-height: var(--line-height-ui-caption); }
+.day-screen .task .tag { height: var(--icon-size-lg); }
+.day-screen > .empty {
+  margin: 0 0 var(--space-compact-4);
+  padding: var(--space-compact-5);
+  font-size: var(--font-size-sm);
+}
+.day-screen > .empty strong { font-weight: var(--font-weight-medium); }
+.day-screen > .btn { font-size: var(--font-size-sm); }
+.day-screen > :is(.completed, .notice) { margin-top: var(--space-compact-4); font-size: var(--font-size-sm); }
+
+/* New/edit Event shares TrainingPlan's bounded native date and time pickers,
+   Manrope typography, five sizes, and compact 4–20px spacing scale. */
+dialog:has(.event-editor-modal) .modal-head,
+dialog:has(.event-editor-modal) .modal-content {
+  box-sizing: border-box;
+  padding: var(--space-compact-4);
+  min-width: 0;
+  max-width: 100%;
+}
+dialog:has(.event-editor-modal) .modal-head h2 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+}
+.event-editor-modal,
+.event-editor-modal form,
+.event-editor-modal .form-fields {
+  display: grid;
+  box-sizing: border-box;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-compact-4);
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  font-family: var(--font-family-base);
+}
+.event-editor-modal .field {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-compact-2);
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+}
+.event-editor-modal .field > label,
+.event-editor-modal .recurrence-options > h3,
+.event-editor-modal .weekdays-picker > p {
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-caption);
+}
+.event-editor-modal .field :is(input:not([type="date"]):not([type="time"]), select, textarea) {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-3) var(--field-control-inline);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+}
+.event-editor-modal .field textarea { min-height: 72px; }
+.event-editor-modal .training-date-field,
+.event-editor-modal .training-time-field {
+  min-width: 0;
+  max-width: 100%;
+}
+.event-editor-modal :is(.training-date-wrap, .training-time-wrap) {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  gap: var(--space-compact-3);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-3) var(--field-control-inline);
+  overflow: hidden;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.event-editor-modal :is(.training-date-value, .training-time-value) {
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-primary);
+}
+.event-editor-modal :is(.training-date-icon, .training-time-icon) {
+  flex: none;
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+  color: var(--color-text-secondary);
+}
+.event-editor-modal :is(.training-date-wrap, .training-time-wrap):focus-within {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.event-editor-modal .training-date-wrap input[type="date"],
+.event-editor-modal .training-time-wrap input[type="time"] {
+  position: absolute;
+  inset: 0;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  opacity: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.event-editor-modal .training-date-wrap input[type="date"]::-webkit-calendar-picker-indicator,
+.event-editor-modal .training-time-wrap input[type="time"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.event-editor-modal .training-time-wrap.is-disabled { background: var(--color-surface-secondary); }
+.event-editor-modal .training-time-wrap.is-disabled .training-time-value { color: var(--color-text-muted); }
+.event-editor-modal .training-time-wrap.is-disabled input { cursor: not-allowed; }
+.event-editor-modal :is(.fields, .recurrence-fields, .training-planner-recurrence) {
+  display: grid;
+  gap: var(--space-compact-3);
+  min-width: 0;
+}
+.event-editor-modal .fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.event-editor-modal .recurrence-options {
+  display: grid;
+  gap: var(--space-compact-3);
+  min-width: 0;
+  padding: var(--space-compact-3);
+  border-radius: var(--radius-md);
+}
+.event-editor-modal :is(.recurrence-options-flat-frequency, .recurrence-options-flat-end) {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.event-editor-modal .recurrence-options-flat-end .field > label { display: none; }
+.event-editor-modal .recurrence-options-flat-frequency .fields { gap: var(--space-compact-2); }
+.event-editor-modal .weekdays-picker-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+}
+.event-editor-modal .weekdays-picker-row .checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  gap: 1px;
+  font-size: var(--font-size-xs);
+}
+.event-editor-modal .weekdays-picker-row .checkbox-hit { width: 18px; }
+.event-editor-modal .weekdays-picker-row .checkbox input { width: 18px; height: 18px; flex: none; }
+.event-editor-modal :is(.checkbox, .hint, .note, p) {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-ui-body);
+}
+.event-editor-modal .btn { margin: 0; font-size: var(--font-size-sm); }
+.event-editor-modal .recurrence-fields > .btn { justify-self: start; }
+.event-editor-modal .form-actions { margin: var(--space-compact-3) 0 0; padding: 0; }

@@ -1,5 +1,7 @@
 import { Field, Select, Note, Form, text, Checkbox } from "./components";
 import TrainingPlan from "./TrainingPlan";
+import TrainingDateField from "./TrainingDateField";
+import TrainingTimeField from "./TrainingTimeField";
 import RecurrenceFields, { draftForDate, type RecurrenceDraft } from "./RecurrenceFields";
 import type { Pet } from "./domain";
 import { useEffect, useState } from "react";
@@ -75,7 +77,7 @@ export default function EventForm({
   }, [existing?.id, session?.user.id]);
   if (chosen === "training" && pet && onTrainingSave && !existing)
     return (
-      <>
+      <div className="event-editor-modal">
         <Select
           label="Категория"
           value={chosen}
@@ -90,9 +92,10 @@ export default function EventForm({
           initialDate={selected}
           onSave={onTrainingSave}
         />
-      </>
+      </div>
     );
   return (
+    <div className="event-editor-modal">
     <Form
       label={existing ? "Сохранить изменения" : "Добавить в календарь"}
       onSave={async (d) => {
@@ -155,38 +158,37 @@ export default function EventForm({
         required
         maxLength={120}
       />
-      <div className="fields">
-        <Field
-          label="Дата"
-          type="date"
-          name="date"
-          defaultValue={initialDate}
-          onChange={(e) => {
-            const next = e.target.value;
-            setStartDate(next);
-            if (next) setRecurrence((r) => ({
-              ...r,
-              monthday: Number(next.slice(-2)),
-              weekdays: [new Date(next + "T12:00:00").getDay() || 7],
-            }));
-          }}
-          required
-        />
-        <Field
-          label="Время"
-          type="time"
-          name="time"
-          defaultValue={existing?.time || "09:00"}
-          disabled={allDay}
-          required={!allDay}
-        />
-      </div>
+      <TrainingDateField
+        label="Дата"
+        name="date"
+        value={startDate}
+        onChange={(e) => {
+          const next = e.target.value;
+          setStartDate(next);
+          if (next) setRecurrence((r) => ({
+            ...r,
+            monthday: r.frequency === "monthly" ? r.monthday : Number(next.slice(-2)),
+            weekdays: [new Date(next + "T12:00:00").getDay() || 7],
+          }));
+        }}
+        required
+      />
+      <TrainingTimeField
+        label="Время"
+        name="time"
+        defaultValue={existing?.time || "09:00"}
+        disabled={allDay}
+        required={!allDay}
+      />
       <Checkbox
         label="Весь день"
         checked={allDay}
         onChange={(e) => setAllDay(e.target.checked)}
       />
-      <RecurrenceFields date={startDate} value={recurrence} onChange={setRecurrence} />
+      <div className="training-planner-recurrence">
+        <RecurrenceFields date={startDate} value={recurrence} onChange={setRecurrence}
+          flatEnd simpleFrequencyLabels monthlyDayPicker />
+      </div>
       <Select
         label="Напомнить"
         value={reminderMode}
@@ -226,5 +228,6 @@ export default function EventForm({
       </p>
       <Note label="Комментарий" value={existing?.note ?? ""} />
     </Form>
+    </div>
   );
 }

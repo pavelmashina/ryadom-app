@@ -84,7 +84,7 @@ export default function Calendar({
     );
   }
   return (
-    <>
+    <div className="day-screen">
       <PageHeader title="Наши планы" />
       <section className="calendar" aria-label="Календарь месяца">
         <div className="month">
@@ -138,11 +138,12 @@ export default function Calendar({
                 key={s}
                 className={`date ${s.slice(0, 7) !== month.slice(0, 7) ? "outside" : ""} ${s === today() ? "today" : ""}`}
                 aria-pressed={s === selected}
+                aria-current={s === today() ? "date" : undefined}
                 aria-label={`${fmt(s, { day: "numeric", month: "long", year: "numeric" })}${s === today() ? ", сегодня" : ""}, событий: ${ev.length}${cats.length ? `, ${cats.map((c) => categories[c]).join(", ")}` : ""}`}
                 onClick={() => choose(s)}
                 variant="ghost"
               >
-                <span>{date(s).getDate()}</span>
+                <span className="day-date-number">{date(s).getDate()}</span>
                 <span className="dots" aria-hidden="true">
                   {cats.map((c) => (
                     <i key={c} className={`dot ${c}`} />
@@ -161,7 +162,7 @@ export default function Calendar({
           ))}
         </div>
       </section>
-      <div className="section-title">
+      <div className="section-title day-selected-title">
         <div>
           <h2>
             {selected === today()
@@ -244,6 +245,6 @@ export default function Calendar({
           ))}
         </aside>
       )}
-    </>
+    </div>
   );
 }
