@@ -28,7 +28,7 @@ describe("Unified form typography, insets and weekday layout",()=>{
     for(const styles of [global,training]) {
       // Several scoped weekday pickers can exist; verify the standard
       // seven-column rule without relying on CSS rule ordering.
-      const blocks=Array.from(styles.matchAll(/\\.weekdays-picker-row\\s*\\{([^}]*)\\}/g),match=>match[1]);
+      const blocks=Array.from(styles.matchAll(/\.weekdays-picker-row\s*\{([^}]*)\}/g),match=>match[1]);
       expect(blocks.some(block =>
         block.includes("grid-template-columns: repeat(7, minmax(0, 1fr))") &&
         block.includes(styles === training ? "gap: 1px" : "gap: calc(var(--space-compact-1) / 2)")
