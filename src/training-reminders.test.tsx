@@ -40,8 +40,9 @@ describe("Training reminders: frontend", () => {
     expect(REMINDER_MULTIPLIER.weeks).toBe(10080);
     expect(() => reminderOffsetMinutes("custom", 54, "weeks")).toThrow();
   });
-  it("does not silently create a reminder when user chooses not to notify", () => {
-    expect(push).toContain("} else if (enabled) {");
+  it("persists an explicitly disabled reminder so automatic defaults cannot re-enable it", () => {
+    expect(push).toContain("} else {");
+    expect(push).toContain('enabled, source: "personal"');
     expect(push).toContain("training_reminders?select=");
     expect(push).toContain('method: "PATCH"');
     expect(push).toContain('method: "POST"');

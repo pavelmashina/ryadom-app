@@ -15,21 +15,22 @@ const api=source("./push-api.ts");
 const ui=source("./NotificationPreferencesSettings.tsx");
 
 describe("Account notification preferences and compact UI",()=>{
- it("provides independent persistent switches and a global training offset",()=>{
+ it("provides independent persistent switches and per-pet category filters",()=>{
   const session={user:{id:"00000000-0000-4000-8000-000000000001"},accessToken:"fake"} as AuthSession;
   const html=renderToStaticMarkup(<NotificationPreferencesSettings session={session}/>);
   expect(html).toContain("О тренировках");
   expect(html).toContain("О событиях");
   expect(html).toContain("Напоминания");
   expect((html.match(/role="switch"/g)||[]).length).toBe(3);
-  expect(ui).toContain("Напомнить о тренировке");
-  expect(ui).toContain("За 10 минут");
-  expect(ui).toContain("За 1 неделю");
+  expect(ui).toContain("notification-pet-filter");
+  expect(ui).toContain("Все питомцы");
+  expect(ui).not.toContain("Напомнить о тренировке");
   expect(api).toContain("notification_preferences?on_conflict=user_id");
   expect(api).toContain("getValidSession()");
   expect(api).toContain('source: "personal"');
   expect(DEFAULT_NOTIFICATION_PREFERENCES).toEqual({
    trainings_enabled:false,events_enabled:true,reminders_enabled:true,training_offset_minutes:60,
+   trainings_pet_ids:null,events_pet_ids:null,reminders_pet_ids:null,
   });
  });
  it("never grants anonymous access and checks auth.uid for all preference changes",()=>{
@@ -61,12 +62,12 @@ describe("Account notification preferences and compact UI",()=>{
   expect(account).not.toContain("Ваш аккаунт");
   expect(account).not.toContain("Адрес для входа и восстановления доступа");
   expect(account).toContain('className="account-email-line"');
-  expect(account).toContain('<NotificationPreferencesSettings session={session} disabled={!pushEnabled} />');
+  expect(account).toContain('<NotificationPreferencesSettings session={session} disabled={!pushEnabled} pets={pets} />');
   expect(push).not.toContain("Напоминания о событиях питомца.");
   expect(styles).toContain(".account-content > .heading {");
   expect(styles).toContain(".account-section-shell {");
   expect(styles).toContain(".notification-toggle-row {");
-  expect(styles).toContain(".notification-training-offset {");
+  expect(styles).toContain(".notification-pet-filter summary {");
   expect(styles).toContain(".new-pet-form .form-actions {");
  });
  it("keeps compact monthly value and checkbox labels on the same typographic level",()=>{

@@ -41,7 +41,6 @@ import Training from "./Training";
 import Health from "./Health";
 import Stock from "./Stock";
 import EventForm from "./EventForm";
-import ReminderSettings from "./ReminderSettings";
 import FirstPetSetup from "./FirstPetSetup";
 import { needsFirstPetSetup, type PetBasics } from "./first-pet-setup";
 import { saveWeight, deleteWeight, saveMedicalRecord, deleteMedicalRecord, deletePetDocument } from "./health-actions";
@@ -132,7 +131,7 @@ export default function App({
 }: {
   initial: State;
   onPersist: (next: State, before: State) => Promise<PersistOutcome>;
-  accountContent: ReactNode;
+  accountContent: (pets: Pet[]) => ReactNode;
   onLogout: () => Promise<void>;
   session: AuthSession;
   onRefresh: () => Promise<State>;
@@ -775,11 +774,6 @@ export default function App({
             >
               {done ? "Снять отметку о выполнении" : "Отметить выполненным"}
             </Button>
-            <ReminderSettings
-              session={session}
-              petId={pet.id}
-              eventId={e.id}
-            />
             <div className="fields event-detail-actions">
               <Button onClick={() => modifyEvent(e, overlay.on, "edit")} variant="secondary">
                 Изменить
@@ -1393,7 +1387,7 @@ export default function App({
                 <ArrowLeft aria-hidden="true" />
               </button>
             </div>
-            {accountContent}
+            {accountContent(state.pets)}
             <section className="account-section-shell account-pets-section">
               <SectionHeader title="Питомцы и доступ" />
               <Card className="account-pets-management">

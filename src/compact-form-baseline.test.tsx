@@ -38,6 +38,6 @@ describe("Shared form spacing and compact notification layout",()=>{
     const labels=styles.split(".account-section-shell:has(.push-settings) .notification-toggle-row,")[1]!.split("}")[0];
     expect(labels).toContain("font-size: var(--font-size-md)");
     expect(tokens).toContain("--font-size-md: 16px");
-    expect(account).toContain('<NotificationPreferencesSettings session={session} disabled={!pushEnabled} />');
+    expect(account).toContain('<NotificationPreferencesSettings session={session} disabled={!pushEnabled} pets={pets} />');
   });
 });

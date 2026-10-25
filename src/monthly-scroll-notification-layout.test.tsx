@@ -21,25 +21,23 @@ describe("Month-day visual inset and nested training notifications", () => {
     expect(picker).toContain("opacity: 0");
     expect(training).toContain("flex: 0 1 164px;");
   });
-  it("places training timing directly beneath the Training toggle, not after other categories", () => {
-    const categoryStart = notifications.indexOf('className="notification-category"');
-    const trainingSubfield = notifications.indexOf('className="notification-training-offset"');
-    const endCategory = notifications.indexOf('</div>)}', categoryStart);
-    expect(categoryStart).toBeGreaterThan(-1);
-    expect(trainingSubfield).toBeGreaterThan(categoryStart);
-    expect(trainingSubfield).toBeLessThan(endCategory);
-    expect(notifications).toContain('key === "trainings_enabled" && prefs.trainings_enabled');
+  it("places a per-pet multi-select beneath every enabled notification category", () => {
+    expect(notifications).toContain('className="notification-category"');
+    expect(notifications).toContain('prefs[key]&&<details className="notification-pet-filter"');
+    expect(notifications).toContain('key: "trainings_enabled"');
+    expect(notifications).toContain('key: "events_enabled"');
+    expect(notifications).toContain('key: "reminders_enabled"');
+    expect(notifications).not.toContain('className="notification-training-offset"');
     expect(notifications).toContain('disabled={disabled||busy||loading}');
   });
-  it("uses compact 36px/12px timing select, 14px description and tight switch rows", () => {
+  it("uses compact pet selector typography and touch-sized choices", () => {
     const group = styles.split(".account-section-shell:has(.push-settings) .notification-preferences {").at(-1)?.split("}")[0] ?? "";
     expect(group).toContain("gap: 0");
-    const label = styles.split(".notification-category .notification-training-offset > span {")[1]?.split("}")[0] ?? "";
-    expect(label).toContain("font-size: var(--font-size-sm)");
-    const select = styles.split(".notification-category .notification-training-offset select {")[1]?.split("}")[0] ?? "";
-    expect(select).toContain("height: calc(var(--button-height-sm) - var(--space-compact-3))");
-    expect(select).toContain("font-size: var(--font-size-xs)");
-    expect(select).toContain("width: min(100%, 208px)");
+    const selector = styles.split(".notification-pet-filter summary {")[1]?.split("}")[0] ?? "";
+    expect(selector).toContain("min-height:var(--button-height-sm)");
+    expect(selector).toContain("font-size:var(--font-size-sm)");
+    const choices = styles.split(".notification-pet-option {")[1]?.split("}")[0] ?? "";
+    expect(choices).toContain("min-height:var(--button-height-sm)");
   });
   it("matches the training section heading gap of twelve points", () => {
     const account = styles.split(".account-content .account-section-shell {")[1]?.split("}")[0] ?? "";

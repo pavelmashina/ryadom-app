@@ -15,11 +15,11 @@ const sections: { key: Category; label: string; filter: FilterKey }[] = [
 ];
 /** Changes are persisted on the account and enforced again by server-side dispatch. */
 export default function NotificationPreferencesSettings({
-  session, disabled = false, pets,
+  session, disabled = false, pets = [],
 }: {
   session: AuthSession;
   disabled?: boolean;
-  pets: PetChoice[];
+  pets?: PetChoice[];
 }) {
   const [prefs,setPrefs] = useState<Choices>({...DEFAULT_NOTIFICATION_PREFERENCES});
   const [busy,setBusy] = useState(false);
@@ -60,7 +60,7 @@ export default function NotificationPreferencesSettings({
   return <div className="notification-preferences" aria-busy={busy||loading}
     aria-disabled={disabled}>
     {sections.map(({key,label,filter})=>{
-      const selection=prefs[filter];
+      const selection=prefs[filter] ?? null;
       const shown=pets.filter(p=>selection===null||selection.includes(p.id));
       const choiceLabel=selection===null ? "Все питомцы"
         : shown.length===0 ? "Ни одного питомца"

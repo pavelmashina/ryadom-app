@@ -94,6 +94,9 @@ export type NotificationPreferences = {
   events_enabled: boolean;
   reminders_enabled: boolean;
   training_offset_minutes: number;
+  trainings_pet_ids: string[] | null;
+  events_pet_ids: string[] | null;
+  reminders_pet_ids: string[] | null;
 };
 
 export const DEFAULT_NOTIFICATION_PREFERENCES = {
@@ -101,11 +104,14 @@ export const DEFAULT_NOTIFICATION_PREFERENCES = {
   events_enabled: true,
   reminders_enabled: true,
   training_offset_minutes: 60,
+  trainings_pet_ids: null,
+  events_pet_ids: null,
+  reminders_pet_ids: null,
 } as const;
 
 export async function getNotificationPreferences(session: AuthSession): Promise<NotificationPreferences> {
   const result = await rest(session,
-    "notification_preferences?select=user_id,trainings_enabled,events_enabled,reminders_enabled,training_offset_minutes&user_id=eq." +
+    "notification_preferences?select=user_id,trainings_enabled,events_enabled,reminders_enabled,training_offset_minutes,trainings_pet_ids,events_pet_ids,reminders_pet_ids&user_id=eq." +
     encodeURIComponent(session.user.id),
   ) as NotificationPreferences[];
   return result[0] ?? { user_id: session.user.id, ...DEFAULT_NOTIFICATION_PREFERENCES };
@@ -118,6 +124,11 @@ export async function updateNotificationPreferences(
   if (!Number.isSafeInteger(prefs.training_offset_minutes) ||
       prefs.training_offset_minutes < 0 || prefs.training_offset_minutes > 10080)
     throw new Error("Некорректное время уведомления о тренировке");
+  for (const key of ["trainings_pet_ids","events_pet_ids","reminders_pet_ids"] as const) {
+    const ids = prefs[key];
+    if (ids !== null && (!Array.isArray(ids) || ids.some(id => !/^[0-9a-f-]{36}$/i.test(id))))
+      throw new Error("Некорректный список питомцев для уведомлений");
+  }
   await rest(session, "notification_preferences?on_conflict=user_id", {
     method: "POST",
     headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
