@@ -34,8 +34,10 @@ describe("Empty pet account navigation and access empties", () => {
   });
 
   it("uses identical, unboxed status text for no requests and no members", () => {
+    const pet = blankPet("Маша");
+    pet.role = "owner";
     const html = renderToStaticMarkup(<Sharing
-      pet={blankPet("Маша")} session={session}
+      pet={pet} session={session}
       onChanged={async () => {}} />);
     expect(html).toContain("Новых запросов нет.");
     expect(html).toContain("Других пользователей с доступом пока нет.");
