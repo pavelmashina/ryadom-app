@@ -251,7 +251,32 @@ button svg {
   flex: 1;
 }
 .account-trigger {
+  position: relative;
+  overflow: visible;
   background: var(--color-surface-secondary);
+}
+/* A small overlapping alert, not another header action.
+   The underlying UserRound stays centered in its original 36px button. */
+.account-trigger .account-notification-bell {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 17px;
+  height: 17px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  pointer-events: none;
+}
+.account-trigger .account-notification-bell svg {
+  display: block;
+  width: 11px;
+  height: 11px;
+  stroke-width: 2;
 }
 .pet-button {
   min-width: 0;

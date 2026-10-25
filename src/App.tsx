@@ -28,13 +28,13 @@ import {
   GraduationCap,
   Package,
   Download,
-  UserRound,
   ArrowLeft,
   LogOut,
   Plus,
   Settings,
 } from "lucide-react";
 import Calendar from "./Calendar";
+import AccountTrigger from "./AccountTrigger";
 import Training from "./Training";
 import Health from "./Health";
 import Stock from "./Stock";
@@ -1363,23 +1363,12 @@ export default function App({
                   </div>
                 </>}
             </div>
-            <IconButton
-              label="Аккаунт"
-              className="account-trigger"
+            <AccountTrigger
               onClick={openAccount}
-            >
-              <UserRound />
-            </IconButton>
-            {state.pets.some((p) => (p.pendingRequests ?? 0) > 0) && (
-              <IconButton
-                label="Есть запросы на доступ"
-                onClick={openAccount}
-              >
-                <span className="request-dot" aria-hidden="true">
-                  ●
-                </span>
-              </IconButton>
-            )}
+              hasPendingRequests={state.pets.some(
+                (p) => p.role === "owner" && (p.pendingRequests ?? 0) > 0
+              )}
+            />
           </div>
         </header>}
         {hasPets && pet.demo && (
