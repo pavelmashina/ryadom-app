@@ -70,8 +70,8 @@ export default function EventForm({
       })
       .catch((error) => {
         if (!alive) return;
-        console.warn("[reminder] failed to load personal reminder for event edit", error);
-        setReminderError("Не удалось загрузить личное напоминание. Проверьте соединение и откройте событие снова.");
+        console.warn("[reminder] failed to load shared reminder for event edit", error);
+        setReminderError("Не удалось загрузить общее напоминание питомца. Проверьте соединение и откройте событие снова.");
       });
     return () => { alive = false; };
   }, [existing?.id, session?.user.id]);
@@ -99,7 +99,7 @@ export default function EventForm({
     <Form
       label={existing ? "Сохранить изменения" : "Добавить в календарь"}
       onSave={async (d) => {
-        if (!reminderReady) throw new Error(reminderError || "Загружаем личное напоминание. Повторите сохранение.");
+        if (!reminderReady) throw new Error(reminderError || "Загружаем общее напоминание питомца. Повторите сохранение.");
         if (recurrence.frequency === "weekly" && recurrence.weekdays.length === 0)
           throw new Error("Выберите хотя бы один день недели");
         if (recurrence.endType === "date" &&
@@ -221,10 +221,10 @@ export default function EventForm({
         </div>
       )}
       {existing && !reminderReady && (
-        <p className="hint" role="status">{reminderError || "Загружаем ваше личное напоминание…"}</p>
+        <p className="hint" role="status">{reminderError || "Загружаем общее напоминание питомца…"}</p>
       )}
       <p className="hint">
-        Напоминание сохраняется лично для вашего аккаунта. Для доставки push включите уведомления в разделе «Аккаунт».
+        Уведомления получают все участники питомца с разрешённым типом: «Событие» — «О событиях», «Напоминание» — «Напоминания». Уведомления об окончании запасов также относятся к «Напоминаниям».
       </p>
       <Note label="Комментарий" value={existing?.note ?? ""} />
     </Form>

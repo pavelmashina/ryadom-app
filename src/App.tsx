@@ -488,13 +488,13 @@ export default function App({
     try {
       await setSharedEventReminder(session, pet.id, eventId, Number(event.reminder), !!event.reminderEnabled);
     } catch (error) {
-      console.warn("[reminder] event saved but personal reminder sync failed", error);
-      setNotice("Событие сохранено, но личное напоминание не обновилось. Откройте карточку события и сохраните напоминание повторно.");
+      console.warn("[reminder] event saved but shared reminder sync failed", error);
+      setNotice("Событие сохранено, но общее напоминание не обновилось. Откройте карточку события и сохраните напоминание повторно.");
     }
   }
   async function saveEventEdit(e: PetEvent, on: string, scope: EventScope, next: PetEvent) {
     // Editing one occurrence or a future series creates a distinct event ID.
-    // Attach the current user's reminder to that new ID, not the old series.
+    // Attach the shared reminder to the new ID, not the old series.
     const targetId = e.repeat !== "once" && scope !== "all" ? id() : e.id;
     await saved(() =>
       update((p) => {
@@ -768,7 +768,7 @@ export default function App({
               </h3>
               <p>{e.kind === "reminder" ? "Напоминание" : "Событие"} · {recurrenceText(e)}</p>
               <p className="note">{e.note || "Заметка не добавлена"}</p>
-              <p className="hint">Личные уведомления настраиваются ниже.</p>
+              <p className="hint">Уведомление получат все участники питомца, у которых разрешены уведомления этого типа.</p>
             </Card>
             <Button
               onClick={() => toggle(e, overlay.on)}

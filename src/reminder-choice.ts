@@ -13,7 +13,7 @@ export type ReminderChoice = {
   unit: ReminderUnit;
 };
 
-/** One conversion path for event forms and personal reminder details. */
+/** One conversion path for event forms and shared reminder details. */
 export function reminderChoice(minutes: number, enabled: boolean): ReminderChoice {
   if (!enabled) return { mode: "none", amount: 1, unit: "minutes" };
   if ([0, 10, 30, 60, 1440].includes(minutes)) {
@@ -25,7 +25,7 @@ export function reminderChoice(minutes: number, enabled: boolean): ReminderChoic
   return { mode: "custom", amount: minutes / REMINDER_MULTIPLIER[unit], unit };
 }
 export function savedReminderChoice(rows: SharedEventReminder[]): ReminderChoice {
-  // Native per-user subscription overrides the shared/legacy event fields.
+  // Server supplies the latest shared reminder configuration for the pet event.
   const reminder = rows.find((row) => row.enabled);
   if (!reminder) return reminderChoice(0, false);
   return reminderChoice(

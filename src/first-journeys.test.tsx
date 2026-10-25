@@ -61,7 +61,7 @@ describe("Release 1: explicitly chosen training scores", () => {
     expect(source("./TrainingPlan.tsx")).toContain("is_active: schedule?.is_active ?? true");
   });
 });
-describe("Release 1: personal reminder consistency", () => {
+describe("Release 1: shared pet reminder consistency", () => {
   it("uses the same presets and custom durations in both interfaces", () => {
     expect(reminderChoice(60, true).mode).toBe("60");
     expect(reminderChoice(0, true).mode).toBe("0");
@@ -71,7 +71,7 @@ describe("Release 1: personal reminder consistency", () => {
     expect(reminderOffsetMinutes("none", 99, "hours")).toBe(0);
     expect(() => reminderOffsetMinutes("custom", 53, "weeks")).toThrow();
   });
-  it("prefers only the current user's active server reminder", () => {
+  it("uses the effective shared server reminder", () => {
     expect(savedReminderChoice([]).mode).toBe("none");
     expect(savedReminderChoice([{ id: "x", user_id: "u", event_id: eventId,
       enabled: true, offset_value: 2, offset_unit: "hours" }]))
@@ -79,14 +79,14 @@ describe("Release 1: personal reminder consistency", () => {
     expect(savedReminderChoice([{ id: "x", user_id: "u", event_id: eventId,
       enabled: false, offset_value: 2, offset_unit: "hours" }]).mode).toBe("none");
   });
-  it("loads the personal reminder before event edits and syncs the final ID", () => {
+  it("loads the shared reminder before event edits and syncs the final ID", () => {
     const event = source("./EventForm.tsx");
     const app = source("./App.tsx");
-    expect(event).toContain("getPersonalReminders(session, existing.id)");
+    expect(event).toContain("getSharedEventReminder(session, existing.id)");
     expect(event).toContain('if (!reminderReady) throw new Error');
     expect(app).toContain('const targetId = e.repeat !== "once" && scope !== "all" ? id() : e.id;');
-    expect(app).toContain("await syncPersonalReminder(targetId, next)");
-    expect(app).toContain("setPersonalReminder(session, pet.id, eventId, Number(event.reminder), !!event.reminderEnabled)");
+    expect(app).toContain("await syncSharedReminder(targetId, next)");
+    expect(app).toContain("setSharedEventReminder(session, pet.id, eventId, Number(event.reminder), !!event.reminderEnabled)");
     expect(event).not.toContain("Отправка push-уведомлений будет подключена отдельно");
   });
 });
