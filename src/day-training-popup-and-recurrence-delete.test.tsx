@@ -74,7 +74,7 @@ describe("Day screen: workout uses event-style details",()=>{
     expect(deletion).toContain('schedule && <Select label="Удалить"');
     expect(deletion).toContain('<option value="one">Только эту тренировку</option>');
     expect(deletion).toContain('<option value="following">Эту и все последующие</option>');
-    expect(deletion).toContain("cancelPlannedTraining(p, workout.id, scope)");
+    expect(app).toContain("cancelPlannedTraining(p, workout.id, scope)");
     expect(deletion).toContain('workout.status !== "planned"');
     const sc=schedule();
     const p=blankPet("Пёс");
