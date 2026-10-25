@@ -799,14 +799,14 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-compact-2);
 }
-.training-modal-content .training-planner-recurrence
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence
 :is(.recurrence-options-flat-frequency,.recurrence-options-flat-end) .field > label,
-.training-modal-content .training-planner-recurrence
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence
 :is(.recurrence-options-flat-frequency,.recurrence-options-flat-end) h3,
-.training-modal-content .training-planner-recurrence .weekdays-picker > p {
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence .weekdays-picker > p {
   font-size: var(--font-size-sm);
 }
-.training-modal-content .training-planner-recurrence
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence
 :is(.recurrence-options-flat-frequency,.recurrence-options-flat-end)
 .field :is(input:not([type="date"]),select) {
   box-sizing: border-box;
@@ -817,7 +817,7 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
   padding: var(--space-compact-1) var(--space-compact-3);
   font-size: var(--font-size-xs);
 }
-.training-modal-content .training-planner-recurrence
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence
 .weekdays-picker-row .checkbox {
   font-size: var(--font-size-xs);
 }
@@ -895,18 +895,18 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
 }
 
 /* Compact seven-day chooser: all weekdays fit one line without reducing hit height. */
-.training-modal-content .weekdays-picker {
+:is(.training-modal-content, .event-editor-modal) .weekdays-picker {
   min-width: 0;
   width: 100%;
 }
-.training-modal-content .weekdays-picker-row {
+:is(.training-modal-content, .event-editor-modal) .weekdays-picker-row {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 1px;
   min-width: 0;
   width: 100%;
 }
-.training-modal-content .weekdays-picker-row .checkbox {
+:is(.training-modal-content, .event-editor-modal) .weekdays-picker-row .checkbox {
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -917,11 +917,11 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
   font-size: var(--font-size-xs);
   white-space: nowrap;
 }
-.training-modal-content .weekdays-picker-row .checkbox-hit {
+:is(.training-modal-content, .event-editor-modal) .weekdays-picker-row .checkbox-hit {
   width: 18px;
   height: var(--button-height-sm);
 }
-.training-modal-content .weekdays-picker-row .checkbox input {
+:is(.training-modal-content, .event-editor-modal) .weekdays-picker-row .checkbox input {
   flex: none;
   width: 18px;
   height: 18px;
@@ -935,12 +935,12 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
   margin-right: var(--space-compact-1);
 }
 /* The end-of-range selector follows the same standard 44px input rhythm. */
-.training-modal-content .training-planner-recurrence .recurrence-options-flat-end > h3,
-.training-modal-content .training-planner-recurrence .recurrence-options-flat-end .field > label {
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence .recurrence-options-flat-end > h3,
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence .recurrence-options-flat-end .field > label {
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
 }
-.training-modal-content .training-planner-recurrence
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence
 .recurrence-options-flat-end .field select {
   box-sizing: border-box;
   min-height: var(--button-height-sm);
@@ -1007,7 +1007,7 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
 }
 /* Make the end-range select the exact same size and inline inset as other form inputs.
    Extra specificity beats the condensed settings used for frequency and period. */
-.training-modal-content .training-planner-recurrence
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence
 .recurrence-options.recurrence-options-flat-end .field select {
   width: 100%;
   box-sizing: border-box;
@@ -1024,9 +1024,9 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
 
 /* Repetition interval and period use the same 20px internal text inset
    as every other app form control. Condensed font and height remain intact. */
-.training-modal-content .training-planner-recurrence
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence
 .recurrence-options-flat-frequency .fields .field input[type="number"],
-.training-modal-content .training-planner-recurrence
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence
 .recurrence-options-flat-frequency .fields .field select {
   padding-left: var(--field-control-inline);
   padding-right: var(--field-control-inline);
@@ -1034,20 +1034,20 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
 
 /* Monthly training recurrence: show a fixed 20px text inset independent of
    Safari's native select rendering. The transparent native picker remains tappable. */
-.training-modal-content .training-planner-recurrence .monthly-day-picker {
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence .monthly-day-picker {
   display: flex;
   align-items: end;
   gap: var(--space-compact-1);
   min-width: 0;
   max-width: 100%;
 }
-.training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-day-field {
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence .monthly-day-picker .monthly-day-field {
   flex: 0 1 164px;
   width: 164px;
   min-width: 0;
   max-width: 164px;
 }
-.training-modal-content .training-planner-recurrence .monthly-day-control {
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence .monthly-day-control {
   position: relative;
   box-sizing: border-box;
   display: flex;
@@ -1066,20 +1066,20 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-regular);
 }
-.training-modal-content .training-planner-recurrence .monthly-day-value {
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence .monthly-day-value {
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   font-size: var(--font-size-xs);
 }
-.training-modal-content .training-planner-recurrence .monthly-day-chevron {
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence .monthly-day-chevron {
   width: var(--icon-size-sm);
   height: var(--icon-size-sm);
   flex: none;
   color: var(--color-text-secondary);
 }
-.training-modal-content .training-planner-recurrence
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence
 .monthly-day-picker .monthly-day-field .monthly-day-control select {
   position: absolute;
   inset: 0;
@@ -1097,11 +1097,11 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
   -webkit-appearance: none;
   appearance: none;
 }
-.training-modal-content .training-planner-recurrence .monthly-day-control:focus-within {
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence .monthly-day-control:focus-within {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
-.training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day {
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence .monthly-day-picker .monthly-last-day {
   display: inline-flex;
   flex: 1 1 auto;
   box-sizing: border-box;
@@ -1118,7 +1118,7 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-ui-caption);
 }
-.training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day .checkbox-hit {
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence .monthly-day-picker .monthly-last-day .checkbox-hit {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1127,11 +1127,11 @@ dialog:has(.training-modal-content) .modal-head {padding:var(--space-compact-4);
   min-width: 18px;
   height: 36px;
 }
-.training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day input {
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence .monthly-day-picker .monthly-last-day input {
   width: 18px;
   height: 18px;
 }
-.training-modal-content .training-planner-recurrence .monthly-day-picker .monthly-last-day > span:last-child {
+:is(.training-modal-content, .event-editor-modal) .training-planner-recurrence .monthly-day-picker .monthly-last-day > span:last-child {
   min-width: 0;
   align-self: center;
   overflow-wrap: break-word;

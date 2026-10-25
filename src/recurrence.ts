@@ -144,7 +144,7 @@ export function recurrenceText(e: RecurrenceEvent): string {
     modifier = " · " + weekdaysOf(e).map((d) => names[d - 1]).join(", ");
   } else if (e.repeat === "monthly") {
     const number = e.repeatMonthday ?? Number(e.date.slice(-2));
-    modifier = ` · ${number} числа`;
+    modifier = number === 32 ? " · последнее число" : ` · ${number} числа`;
   }
   const ending = e.repeatEndType === "count"
     ? ` · ${e.repeatCount} повторений`

@@ -41,6 +41,20 @@ describe("shared calendar recurrence calculations", () => {
     }
     expect(occursOn(e, "2026-03-30")).toBe(false);
   });
+  it("supports the explicit last-day-of-month choice for an event", () => {
+    const e = event({ date: "2026-01-15", repeat: "monthly", repeatMonthday: 32 });
+    for (const date of ["2026-01-31", "2026-02-28", "2026-03-31", "2026-04-30"])
+      expect(occursOn(e, date)).toBe(true);
+    expect(occursOn(e, "2026-03-30")).toBe(false);
+    expect(recurrenceText(e)).toContain("последнее число");
+    const parsed = eventSchema.safeParse({
+      id: "month-last", name: "Проверка", category: "care",
+      date: "2026-01-15", time: "", repeat: "monthly",
+      repeatInterval: 1, repeatMonthday: 32, repeatEndType: "never",
+      end: "", reminder: "0", note: "",
+    });
+    expect(parsed.success).toBe(true);
+  });
   it("handles leap years when clamping February", () => {
     const e = event({ date: "2024-01-31", repeat: "monthly" });
     expect(occursOn(e, "2024-02-29")).toBe(true);

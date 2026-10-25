@@ -54,7 +54,9 @@ describe("Day calendar unified with Training calendar layout", () => {
   it("preserves the standard compact typography, recurrence and event metadata", () => {
     const src = source("./EventForm.tsx");
     const css = source("./styles.css");
-    expect(src).toContain("flatEnd simpleFrequencyLabels monthlyDayPicker");
+    for (const setting of ["flatEnd", "simpleFrequencyLabels", "monthlyDayPicker",
+      "intervalText={intervalText}", "onIntervalTextChange={setIntervalText}"])
+      expect(src).toContain(setting);
     expect(src).toContain('name="category"');
     expect(src).toContain('name="name"');
     expect(src).toContain('reminderOffsetMinutes(');

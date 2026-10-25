@@ -30,7 +30,7 @@ export const eventSchema = z
     repeat: z.enum(["once", "daily", "weekly", "monthly", "yearly"]),
     repeatInterval: z.number().int().min(1).max(366).optional(),
     repeatWeekdays: z.array(z.number().int().min(1).max(7)).max(7).optional(),
-    repeatMonthday: z.number().int().min(1).max(31).optional(),
+    repeatMonthday: z.number().int().min(1).max(32).optional(),
     repeatEndType: z.enum(["never", "date", "count"]).optional(),
     repeatCount: z.number().int().min(1).max(10000).optional(),
     exceptions: z.array(z.object({

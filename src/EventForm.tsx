@@ -1,5 +1,5 @@
 import { Field, Select, Note, Form, text, Checkbox } from "./components";
-import TrainingPlan from "./TrainingPlan";
+import TrainingPlan, { validatePlanningInterval, validateMonthlyRepeatDay } from "./TrainingPlan";
 import TrainingDateField from "./TrainingDateField";
 import TrainingTimeField from "./TrainingTimeField";
 import RecurrenceFields, { draftForDate, type RecurrenceDraft } from "./RecurrenceFields";
@@ -36,6 +36,7 @@ export default function EventForm({
   const [chosen, setChosen] = useState(existing?.category ?? category);
   const [kind, setKind] = useState<"event" | "reminder">(existing?.kind ?? "event");
   const [startDate, setStartDate] = useState(initialDate);
+  const [intervalText, setIntervalText] = useState(String(existing?.repeatInterval ?? 1));
   const [allDay, setAllDay] = useState(!existing?.time);
   const [recurrence, setRecurrence] = useState<RecurrenceDraft>(() => ({
     ...draftForDate(initialDate),
@@ -100,9 +101,11 @@ export default function EventForm({
       label={existing ? "Сохранить изменения" : "Добавить в календарь"}
       onSave={async (d) => {
         if (!reminderReady) throw new Error(reminderError || "Загружаем общее напоминание питомца. Повторите сохранение.");
+        const interval = validatePlanningInterval(intervalText, recurrence.frequency);
+        validateMonthlyRepeatDay(recurrence.frequency, recurrence.monthday);
         if (recurrence.frequency === "weekly" && recurrence.weekdays.length === 0)
           throw new Error("Выберите хотя бы один день недели");
-        if (recurrence.endType === "date" &&
+        if (recurrence.frequency !== "once" && recurrence.endType === "date" &&
             (!recurrence.endDate || recurrence.endDate < startDate))
           throw new Error("Дата окончания должна быть не раньше начала");
 
@@ -116,7 +119,7 @@ export default function EventForm({
           date: text(d, "date"),
           time: allDay ? "" : text(d, "time"),
           repeat: recurrence.frequency,
-          repeatInterval: recurrence.frequency === "once" ? undefined : recurrence.interval,
+          repeatInterval: recurrence.frequency === "once" ? undefined : interval,
           repeatWeekdays: recurrence.frequency === "weekly" ? recurrence.weekdays : undefined,
           repeatMonthday: recurrence.frequency === "monthly" ? recurrence.monthday : undefined,
           repeatEndType: recurrence.frequency === "once" ? undefined : recurrence.endType,
@@ -186,8 +189,16 @@ export default function EventForm({
         onChange={(e) => setAllDay(e.target.checked)}
       />
       <div className="training-planner-recurrence">
-        <RecurrenceFields date={startDate} value={recurrence} onChange={setRecurrence}
-          flatEnd simpleFrequencyLabels monthlyDayPicker />
+        <RecurrenceFields
+          date={startDate}
+          value={recurrence}
+          onChange={setRecurrence}
+          flatEnd
+          simpleFrequencyLabels
+          monthlyDayPicker
+          intervalText={intervalText}
+          onIntervalTextChange={setIntervalText}
+        />
       </div>
       <Select
         label="Напомнить"
@@ -223,9 +234,6 @@ export default function EventForm({
       {existing && !reminderReady && (
         <p className="hint" role="status">{reminderError || "Загружаем общее напоминание питомца…"}</p>
       )}
-      <p className="hint">
-        Уведомления получают все участники питомца с разрешённым типом: «Событие» — «О событиях», «Напоминание» — «Напоминания». Уведомления об окончании запасов также относятся к «Напоминаниям».
-      </p>
       <Note label="Комментарий" value={existing?.note ?? ""} />
     </Form>
     </div>
