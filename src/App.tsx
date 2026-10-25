@@ -754,8 +754,8 @@ export default function App({
         const e = pet.events.find((e) => e.id === overlay.event.id)!;
         const done = pet.done[completionKey(e, overlay.on)];
         return (
-          <>
-            <Card>
+          <div className="event-detail-modal">
+            <Card className="event-detail-summary">
               <span className="eyebrow">
                 {fmt(overlay.on, {
                   day: "numeric",
@@ -768,7 +768,6 @@ export default function App({
               </h3>
               <p>{e.kind === "reminder" ? "Напоминание" : "Событие"} · {recurrenceText(e)}</p>
               <p className="note">{e.note || "Заметка не добавлена"}</p>
-              <p className="hint">Уведомление получат все участники питомца, у которых разрешены уведомления этого типа.</p>
             </Card>
             <Button
               onClick={() => toggle(e, overlay.on)}
@@ -782,7 +781,7 @@ export default function App({
               petId={pet.id}
               eventId={e.id}
             />
-            <div className="fields">
+            <div className="fields event-detail-actions">
               <Button onClick={() => modifyEvent(e, overlay.on, "edit")} variant="secondary">
                 Изменить
               </Button>
@@ -800,16 +799,15 @@ export default function App({
                   setMonth(to.slice(0, 7) + "-01");
                 }}
               >
-                <Field
+                <TrainingDateField
                   label="Перенести на дату"
                   name="date"
-                  type="date"
                   defaultValue={e.date}
                   required
                 />
               </Form>
             )}
-          </>
+          </div>
         );
       }
       case "pets":

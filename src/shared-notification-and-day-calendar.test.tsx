@@ -43,15 +43,16 @@ describe("Day calendar matches Training and notifications follow category permis
     expect(css).toContain("height: 8px;");
   });
 
-  it("keeps the notification explanation in detail settings, not New Event", () => {
+  it("keeps notification help out of both New Event and the event details", () => {
     const html = renderToStaticMarkup(<EventForm selected="2026-10-25" onSave={() => {}} />);
     expect(html).not.toContain("Напоминание сохраняется лично");
     expect(html).not.toContain("Уведомления получают");
     expect(html).not.toContain("Уведомления об окончании запасов");
     expect(html).toContain("Напомнить");
     const detail = renderToStaticMarkup(<ReminderSettings session={session} petId="pet" eventId="event" />);
-    expect(detail).toContain("все участники питомца");
-    expect(detail).toContain("предупреждения о запасах");
+    expect(detail).not.toContain("Уведомление получат");
+    expect(detail).not.toContain("все участники питомца");
+    expect(detail).toContain("Настройка напоминания");
   });
 
   it("stores one effective shared event reminder without exposing anonymous writes", () => {

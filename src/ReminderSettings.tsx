@@ -35,9 +35,6 @@ export default function ReminderSettings({
   return (
     <div className="personal-reminder">
       <h3>Настройка напоминания</h3>
-      <p className="hint">
-        Уведомление получат все участники питомца с разрешённым типом: «Событие» — «О событиях», «Напоминание» и предупреждения о запасах — «Напоминания».
-      </p>
       <Form
         label="Сохранить напоминание"
         onSave={async () => {

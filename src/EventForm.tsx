@@ -206,7 +206,7 @@ export default function EventForm({
         onChange={(e) => setReminderMode(e.target.value)}
       >
         <option value="none">Не напоминать</option>
-        <option value="now">В момент события</option>
+        <option value="0">В момент события</option>
         <option value="10">За 10 минут</option>
         <option value="30">За 30 минут</option>
         <option value="60">За 1 час</option>
