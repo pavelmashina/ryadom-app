@@ -15,6 +15,8 @@ import {
 } from "./components";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Sharing, JoinPet, PetMembersSummary } from "./Sharing";
+import { petAccess } from "./sharing-api";
+import TrainingDateField from "./TrainingDateField";
 import { rpc, type AuthSession } from "./backend";
 import type { PersistOutcome } from "./cloud-data";
 import {
@@ -103,6 +105,7 @@ type Overlay =
         | "newpet"
         | "addPetChoice"
         | "editpet"
+        | "deletePet"
         | "command"
         | "weight"
         | "record"
@@ -653,6 +656,7 @@ export default function App({
                 newpet: "Новый питомец",
                 addPetChoice: "Добавить питомца",
                 editpet: "Данные питомца",
+                deletePet: "Удалить питомца",
                 command: "Новая команда",
                 weight: "Записать вес",
                 editWeight: "Редактировать вес",
@@ -874,10 +878,9 @@ export default function App({
               defaultValue={pet.breed}
               maxLength={120}
             />
-            <Field
+            <TrainingDateField
               label="Дата рождения"
               name="birthday"
-              type="date"
               max={today()}
               defaultValue={pet.birthday}
             />
@@ -893,6 +896,25 @@ export default function App({
               maxLength={100}
             />
           </Form>
+          </div>
+        );
+      case "deletePet":
+        return (
+          <div className="standard-pet-modal pet-delete-modal">
+            <Form
+              label="Удалить питомца"
+              variant="destructive"
+              onSave={async () => {
+                await petAccess(session, "delete", { target: pet.id });
+                await refreshNow();
+                setScreen("account");
+                close();
+                setNotice("Питомец удалён");
+                window.scrollTo({ top: 0 });
+              }}
+            >
+              <p>Удалить питомца {pet.name}? Его данные станут недоступны всем участникам.</p>
+            </Form>
           </div>
         );
       case "command":
@@ -1595,6 +1617,16 @@ export default function App({
               >
                 Резервные копии и восстановление
               </Button>
+              {pet.role === "owner" && (
+                <Button
+                  onClick={() => setOverlay({ kind: "deletePet" })}
+                  fullWidth
+                  variant="destructive"
+                  className="pet-profile-delete"
+                >
+                  Удалить питомца
+                </Button>
+              )}
               </section>
             </section>
           )}

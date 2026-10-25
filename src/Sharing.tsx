@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Card, Field, Form, SectionHeader, text } from "./components";
+import { Button, Card, Field, Form, IconButton, SectionHeader, text } from "./components";
+import { Copy, RefreshCw } from "lucide-react";
 import {
   petAccess,
   type AccessDetails,
@@ -244,23 +245,38 @@ export function Sharing({
   }
   return (
     <>
-      <Card>
+      <Card className="sharing-id-card">
         <h3>ID питомца</h3>
-        <p className="share-code">{pet.shareCode}</p>
-        <Button
-          onClick={async () => {
-            try {
-              await navigator.clipboard.writeText(pet.shareCode || "");
-              setMessage("ID скопирован");
-            } catch {
-              setError(
-                "Не удалось скопировать. Выделите ID и скопируйте вручную.",
-              );
-            }
-          }}
-        >
-          Скопировать ID
-        </Button>
+        <div className="sharing-id-row">
+          <p className="share-code">{pet.shareCode}</p>
+          <div className="sharing-id-actions">
+            <IconButton
+              label="Скопировать ID"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(pet.shareCode || "");
+                  setMessage("ID скопирован");
+                } catch {
+                  setError("Не удалось скопировать. Выделите ID и скопируйте вручную.");
+                }
+              }}
+            >
+              <Copy aria-hidden="true" />
+            </IconButton>
+            {pet.role === "owner" && (
+              <IconButton
+                label="Сгенерировать новый ID"
+                disabled={busy}
+                onClick={() => setConfirm({
+                  action: "rotate",
+                  label: "Сгенерировать новый ID питомца? Старый ID перестанет работать. Участники сохранят доступ.",
+                })}
+              >
+                <RefreshCw aria-hidden="true" />
+              </IconButton>
+            )}
+          </div>
+        </div>
       </Card>
       {message && (
         <p role="status" className="notice">
@@ -330,52 +346,29 @@ export function Sharing({
             </Card>
           ))}
           <SectionHeader title="Пользователи с доступом" />
-          {details.members.map((m) => (
-            <Card key={m.user_id} className="sharing-member-card">
-              <div className="pet-member-row"><span>{m.email}</span><span>{m.role === "owner" ? "Владелец" : "Совместный доступ"}</span></div>
-              {m.role === "editor" && (
+          <Card className="sharing-members-list">
+            {details.members.filter((member) => member.role === "editor").length === 0 && (
+              <p className="hint">Других пользователей с доступом пока нет.</p>
+            )}
+            {details.members.filter((member) => member.role === "editor").map((member) => (
+              <div className="sharing-member-row" key={member.user_id}>
+                <span className="sharing-member-email">{member.email}</span>
                 <Button
                   disabled={busy}
+                  size="sm"
                   variant="ghost"
-                  onClick={() =>
-                    setConfirm({
-                      action: "revoke",
-                      subject: m.user_id,
-                      label: `Отозвать доступ ${m.email} к ${pet.name}? После этого пользователь больше не сможет видеть или изменять данные питомца.`,
-                    })
-                  }
+                  className="sharing-revoke"
+                  onClick={() => setConfirm({
+                    action: "revoke",
+                    subject: member.user_id,
+                    label: `Отозвать доступ ${member.email} к ${pet.name}? После этого пользователь больше не сможет видеть или изменять данные питомца.`,
+                  })}
                 >
                   Отозвать доступ
                 </Button>
-              )}
-            </Card>
-          ))}
-          <Button
-            disabled={busy}
-            fullWidth
-            onClick={() =>
-              setConfirm({
-                action: "rotate",
-                label:
-                  "Сгенерировать новый ID питомца? Старый ID перестанет работать. Участники сохранят доступ.",
-              })
-            }
-          >
-            Сгенерировать новый ID
-          </Button>
-          <Button
-            disabled={busy}
-            fullWidth
-            variant="destructive"
-            onClick={() =>
-              setConfirm({
-                action: "delete",
-                label: `Удалить питомца ${pet.name}? Он исчезнет у всех участников.`,
-              })
-            }
-          >
-            Удалить питомца
-          </Button>
+              </div>
+            ))}
+          </Card>
         </>
       ) : (
         <Button

@@ -6,12 +6,13 @@ import { fmt } from "./domain";
  * The wrapper draws the border; WebKit's intrinsic date width cannot change it.
  */
 export default function TrainingDateField({
-  label, name, required, min, value, defaultValue, onChange,
+  label, name, required, min, max, value, defaultValue, onChange,
 }: {
   label: string;
   name: string;
   required?: boolean;
   min?: string;
+  max?: string;
   value?: string;
   defaultValue?: string;
   onChange?: ChangeEventHandler<HTMLInputElement>;
@@ -28,7 +29,7 @@ export default function TrainingDateField({
         </span>
         <CalendarDays className="training-date-icon" aria-hidden="true" />
         <input
-          id={id} name={name} type="date" required={required} min={min}
+          id={id} name={name} type="date" required={required} min={min} max={max}
           value={value}
           defaultValue={value === undefined ? defaultValue : undefined}
           onChange={(event) => {

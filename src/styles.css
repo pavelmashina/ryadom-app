@@ -1846,3 +1846,172 @@ dialog:has(.standard-pet-modal) .modal-content {
 .pet-sharing-modal .invitation-actions > * { flex: 1 1 160px; }
 .pet-sharing-modal .share-code { font-size: var(--font-size-lg); }
 .pet-backup-modal .field, .pet-backup-modal > .btn { width: 100%; }
+
+/* Pet profile editor: reuse the verified training date shell, not the
+   intrinsically oversized Safari date input (including its picker indicator). */
+.pet-editor-modal .field > label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+.pet-editor-modal .training-date-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  max-width: 100%;
+}
+.pet-editor-modal .training-date-wrap {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-compact-3);
+  inline-size: 100%;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-3) var(--space-compact-4);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+.pet-editor-modal .training-date-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+}
+.pet-editor-modal .training-date-icon {
+  flex: none;
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+}
+.pet-editor-modal .training-date-wrap:focus-within {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+/* More specific than the generic .standard-pet-modal field-input rules. */
+.pet-editor-modal .training-date-wrap input[type="date"] {
+  position: absolute;
+  inset: 0;
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: 100%;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  opacity: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.pet-editor-modal .training-date-wrap input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Compact shared-access dialog: action icons sit beside the ID. */
+.pet-sharing-modal .sharing-id-card {
+  display: grid;
+  gap: var(--space-compact-2);
+}
+.pet-sharing-modal .sharing-id-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-compact-2);
+  min-width: 0;
+}
+.pet-sharing-modal .sharing-id-row .share-code {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--font-size-md);
+  overflow-wrap: anywhere;
+}
+.pet-sharing-modal .sharing-id-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0;
+}
+.pet-sharing-modal .sharing-id-actions .icon-button {
+  flex: 0 0 var(--button-height-sm);
+  width: var(--button-height-sm);
+  height: var(--button-height-sm);
+  padding: var(--space-compact-3);
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+}
+.pet-sharing-modal .sharing-id-actions svg {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+}
+.pet-sharing-modal .sharing-id-actions .icon-button:hover {
+  background: var(--color-surface-secondary);
+}
+/* Two levels below the former md (16px) label: xs (12px). */
+.pet-sharing-modal .field:has(input[name="email"]) > label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+/* One card for all editors, without owner email or role captions. */
+.pet-sharing-modal .sharing-members-list {
+  display: grid;
+  gap: 0;
+  padding: var(--space-compact-2) var(--space-compact-4);
+}
+.pet-sharing-modal .sharing-member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  min-width: 0;
+  gap: var(--space-compact-1) var(--space-compact-3);
+  padding: var(--space-compact-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.pet-sharing-modal .sharing-member-row:last-child {
+  border-bottom: 0;
+}
+.pet-sharing-modal .sharing-member-email {
+  flex: 1 1 140px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--font-size-sm);
+}
+.pet-sharing-modal .sharing-revoke.btn {
+  width: auto;
+  flex: none;
+  max-width: 100%;
+  min-height: var(--button-height-sm);
+  border: 0;
+  background: transparent;
+  padding: var(--space-compact-2);
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+  box-shadow: none;
+}
+.pet-sharing-modal .sharing-revoke.btn:hover { background: transparent; }
+.pet-profile-screen .pet-profile-delete.btn {
+  margin: 0;
+  min-height: var(--button-height-sm);
+  font-size: var(--font-size-sm);
+}
