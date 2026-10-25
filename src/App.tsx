@@ -189,7 +189,9 @@ export default function App({
     };
   }, [petMenuOpen]);
   const hasPets = state.pets.length > 0;
-  const pet = state.pets.find((p) => p.id === state.selectedPet) ?? state.pets[0] ?? blankPet("Питомец");
+  // Stable temporary data allows read-only browsing without ever saving a fake pet.
+  const [unselectedPet] = useState(() => blankPet("Питомец"));
+  const pet = state.pets.find((p) => p.id === state.selectedPet) ?? state.pets[0] ?? unselectedPet;
   useEffect(() => {
     if (handledTrainingLink.current) return;
     const params = new URLSearchParams(location.search);
@@ -1380,7 +1382,7 @@ export default function App({
             )}
           </div>
         </header>}
-        {pet.demo && (
+        {hasPets && pet.demo && (
           <div className="demo-banner">
             Демонстрационный питомец · все данные вымышлены
           </div>
@@ -1431,15 +1433,11 @@ export default function App({
             </Button>
           </>}
           {!hasPets && screen !== "account" && screen !== "profile" && (
-            <Card className="empty-pet-welcome">
-              <h2>Добавьте питомца</h2>
-              <p>После добавления здесь появятся календарь, занятия и запасы питомца.</p>
-              <Button fullWidth onClick={addPetChoice}>
-                <Plus aria-hidden="true"/> Добавить питомца
-              </Button>
-            </Card>
+            <p className="no-pet-notice" role="status">
+              Питомец не выбран. Разделы доступны для просмотра. Чтобы добавлять записи, сначала добавьте питомца.
+            </p>
           )}
-          {hasPets && screen === "day" && (showFirstPetSetup ? (
+          {screen === "day" && (hasPets && showFirstPetSetup ? (
             <FirstPetSetup
               onSave={(details) => finishFirstPetSetup(details)}
               onSkip={() => finishFirstPetSetup()}
@@ -1451,7 +1449,8 @@ export default function App({
               month={month}
               setSelected={setSelected}
               setMonth={setMonth}
-              onAdd={() => setOverlay({ kind: "event" })}
+              readOnly={!hasPets}
+              onAdd={() => { if (hasPets) setOverlay({ kind: "event" }); }}
               onTraining={(id) => {
                 setOpenTraining(id);
                 setScreen("training");
@@ -1464,13 +1463,14 @@ export default function App({
               }
             />
           ))}{" "}
-          {hasPets && screen === "training" && (
+          {screen === "training" && (
             <Training
               session={session}
               openSession={openTraining}
               onOpened={() => setOpenTraining(undefined)}
-              canEdit={pet.role === "owner" || pet.role === "editor"}
-              key={pet.id}
+              canEdit={hasPets && (pet.role === "owner" || pet.role === "editor")}
+              noPet={!hasPets}
+              key={hasPets ? pet.id : "no-pet"}
               pet={pet}
               onMonthVisible={async month=>{
                 if(!pet.trainingSchedules?.some(sc=>sc.is_active))return;
@@ -1482,9 +1482,10 @@ export default function App({
               onSave={(next) => update(() => next)}
             />
           )}{" "}
-          {hasPets && screen === "health" && (
+          {screen === "health" && (
             <Health
               pet={pet}
+              readOnly={!hasPets}
               onWeight={() => setOverlay({ kind: "weight" })}
               onRecord={() => setOverlay({ kind: "record" })}
               onEditWeight={(entryId) => setOverlay({ kind: "editWeight", entryId })}
@@ -1514,6 +1515,30 @@ export default function App({
                 else safe(() => update((p) => restoreShoppingItem(p, itemId)));
               }}
             />
+          )}{" "}
+          {!hasPets && screen === "stock" && (
+            <div className="stock-screen stock-no-pet">
+              <section className="stock-section">
+                <div className="stock-list-header">
+                  <h2>Запасы</h2>
+                  <button type="button" className="stock-add-trigger" disabled
+                    aria-label="Добавить запас или покупку">
+                    <Plus aria-hidden="true" />
+                  </button>
+                </div>
+                <Card variant="info" className="stock-collection">
+                  <p className="stock-muted">Запасов пока нет. Добавьте питомца, чтобы вести учёт.</p>
+                </Card>
+              </section>
+              <section className="stock-section stock-shopping">
+                <SectionHeader title="Купить">
+                  <span className="stock-shopping-count">0 в списке</span>
+                </SectionHeader>
+                <Empty title="Всё есть дома">
+                  Покупки можно добавлять после выбора питомца.
+                </Empty>
+              </section>
+            </div>
           )}{" "}
           {hasPets && screen === "profile" && (
             <section className="pet-profile-screen">
@@ -1631,7 +1656,7 @@ export default function App({
             </section>
           )}
         </main>
-        {hasPets && !showFirstPetSetup && screen !== "profile" && <nav className="bottom-nav" aria-label="Разделы приложения">
+        {!showFirstPetSetup && screen !== "profile" && <nav className="bottom-nav" aria-label="Разделы приложения">
           {nav.map(([key, label, Icon]) => (
             <Button
               key={key}

@@ -5,10 +5,12 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 export default function CommandGrid({
   children,
   title,
+  empty,
   scrollControls = "native",
 }: {
   children: ReactNode[];
   title?: string;
+  empty?: ReactNode;
   scrollControls?: "native" | "arrows";
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -26,7 +28,7 @@ export default function CommandGrid({
   return (
     <div className="command-scroller">
       {title && <div className="command-scroll-guide"><h2>{title}</h2></div>}
-      <div
+      {empty ?? <div
         ref={ref}
         id={gridId}
         className="command-list"
@@ -35,7 +37,7 @@ export default function CommandGrid({
         data-scroll-controls={scrollControls === "arrows" ? "native" : scrollControls}
       >
         {children}
-      </div>
+      </div>}
     </div>
   );
 }

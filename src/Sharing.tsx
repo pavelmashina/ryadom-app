@@ -241,6 +241,7 @@ export function Sharing({
       setBusy(false);
     }
   }
+  const editorMembers = details.members.filter((member) => member.role === "editor");
   return (
     <>
       <Card className="sharing-id-card">
@@ -305,7 +306,7 @@ export function Sharing({
           <SectionHeader
             title={`Запросы на доступ · ${details.requests.length}`}
           />
-          {!details.requests.length && <p>Новых запросов нет.</p>}
+          {!details.requests.length && <p className="sharing-empty-message">Новых запросов нет.</p>}
           {details.requests.map((r) => (
             <Card key={r.id}>
               <h3>{r.email}</h3>
@@ -325,11 +326,11 @@ export function Sharing({
             </Card>
           ))}
           <SectionHeader title="Пользователи с доступом" />
-          <Card className="sharing-members-list">
-            {details.members.filter((member) => member.role === "editor").length === 0 && (
-              <p className="hint">Других пользователей с доступом пока нет.</p>
-            )}
-            {details.members.filter((member) => member.role === "editor").map((member) => (
+          {editorMembers.length === 0 ? (
+            <p className="sharing-empty-message">Других пользователей с доступом пока нет.</p>
+          ) : (
+            <Card className="sharing-members-list">
+            {editorMembers.map((member) => (
               <div className="sharing-member-row" key={member.user_id}>
                 <span className="sharing-member-email">{member.email}</span>
                 <Button
@@ -347,7 +348,8 @@ export function Sharing({
                 </Button>
               </div>
             ))}
-          </Card>
+            </Card>
+          )}
         </>
       ) : (
         <Button

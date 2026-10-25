@@ -9,6 +9,7 @@ export default function Health({
   onEditRecord,
   onSummary,
   onPlan,
+  readOnly = false,
 }: {
   pet: Pet;
   onWeight: () => void;
@@ -17,6 +18,7 @@ export default function Health({
   onEditRecord: (id: string) => void;
   onSummary: () => void;
   onPlan: (name: string, id?: string) => void;
+  readOnly?: boolean;
 }) {
   const weights = [...pet.weights].sort((a, b) => b.date.localeCompare(a.date));
   return (
@@ -55,7 +57,7 @@ export default function Health({
         ) : (
           <p>Добавьте первое измерение.</p>
         )}
-        <Button onClick={onWeight} fullWidth variant="secondary">
+        <Button onClick={onWeight} fullWidth variant="secondary" disabled={readOnly}>
           <Plus />
           Записать вес
         </Button>
@@ -93,14 +95,14 @@ export default function Health({
           Добавьте визит, анализы, прививку или назначение.
         </Empty>
       )}
-      <Button onClick={onRecord} fullWidth variant="primary">
+      <Button onClick={onRecord} fullWidth variant="primary" disabled={readOnly}>
         <Plus />
         Добавить запись
       </Button>
-      <Button onClick={() => onPlan("")} fullWidth variant="secondary">
+      <Button onClick={() => onPlan("")} fullWidth variant="secondary" disabled={readOnly}>
         Запланировать визит или прививку
       </Button>
-      <Button onClick={onSummary} fullWidth variant="secondary">
+      <Button onClick={onSummary} fullWidth variant="secondary" disabled={readOnly}>
         <FileText />
         Сводка для ветеринара
       </Button>

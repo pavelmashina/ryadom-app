@@ -66,10 +66,12 @@ export default function Training({
   onOpened,
   onMonthVisible,
   canEdit = false,
+  noPet = false,
 }: {
   pet: Pet;
   session: AuthSession;
   canEdit?: boolean;
+  noPet?: boolean;
   onSave: (pet: Pet) => Promise<void>;
   onPlan?: (name: string) => void;
   openSession?: string;
@@ -132,12 +134,16 @@ export default function Training({
   }
   return (
     <div className="training-screen">
-      {!activeCommands.length && (
-        <Empty title="Начните с первой команды">
-          Команды принадлежат только этому питомцу.
-        </Empty>
-      )}
-      <CommandGrid title="Команды">
+      <CommandGrid
+        title="Команды"
+        empty={!activeCommands.length ? (
+          <Empty title="Начните с первой команды">
+            {noPet
+              ? "Чтобы добавлять команды, сначала выберите питомца."
+              : "Команды принадлежат только этому питомцу."}
+          </Empty>
+        ) : undefined}
+      >
         {activeCommands.map((c) => {
           const p = commandProgress(sessions, c.id);
           return (

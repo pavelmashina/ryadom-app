@@ -49,9 +49,10 @@ describe("Pet profile editor and sharing management refinements", () => {
 
   it("shows all non-owner members in one card, with inline revoke controls", () => {
     const sharingSection = sharing.split('<SectionHeader title="Пользователи с доступом" />')[1]
-      ?.split(') : (')[0] ?? "";
+      ?.split("</>")[0] ?? "";
     expect(sharingSection).toContain('<Card className="sharing-members-list">');
-    expect(sharingSection).toContain('details.members.filter((member) => member.role === "editor")');
+    expect(sharing).toContain('const editorMembers = details.members.filter((member) => member.role === "editor")');
+    expect(sharingSection).toContain("editorMembers.map((member) => (");
     expect(sharingSection).toContain('className="sharing-revoke"');
     expect(sharingSection).not.toContain('className="sharing-member-card"');
     expect(sharingSection).not.toContain('"Совместный доступ"');

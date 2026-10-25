@@ -2020,3 +2020,37 @@ dialog:has(.standard-pet-modal) .modal-content {
 .pet-editor-modal .field :is(input:not([type="date"]), select, textarea) {
   font-size: var(--font-size-sm);
 }
+
+/* Shared-access empty states use one typography/spacing rule and no card surface. */
+.pet-sharing-modal .sharing-empty-message {
+  box-sizing: border-box;
+  margin: 0;
+  padding: var(--space-compact-2) 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-ui-body);
+  color: var(--color-text-secondary);
+}
+
+/* An account without a pet can explore tabs but cannot create records. */
+.app main > .no-pet-notice {
+  margin: 0 0 var(--space-compact-5);
+  padding: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-ui-body);
+  color: var(--color-text-secondary);
+}
+.app main:has(> .no-pet-notice + .training-screen) {
+  padding-top: var(--space-compact-3);
+}
+.training-screen .command-scroller > .empty {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+}
+.stock-no-pet .stock-add-trigger:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  pointer-events: none;
+}

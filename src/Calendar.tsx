@@ -25,6 +25,7 @@ export default function Calendar({
   onTraining,
   onToggle,
   onDetail,
+  readOnly = false,
 }: {
   pet: Pet;
   selected: string;
@@ -35,6 +36,7 @@ export default function Calendar({
   onTraining: (id: string) => void;
   onToggle: (e: PetEvent, s: string) => void;
   onDetail: (e: PetEvent, s: string) => void;
+  readOnly?: boolean;
 }) {
   const m = date(month),
     offset = (new Date(m.getFullYear(), m.getMonth(), 1).getDay() + 6) % 7,
@@ -216,7 +218,7 @@ export default function Calendar({
         >
           {done.length
             ? "Можно просто побыть рядом."
-            : "Добавьте визит, уход или тренировку."}
+            : readOnly ? "Выберите питомца, чтобы добавлять события." : "Добавьте визит, уход или тренировку."}
         </Empty>
       ) : null}
       {done.length > 0 && (
@@ -225,7 +227,7 @@ export default function Calendar({
           {done.map(task)}
         </details>
       )}
-      <Button onClick={onAdd} fullWidth variant="primary">
+      <Button onClick={onAdd} fullWidth variant="primary" disabled={readOnly}>
         <Plus /> Добавить событие
       </Button>
       {overdue.length > 0 && (
