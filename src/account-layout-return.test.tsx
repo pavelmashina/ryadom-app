@@ -19,7 +19,7 @@ describe("Account layout and return navigation",()=>{
   it("shows the arrow in content above the first Account heading with Stock editor styling",()=>{
     const section=app.split('{screen === "account" && <>')[1] ?? "";
     expect(section).toContain('className="account-back-row"');
-    expect(section.indexOf('className="account-back-row"')).toBeLessThan(section.indexOf('{accountContent}'));
+    expect(section.indexOf('className="account-back-row"')).toBeLessThan(section.indexOf('{accountContent(state.pets)}'));
     expect(section).toContain('className="account-back" onClick={leaveAccount}');
     expect(section).toContain('aria-label="Назад"');
     expect(css).toContain(".account-back-row {");

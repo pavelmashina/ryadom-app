@@ -47,7 +47,7 @@ describe("Immediate event reminder and compact detail", () => {
     const detail = source.split('case "detail": {')[1]?.split('case "pets":')[0] ?? "";
     expect(detail).toContain('className="event-detail-modal"');
     expect(detail).toContain('className="event-detail-summary"');
-    expect(detail).toContain("<ReminderSettings");
+    expect(detail).not.toContain("<ReminderSettings");
     expect(detail).toContain('className="fields event-detail-actions"');
     expect(detail).toContain('<TrainingDateField');
     expect(detail).toContain("Отметить выполненным");
