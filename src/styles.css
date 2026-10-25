@@ -1707,7 +1707,7 @@ dialog:has(.new-pet-form) .modal-content {
 
 /* Unified pet/account forms: match the five type sizes and compact grid spacing. */
 .app main > .account-pets-section .account-pet-row strong {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-md);
   line-height: var(--line-height-ui-heading);
   font-weight: var(--font-weight-medium);
 }
@@ -1836,14 +1836,12 @@ dialog:has(.standard-pet-modal) .modal-content {
   display: grid;
   gap: var(--space-compact-3);
 }
-.pet-sharing-modal .sharing-actions,
-.pet-sharing-modal .invitation-actions {
+.pet-sharing-modal .sharing-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-compact-3);
 }
-.pet-sharing-modal .sharing-actions > *,
-.pet-sharing-modal .invitation-actions > * { flex: 1 1 160px; }
+.pet-sharing-modal .sharing-actions > * { flex: 1 1 160px; }
 .pet-sharing-modal .share-code { font-size: var(--font-size-lg); }
 .pet-backup-modal .field, .pet-backup-modal > .btn { width: 100%; }
 
@@ -1965,12 +1963,6 @@ dialog:has(.standard-pet-modal) .modal-content {
 .pet-sharing-modal .sharing-id-actions .icon-button:hover {
   background: var(--color-surface-secondary);
 }
-/* Two levels below the former md (16px) label: xs (12px). */
-.pet-sharing-modal .field:has(input[name="email"]) > label {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-}
-
 /* One card for all editors, without owner email or role captions. */
 .pet-sharing-modal .sharing-members-list {
   display: grid;
@@ -2053,4 +2045,50 @@ dialog:has(.standard-pet-modal) .modal-content {
   opacity: 0.42;
   cursor: not-allowed;
   pointer-events: none;
+}
+
+/* Pending join requests follow the five-size type scale and compact rhythm. */
+.pet-join-modal > .section-title {
+  margin: 0;
+  padding: 0;
+}
+.pet-join-modal > .section-title h2 {
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-ui-heading);
+  font-weight: var(--font-weight-medium);
+}
+.pet-join-modal > .card.pet-join-request {
+  box-sizing: border-box;
+  margin: 0;
+  padding: var(--space-compact-4);
+  display: grid;
+  gap: var(--space-compact-3);
+  min-width: 0;
+}
+.pet-join-modal .pet-join-request > h3 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-heading);
+  overflow-wrap: anywhere;
+}
+.pet-join-modal .pet-join-request > .pet-join-request-status {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-ui-body);
+  color: var(--color-text-secondary);
+}
+.pet-join-modal .pet-join-request > form {
+  margin: 0;
+  gap: var(--space-compact-2);
+}
+.pet-join-modal .pet-join-request .form-actions {
+  margin: 0;
+  padding: 0;
+}
+.pet-join-modal .pet-join-request .btn {
+  font-size: var(--font-size-sm);
 }

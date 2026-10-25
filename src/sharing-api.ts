@@ -9,6 +9,10 @@ export type OutgoingRequest = {
   status: "pending" | "approved" | "rejected" | "cancelled";
   created_at: string;
 };
+/** Only unanswered access requests belong in the Add Existing Pet dialog. */
+export function pendingAccessRequests(requests: OutgoingRequest[]): OutgoingRequest[] {
+  return requests.filter(request => request.status === "pending");
+}
 export type AccessDetails = {
   members: { user_id: string; email: string; role: "owner" | "editor" }[];
   requests: { id: string; email: string; created_at: string }[];

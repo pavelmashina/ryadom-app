@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { blankPet } from "./domain";
-import { inviteLink, invitationMailto, joinCodeFromUrl } from "./share-invitation";
+import { inviteLink, joinCodeFromUrl } from "./share-invitation";
 import { completeShoppingItem, restoreShoppingItem, visibleShoppingItems } from "./shopping-checkout";
 import { JoinPet, Sharing } from "./Sharing";
 import Stock from "./Stock";
@@ -10,7 +10,7 @@ import type { AuthSession } from "./backend";
 
 const source = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
 
-describe("R3: email invitation links", () => {
+describe("R3: joining a pet with a shared code", () => {
   const code = "RYD-2345678ABC";
   const url = "https://pavelmashina.github.io/ryadom-app/";
   it("builds an origin-constrained deep link preserving the PWA subfolder", () => {
@@ -20,13 +20,6 @@ describe("R3: email invitation links", () => {
     expect(joinCodeFromUrl("?join=https%3A%2F%2Fevil.example")).toBeNull();
     expect(() => inviteLink("https://example.com", "https://evil.example/", code)).toThrow();
     expect(() => inviteLink("https://example.com", "/ryadom-app/", "evil")).toThrow();
-  });
-  it("formats mailto without automatic approval or leaking email to arbitrary endpoint", () => {
-    const mailto = invitationMailto(" friend@example.com ", "Бублик", url + "?join=" + code);
-    expect(mailto).toContain("mailto:friend%40example.com");
-    expect(decodeURIComponent(mailto)).toContain("После подтверждения мной");
-    expect(decodeURIComponent(mailto)).toContain("?join=" + code);
-    expect(() => invitationMailto("not-an-email", "Бублик", url)).toThrow();
   });
   it("renders a clear confirmation-based flow and prefilled access code", () => {
     const session: AuthSession = {
@@ -44,7 +37,7 @@ describe("R3: email invitation links", () => {
     const guest = renderToStaticMarkup(
       <JoinPet session={session} onChanged={async () => {}} initialCode={code} />,
     );
-    expect(owner).toContain("Пригласить по email");
+    expect(owner).not.toContain("Пригласить по email");
     expect(owner).not.toContain("Сформируйте письмо со ссылкой");
     expect(owner).not.toContain("Отправьте этот ID человеку");
     expect(guest).toContain(code);

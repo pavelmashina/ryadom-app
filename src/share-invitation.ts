@@ -16,16 +16,3 @@ export function joinCodeFromUrl(search: string): string | null {
   const code = new URLSearchParams(search).get("join");
   return code && /^RYD-[A-Z0-9]{10}$/i.test(code) ? code.toUpperCase() : null;
 }
-export function invitationMailto(email: string, petName: string, url: string): string {
-  const recipient = email.trim();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient) || recipient.length > 254)
-    throw new Error("Введите корректный адрес электронной почты.");
-  const subject = "Приглашение в Рядом — " + petName;
-  const body = "Приглашаю вас вместе заботиться о питомце «" + petName +
-    "» в приложении «Рядом».\n\n" +
-    "Перейдите по ссылке, войдите в аккаунт и отправьте запрос на доступ. " +
-    "После подтверждения мной вы сможете видеть и обновлять данные питомца.\n\n" +
-    url + "\n\nПожалуйста, не пересылайте ссылку посторонним.";
-  return "mailto:" + encodeURIComponent(recipient) +
-    "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
-}

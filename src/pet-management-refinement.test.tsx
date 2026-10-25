@@ -73,8 +73,10 @@ describe("Pet profile editor and sharing management refinements", () => {
     expect(sharing).not.toContain('action: "delete"');
   });
 
-  it("uses a two-level smaller label only for invitation email", () => {
-    expect(css).toContain('.pet-sharing-modal .field:has(input[name="email"]) > label');
-    expect(css).toContain('font-size: var(--font-size-xs);');
+  it("has no invite-by-email form in the sharing dialog", () => {
+    expect(sharing).not.toContain("Пригласить по email");
+    expect(sharing).not.toContain("Отправить приглашение");
+    expect(sharing).not.toContain("sendPetInvitation");
+    expect(css).not.toContain('.pet-sharing-modal .field:has(input[name="email"])');
   });
 });

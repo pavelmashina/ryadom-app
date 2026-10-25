@@ -8,13 +8,13 @@ const css = read("./styles.css");
 const sql = read("../supabase/migrations/20261025100402_pet_members_summary_for_shared_profiles.sql");
 
 describe("Pet account polish and secured membership summary", () => {
-  it("renders plain red logout and a larger name only within Account's pet list", () => {
+  it("renders plain red logout and standard-sized names within Account's pet list", () => {
     const logout = css.split(".account-logout.btn,")[1]?.split("}")[0] ?? "";
     expect(logout).toContain("background: transparent;");
     expect(logout).toContain("border: 0;");
     expect(app).toContain('className="account-logout"');
     expect(css).toContain(".app main > .account-pets-section .account-pet-row strong");
-    expect(css).toContain("font-size: var(--font-size-lg)");
+    expect(css).toContain("font-size: var(--font-size-md)");
   });
   it("keeps add-pet buttons close and uses consistent modal typography", () => {
     expect(css).toContain(".pet-add-choices { gap: var(--space-compact-2); }");

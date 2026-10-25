@@ -7,10 +7,10 @@ import {
   type AccessResult,
   type OutgoingRequest,
   getPetMembers,
+  pendingAccessRequests,
 } from "./sharing-api";
 import type { AuthSession } from "./backend";
 import type { Pet } from "./domain";
-import { sendPetInvitation } from "./invitation-email";
 
 export function JoinPet({
   session, onChanged, initialCode,
@@ -41,7 +41,7 @@ export function JoinPet({
   }
 
   function updateRequests(next: OutgoingRequest[]) {
-    setRequests(next);
+    setRequests(pendingAccessRequests(next));
     const approved = next.filter(r => r.status === "approved").map(r => r.id).sort().join(",");
     if (approved !== approvedSignature.current) {
       approvedSignature.current = approved;
@@ -122,19 +122,12 @@ export function JoinPet({
       {requests.map(request => (
         <Card key={request.id} className="pet-join-request">
           <h3>{request.name}</h3>
-          <p>{{
-            pending: "Ожидает подтверждения",
-            approved: "Доступ разрешён",
-            rejected: "Запрос отклонён",
-            cancelled: "Запрос отменён",
-          }[request.status]}</p>
-          {request.status === "pending" && (
-            <Form children={null} label="Отменить запрос" onSave={async () => {
-              await petAccess(session, "cancel", { subject: request.id });
-              await refreshRequests();
-              setFound(null);
-            }} />
-          )}
+          <p className="pet-join-request-status">Ожидает подтверждения</p>
+          <Form children={null} label="Отменить запрос" onSave={async () => {
+            await petAccess(session, "cancel", { subject: request.id });
+            await refreshRequests();
+            setFound(null);
+          }} />
         </Card>
       ))}
     </div>
@@ -289,20 +282,6 @@ export function Sharing({
       )}
       {pet.role === "owner" ? (
         <>
-          <Card>
-            <h3>Пригласить по email</h3>
-            <Form label="Отправить приглашение"
-              onSave={async (data) => {
-                const email = text(data, "email");
-                setMessage("");
-                await sendPetInvitation(session, pet.id, email);
-                setMessage(`Приглашение отправлено на ${email}. Доступ появится после вашего подтверждения.`);
-              }}
-            >
-              <Field label="Email получателя" name="email" type="email" required
-                maxLength={254} placeholder="email@example.com" autoComplete="email" />
-            </Form>
-          </Card>
           <SectionHeader
             title={`Запросы на доступ · ${details.requests.length}`}
           />

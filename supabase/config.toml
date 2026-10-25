@@ -1,4 +1,4 @@
-# Invitation emails validate the user's JWT against Supabase Auth and check
-# pet ownership in PostgreSQL; disable legacy gateway JWT checks for ES256 keys.
+# Legacy route is a 410 Gone tombstone for cached versions of the PWA.
+# The email-invitation feature has been removed.
 [functions.pet-invitation-email]
 verify_jwt = false
