@@ -1285,3 +1285,121 @@
   max-height: 320px;
   overflow-y: auto;
 }
+
+/* Purchase completion is a standard modal, not a second boxed stock editor. */
+dialog:has(.stock-checkout-form) .modal-head {
+  padding: var(--space-compact-4);
+}
+dialog:has(.stock-checkout-form) .modal-head h2 {
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-heading);
+}
+dialog:has(.stock-checkout-form) .modal-content {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  padding: var(--space-compact-4);
+}
+dialog:has(.stock-checkout-form) .stock-checkout-form {
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
+  gap: var(--space-compact-4);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--font-family-base);
+}
+.stock-checkout-form > p {
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-ui-body);
+}
+.stock-checkout-form > p strong {font-weight:var(--font-weight-medium);}
+.stock-checkout-form .stock-checkout-options {
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
+  gap: var(--space-compact-3);
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+.stock-checkout-form .stock-checkout-options legend {
+  margin: 0 0 var(--space-compact-3);
+  padding: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-caption);
+}
+.stock-checkout-form .stock-checkout-options label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-compact-3);
+  min-width: 0;
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-2) var(--space-compact-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-ui-caption);
+  cursor: pointer;
+}
+.stock-checkout-form .stock-checkout-options label:has(input:checked) {
+  border-color: var(--color-primary);
+}
+.stock-checkout-form .stock-checkout-options input {
+  flex: none;
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+  margin: 0;
+  accent-color: var(--color-primary);
+}
+.stock-checkout-form .stock-field {
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
+  gap: var(--space-compact-2);
+  min-width: 0;
+  font-family: var(--font-family-base);
+}
+.stock-checkout-form .stock-field > span:first-child {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-caption);
+}
+.stock-checkout-form .stock-field :is(input,select) {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-3) var(--field-control-inline);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+}
+.stock-checkout-form .stock-fields-two {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: var(--space-compact-3);
+  min-width: 0;
+}
+.stock-checkout-form > .btn[type="submit"] {
+  width: 100%;
+  min-height: var(--button-height-sm);
+  margin: var(--space-compact-2) 0 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+}

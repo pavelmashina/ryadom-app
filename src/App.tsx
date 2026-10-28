@@ -38,6 +38,7 @@ import {
 import Calendar from "./Calendar";
 import AccountTrigger from "./AccountTrigger";
 import { formatEventDetailDate } from "./event-detail-date";
+import CalendarExportButtons from "./CalendarExportButtons";
 import Training from "./Training";
 import TrainingPlan from "./TrainingPlan";
 import { cancelPlannedTraining, reschedulePlannedTraining } from "./training-actions";
@@ -789,6 +790,10 @@ export default function App({
               <p>Тренировка · {trainingScheduleText(schedule)}</p>
               {comment.trim() && <p className="note">{comment}</p>}
             </Card>
+            <CalendarExportButtons item={{
+              id: workout.id, title: workout.name || "Тренировка", on: workout.date,
+              time, description: comment, petName: pet.name,
+            }}/>
             <div className="fields event-detail-actions">
               <Button variant="secondary" onClick={() =>
                 workout.status === "planned"
@@ -872,6 +877,10 @@ export default function App({
               <p>{e.kind === "reminder" ? "Напоминание" : "Событие"} · {recurrenceText(e)}</p>
               {e.note?.trim() && <p className="note">{e.note}</p>}
             </Card>
+            <CalendarExportButtons item={{
+              id:e.id, title:e.name, on:overlay.on, time:e.time,
+              description:e.note, petName:pet.name,
+            }}/>
             <Button
               onClick={() => toggle(e, overlay.on)}
               fullWidth
