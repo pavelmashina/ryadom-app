@@ -1403,3 +1403,36 @@ dialog:has(.stock-checkout-form) .stock-checkout-form {
   font-family: var(--font-family-base);
   font-size: var(--font-size-sm);
 }
+
+/* "Изменить расход": Repeat every and Period share an equal 2-column row
+   and identical control height on narrow screens too. */
+.stock-screen .stock-rule-form .recurrence-options-flat-frequency .fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: var(--space-compact-3);
+  align-items: end;
+  min-width: 0;
+}
+.stock-screen .stock-rule-form .recurrence-options-flat-frequency .fields > .field {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+.stock-screen .stock-rule-form .recurrence-options-flat-frequency .fields > .field :is(input[type="number"],select) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: var(--button-height-sm);
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-3);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-ui-body);
+}
+@media (max-width: 420px) {
+  .stock-screen .stock-rule-form .recurrence-options-flat-frequency .fields {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}

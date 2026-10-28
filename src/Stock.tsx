@@ -6,7 +6,7 @@ import { today, fmt, type Pet } from "./domain";
 import { rpc, type AuthSession } from "./backend";
 import RecurrenceFields, { draftForDate, type RecurrenceDraft } from "./RecurrenceFields";
 import {
-  STOCK_UNITS, stockAmount, activeStockRule, stockForecast, stockProgress,
+  STOCK_UNITS, stockAmount, activeStockRule, stockForecast, stockForecastLabel, stockProgress,
   stockStatus, stockUnitFactor, compatibleStockUnits,
   type StockItem, type StockUnit,
 } from "./stock-domain";
@@ -402,6 +402,7 @@ export default function Stock({
   if(updated)leaveEditor();
  }
  const currentView=mode!=="list"&&mode!=="create"&&current;
+ const currentForecast=currentView?stockForecast(currentView,today()):null;
  return <div className="stock-screen">
   <Toast message={error} tone="error"/>
   {mode!=="list"&&(
@@ -460,7 +461,7 @@ export default function Stock({
        <progress max={100} value={stockProgress(item)}
         aria-label={"Остаток "+item.name+": "+stockAmount(item.current_quantity,item.display_unit)+" "+item.display_unit}/>
        <div className="stock-item-footer">
-        <span>{forecast?"Примерно на "+forecast.days+" дн.":""}</span>
+        <span>{forecast?stockForecastLabel(forecast,today()):""}</span>
         {status!=="normal"&&<em>{status==="empty"?"Закончился":"Скоро закончится"}</em>}
        </div>
       </div>;
@@ -591,9 +592,10 @@ export default function Stock({
       <div className="stock-large">
        {stockAmount(current.current_quantity,current.display_unit)} <small>{current.display_unit}</small>
       </div>
-      <Badge><Package/>{stockForecast(current,today())
-       ? "до "+fmt(stockForecast(current,today())!.date,{day:"numeric",month:"short"})
-       : active?"Прогноз недоступен":"Укажите расход"}</Badge>
+      <Badge><Package/>{currentForecast
+       ? stockForecastLabel(currentForecast,today())
+       : current.current_quantity<=0?"Запас закончился"
+         : active?"Прогноз недоступен":"Укажите расход"}</Badge>
      </div>
      <progress value={stockProgress(current)} max={100}
       aria-label={"Остаток "+stockAmount(current.current_quantity,current.display_unit)+" "+current.display_unit}/>
