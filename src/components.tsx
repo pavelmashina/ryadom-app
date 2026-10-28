@@ -328,11 +328,13 @@ export function Form({
   onSave,
   label = "Сохранить",
   variant = "primary",
+  className,
 }: {
   children: ReactNode;
   onSave: (data: FormData) => void | Promise<void>;
   label?: string;
   variant?: ButtonProps["variant"];
+  className?: string;
 }) {
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -354,7 +356,7 @@ export function Form({
     }
   }
   return (
-    <form onSubmit={submit} aria-busy={busy}>
+    <form onSubmit={submit} aria-busy={busy} className={className}>
       <fieldset className="form-fields" disabled={busy}>
         {children}
       </fieldset>

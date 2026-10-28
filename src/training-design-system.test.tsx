@@ -52,7 +52,8 @@ describe("Training mobile composition (requirements 140–161)", () => {
   });
 
   it("removes the internal training count from the calendar heading at source", () => {
-    expect(history).toContain('<SectionHeader title={list ? "История тренировок" : "Календарь"} />');
+    expect(history).toContain('<SectionHeader title={list ? "История тренировок" : "Календарь"}>');
+    expect(history).toContain('className="training-calendar-add"');
     const headingSource = history.slice(history.indexOf("<SectionHeader"), history.indexOf("{!list && ("));
     expect(headingSource).not.toContain("sessions.filter");
     expect(headingSource).not.toContain("<span>");

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { Archive, ArrowLeft, CalendarDays, ChevronRight, Plus, Package, Settings } from "lucide-react";
-import { Badge, Button, Card, Checkbox, Empty, SectionHeader, Toast } from "./components";
+import { Badge, Button, Card, Checkbox, Empty, Modal, SectionHeader, Toast } from "./components";
 import { today, fmt, type Pet } from "./domain";
 import { rpc, type AuthSession } from "./backend";
 import RecurrenceFields, { draftForDate, type RecurrenceDraft } from "./RecurrenceFields";
@@ -22,10 +22,11 @@ function Field({ label, children }: {label: string; children: React.ReactNode}) 
  return <label className="stock-field"><span>{label}</span>{children}</label>;
 }
 export default function Stock({
- pet, session, onShop, onToggle, initialItemId, onInitialItemHandled,
+ pet, session, onShop, onToggle, onPurchaseDone, initialItemId, onInitialItemHandled,
 }:{
  pet: Pet; session: AuthSession; initialItemId?: string; onInitialItemHandled?:()=>void;
  onShop:()=>void; onToggle:(id:string)=>void;
+ onPurchaseDone:(id:string)=>Promise<void>;
 }) {
  const [items,setItems]=useState<StockItem[]>([]);
  const [archiveItems,setArchiveItems]=useState<StockItem[]>([]);
@@ -58,11 +59,21 @@ export default function Stock({
  const [gearPosition,setGearPosition]=useState({top:0,left:0,width:260});
  const [createTarget,setCreateTarget]=useState<"existing"|"new">("new");
  const [createItemId,setCreateItemId]=useState("");
+ const [checkoutId,setCheckoutId]=useState<string|null>(null);
+ const [checkoutMode,setCheckoutMode]=useState<"only"|"existing"|"new">("only");
+ const [checkoutItemId,setCheckoutItemId]=useState("");
+ const [checkoutAmount,setCheckoutAmount]=useState("");
+ const [checkoutUnit,setCheckoutUnit]=useState<StockUnit>("шт.");
+ const [checkoutName,setCheckoutName]=useState("");
+ const [checkoutCategory,setCheckoutCategory]=useState("Прочее");
+ const [checkoutBusy,setCheckoutBusy]=useState(false);
+ const [checkoutError,setCheckoutError]=useState("");
  const visibleItems=items.filter(item=>item.pet_id===pet.id);
  const current=visibleItems.find((i)=>i.id===selectedId);
  const active=current?activeStockRule(current):null;
  const settingsItem=visibleItems.find((i)=>i.id===settingsItemId);
  const shoppingItems=visibleShoppingItems(pet.shopping,shoppingDate);
+ const checkoutPurchase=pet.shopping.find(p=>p.id===checkoutId);
  // Reopen Stock on the current date after switching pets.
  useEffect(() => { setShoppingDate(today()); setStartDate(today()); }, [pet.id]);
  const load=useCallback(async()=>{
@@ -95,6 +106,7 @@ export default function Stock({
   setEditorReturn("list");
   setGearOpen(false);
   setSettingsItemId(null);
+  setCheckoutId(null);
   setLoading(true);
   void load();
   function refresh(){if(!document.hidden)void load();}
@@ -288,6 +300,40 @@ export default function Stock({
    } : {}),
   });
  }
+ function openCheckout(purchase:Pet["shopping"][number]){
+  const matched=visibleItems.find(i=>i.name.trim().toLocaleLowerCase("ru-RU")===
+    purchase.name.trim().toLocaleLowerCase("ru-RU"));
+  setCheckoutId(purchase.id);setCheckoutMode(matched?"existing":"only");
+  setCheckoutItemId(matched?.id??visibleItems[0]?.id??"");
+  setCheckoutUnit(matched?.display_unit??"шт.");setCheckoutAmount("");
+  setCheckoutName(purchase.name);setCheckoutCategory(matched?.category??"Прочее");
+  setCheckoutError("");
+ }
+ async function completeCheckout(e:FormEvent<HTMLFormElement>){
+  e.preventDefault();if(checkoutBusy||!checkoutPurchase)return;
+  setCheckoutBusy(true);setCheckoutError("");
+  try{
+   const pid=pet.id;
+   if(checkoutMode!=="only"){
+    const amount=Number(checkoutAmount);
+    if(!checkoutAmount.trim()||!Number.isFinite(amount)||amount<=0)
+     throw new Error("Укажите количество купленного товара.");
+    const result=await rpc(session,"checkout_stock_purchase",{
+     p_pet:pid,p_purchase:checkoutPurchase.id,p_mode:checkoutMode,
+     p_item:checkoutMode==="existing"?checkoutItemId:null,
+     p_name:checkoutMode==="new"?checkoutName:null,
+     p_amount:amount,p_unit:checkoutUnit,p_category:checkoutCategory,
+    }) as StockItem[];
+    if(activePetId.current!==pid)return;
+    ++loadEpoch.current;setItems(result);
+   }
+   await onPurchaseDone(checkoutPurchase.id);
+   if(activePetId.current!==pid)return;
+   setCheckoutId(null);
+   if(checkoutMode!=="only")window.dispatchEvent(new Event("ryadom:stock-changed"));
+  }catch(error){setCheckoutError(errText(error));}
+  finally{setCheckoutBusy(false);}
+ }
  async function onAddExisting(e:FormEvent<HTMLFormElement>) {
   e.preventDefault();
   const d=new FormData(e.currentTarget);
@@ -428,7 +474,7 @@ export default function Stock({
     {shoppingItems.length?(
      <div className="stock-shopping-list">
       {shoppingItems.map(s=><Checkbox key={s.id} className={"shopping "+(s.done?"done":"")}
-       checked={s.done} onChange={()=>onToggle(s.id)}
+       checked={s.done} onChange={()=>s.done?onToggle(s.id):openCheckout(s)}
        label={<span>{s.name}<small>{s.quantity}</small></span>}/>)}
      </div>
     ):<Empty title="Всё есть дома">Добавляйте покупки по мере необходимости.</Empty>}
@@ -639,5 +685,54 @@ export default function Stock({
     </form>
    </>}
   </section>}
+ {checkoutPurchase&&<Modal title="Покупка выполнена"
+  onClose={()=>{if(!checkoutBusy)setCheckoutId(null);}}>
+  <form className="stock-form stock-checkout-form" onSubmit={completeCheckout} aria-busy={checkoutBusy}>
+   <p><strong>{checkoutPurchase.name}</strong>
+    {checkoutPurchase.quantity?" · "+checkoutPurchase.quantity:""}</p>
+   <fieldset className="stock-checkout-options">
+    <legend>Как учесть покупку?</legend>
+    <label><input type="radio" checked={checkoutMode==="only"}
+     onChange={()=>setCheckoutMode("only")}/> Только отметить купленным</label>
+    <label><input type="radio" checked={checkoutMode==="existing"} disabled={!visibleItems.length}
+     onChange={()=>{
+      setCheckoutMode("existing");setCheckoutError("");
+      const item=visibleItems.find(i=>i.id===checkoutItemId)??visibleItems[0];
+      if(item){setCheckoutItemId(item.id);setCheckoutUnit(item.display_unit);}
+     }}/> Пополнить существующий запас</label>
+    <label><input type="radio" checked={checkoutMode==="new"}
+     onChange={()=>{setCheckoutMode("new");setCheckoutError("");setCheckoutUnit("шт.");}}/>
+     Добавить как новый запас</label>
+   </fieldset>
+   {checkoutMode==="existing"&&<Field label="Запас">
+    <select value={checkoutItemId} onChange={e=>{
+     setCheckoutItemId(e.target.value);
+     const item=visibleItems.find(i=>i.id===e.target.value);
+     if(item)setCheckoutUnit(item.display_unit);
+    }}>{visibleItems.map(i=><option key={i.id} value={i.id}>{i.name}</option>)}</select>
+   </Field>}
+   {checkoutMode==="new"&&<>
+    <Field label="Название"><input required maxLength={120} value={checkoutName}
+      onChange={e=>setCheckoutName(e.target.value)}/></Field>
+    <Field label="Категория"><select value={checkoutCategory}
+      onChange={e=>setCheckoutCategory(e.target.value)}>
+      {categories.map(c=><option key={c}>{c}</option>)}</select></Field>
+   </>}
+   {checkoutMode!=="only"&&<div className="stock-fields-two">
+    <Field label="Количество"><input type="number" min={0.001} step="any"
+      required value={checkoutAmount} onChange={e=>setCheckoutAmount(e.target.value)}/></Field>
+    <Field label="Единица"><select value={checkoutUnit}
+     onChange={e=>setCheckoutUnit(e.target.value as StockUnit)}>
+     {(checkoutMode==="existing"
+      ?compatibleStockUnits(visibleItems.find(i=>i.id===checkoutItemId)?.display_unit??"шт.")
+      :STOCK_UNITS).map(u=><option key={u}>{u}</option>)}
+    </select></Field>
+   </div>}
+   {checkoutError&&<p className="notice notice-error" role="alert">{checkoutError}</p>}
+   <Button type="submit" fullWidth disabled={checkoutBusy} loading={checkoutBusy}>
+    {checkoutMode==="only"?"Отметить купленным":checkoutMode==="existing"?"Пополнить запас":"Создать запас"}
+   </Button>
+  </form>
+ </Modal>}
  </div>;
 }

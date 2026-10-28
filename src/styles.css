@@ -2814,3 +2814,87 @@ dialog:has(.event-detail-modal) .modal-head h2 {
   padding-bottom: var(--space-compact-1);
 }
 .account-content .account-section .account-row > div h3 { margin: 0; }
+
+/* Security rows are one compact control-height each. */
+.account-content .account-section-shell:has(.account-security-edit) > .account-section {
+  gap: 0;
+  padding: var(--space-compact-2) var(--space-compact-3);
+}
+.account-content .account-section .account-row:has(.account-security-edit) {
+  min-height: 32px;
+  padding: 0;
+  gap: var(--space-compact-2);
+}
+.account-content .account-section .account-row > .account-security-edit.btn {
+  width: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  height: 32px;
+  padding: var(--space-compact-1);
+}
+/* Pet subscriptions: narrow compact selectors with an overlay menu. */
+.account-content .notification-category {position:relative;overflow:visible;}
+.account-content .notification-pet-filter {
+  position: relative;
+  width: min(100%, 180px);
+  margin: 0 0 var(--space-compact-2) var(--space-compact-4);
+  z-index: 1;
+}
+.account-content .notification-pet-filter[open] {z-index:20;}
+.account-content .notification-pet-filter summary {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 30px;
+  height: 30px;
+  padding: var(--space-compact-1) var(--space-compact-2);
+  font-size: var(--font-size-xs);
+}
+.account-content .notification-pet-filter summary svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+.account-content .notification-pet-filter-options {
+  position:absolute;
+  z-index:25;
+  top:calc(100% + var(--space-compact-1));
+  left:0;
+  box-sizing:border-box;
+  width:max(100%, min(240px, calc(100vw - 64px)));
+  max-height:min(290px, 45vh);
+  overflow-y:auto;
+  padding:var(--space-compact-2);
+  margin:0;
+  background:var(--color-surface);
+  border:1px solid var(--color-border);
+  border-radius:var(--radius-sm);
+  box-shadow:var(--shadow-md);
+}
+.account-content .notification-pet-option {min-height:32px;font-size:var(--font-size-sm);}
+/* Account credential dialogs share standard form typography and spacing. */
+dialog:has(.account-credentials-form) .modal-head h2 {
+  font-family:var(--font-family-base);
+  font-size:var(--font-size-lg);
+  font-weight:var(--font-weight-medium);
+}
+dialog:has(.account-credentials-form) .modal-content {
+  padding:var(--space-compact-4);
+  max-width:100%;
+}
+.account-credentials-form,
+.account-credentials-form .form-fields {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:var(--space-compact-3);
+  min-width:0;
+}
+.account-credentials-form .field {display:grid;gap:var(--space-compact-2);min-width:0;margin:0;}
+.account-credentials-form .field > label {font-family:var(--font-family-base);font-size:var(--font-size-md);font-weight:var(--font-weight-medium);}
+.account-credentials-form .field input {
+  min-height:var(--button-height-sm);
+  padding:var(--space-compact-3) var(--field-control-inline);
+  font-family:var(--font-family-base);
+  font-size:var(--font-size-sm);
+  font-weight:var(--font-weight-regular);
+}
+.account-credentials-form :is(p,.hint) {margin:0;font-size:var(--font-size-sm);}
+.account-credentials-form .form-actions {margin-top:0;padding:0;}

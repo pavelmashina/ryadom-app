@@ -223,6 +223,7 @@ export default function Training({
         commands={pet.commands}
         readOnly={!canEdit}
         onOpen={(id) => setView({ kind: "session", id })}
+        onAdd={() => setView({kind:"actions"})}
         onStart={(session) => setView({ kind: "edit", session })}
         onEdit={(session) => setView(session.status === "planned"
           ? {kind:"plan", session,
@@ -247,7 +248,7 @@ export default function Training({
         </details>
       )}
       </div>}
-      <Button
+      {activeTab === "commands" && <Button
         className="training-fab"
         variant="primary"
         disabled={!canEdit}
@@ -256,7 +257,7 @@ export default function Training({
         onClick={() => setView(activeTab === "commands" ? {kind:"addCommand"} : { kind: "actions" })}
       >
         <Plus aria-hidden="true" />
-      </Button>
+      </Button>}
       {view && (
         <Modal
           title={

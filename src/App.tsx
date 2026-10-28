@@ -1591,6 +1591,9 @@ export default function App({
               initialItemId={stockTarget}
               onInitialItemHandled={() => setStockTarget(undefined)}
               onShop={() => setOverlay({ kind: "shopping" })}
+              onPurchaseDone={async itemId => {
+                await saved(() => update(p => completeShoppingItem(p,itemId,0,today())));
+              }}
               onToggle={(itemId) => {
                 const item = pet.shopping.find((s) => s.id === itemId);
                 if (!item) return;

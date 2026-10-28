@@ -1287,3 +1287,47 @@ dialog:has(.training-modal-content) .modal-head h2 {
   padding-top: var(--space-compact-3);
   margin-top: var(--space-compact-3);
 }
+
+/* Tabs occupy the same top baseline as "Наши планы" on Day. */
+.app main:has(> .training-screen) {padding-top:var(--space-compact-3);}
+.training-screen .training-section-tabs {
+  align-items: start;
+  margin: 0 0 var(--training-section-gap);
+  gap: var(--space-compact-3);
+}
+.training-screen .training-section-tabs button {
+  box-sizing: border-box;
+  min-height: 30px;
+  height: 30px;
+  padding: 0 var(--space-compact-2) var(--space-compact-1);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-ui-heading);
+  letter-spacing: normal;
+}
+/* The calendar add control is in its header, aligned with its right edge. */
+.training-screen .training-history > .section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-compact-3);
+}
+.training-screen .training-history > .section-title .training-calendar-add.btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  flex: none;
+  width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+  min-height: var(--icon-size-lg);
+  min-width: var(--icon-size-lg);
+  margin: 0;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+}
+.training-screen .training-history > .section-title .training-calendar-add svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}

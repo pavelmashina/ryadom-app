@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Plus } from "lucide-react";
 import { Button, Card, Empty, IconButton, SectionHeader } from "./components";
 import { fmt, today, type Pet } from "./domain";
 import type { TrainingSession } from "./training-domain";
@@ -10,6 +10,7 @@ export default function TrainingHistory({
   onOpen,
   onEdit,
   onStart,
+  onAdd,
   initialDate,
   onMonthVisible,
   petId,
@@ -21,6 +22,7 @@ export default function TrainingHistory({
   onOpen: (id: string) => void;
   onEdit: (session: TrainingSession) => void;
   onStart?: (session: TrainingSession) => void;
+  onAdd?: () => void;
   initialDate?: string;
   onMonthVisible?: (month: string) => Promise<void>;
   petId?: string;
@@ -80,7 +82,11 @@ export default function TrainingHistory({
   }
   return (
     <section className="training-history" aria-label="История тренировок">
-      <SectionHeader title={list ? "История тренировок" : "Календарь"} />
+      <SectionHeader title={list ? "История тренировок" : "Календарь"}>
+        {!list && onAdd && <Button size="sm" variant="primary" className="training-calendar-add"
+          onClick={onAdd} aria-label="Добавить или запланировать тренировку"
+          disabled={readOnly}><Plus aria-hidden="true" /></Button>}
+      </SectionHeader>
       {!list && (
         <div className="training-calendar">
           <div className="month training-month">

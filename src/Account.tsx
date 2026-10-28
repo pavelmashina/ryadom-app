@@ -135,6 +135,7 @@ export default function Account({
         >
           {view === "email" ? (
             <Form
+              className="account-credentials-form"
               label="Отправить подтверждение"
               onSave={async (data) => {
                 const email = text(data, "email");
@@ -171,6 +172,7 @@ export default function Account({
             </Form>
           ) : (
             <Form
+              className="account-credentials-form"
               label="Сохранить пароль"
               onSave={async (data) => {
                 const password = String(data.get("password") || ""),
