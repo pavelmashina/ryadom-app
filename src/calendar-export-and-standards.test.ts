@@ -39,7 +39,8 @@ describe("Add selected pet calendar event to Google and Apple",()=>{
     expect(ics).toContain("SUMMARY:Приём у ветеринара");
     expect(ics).toContain("UID:event-1-2026-12-21@ryadom-app");
     expect(ics).toContain("END:VEVENT\r\nEND:VCALENDAR\r\n");
-    expect(ics).toContain("DESCRIPTION:Мася\\nУточнить результаты\\, анализы");
+    const unfolded = ics.replace(/\\r\\n /g, "");
+    expect(unfolded).toContain("DESCRIPTION:Мася\\nУточнить результаты\\, анализы");
     for(const line of ics.split("\r\n"))expect(new TextEncoder().encode(line).length).toBeLessThanOrEqual(75);
   });
   it("does not lose dates when an event finishes after midnight",()=>{
