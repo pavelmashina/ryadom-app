@@ -610,13 +610,15 @@ export default function Training({
                 {progress.history.find((x) => isCommandFeedback(x.result.comment))?.result.comment.trim() ||
                   "Комментариев к команде пока нет."}
               </p>
-              <Button
-                fullWidth
-                variant="secondary"
-                onClick={() => setView({ kind: "comments", id: command.id })}
-              >
-                Посмотреть другие комментарии
-              </Button>
+              {progress.history.some((x) => isCommandFeedback(x.result.comment)) && (
+                <Button
+                  fullWidth
+                  variant="secondary"
+                  onClick={() => setView({ kind: "comments", id: command.id })}
+                >
+                  Посмотреть другие комментарии
+                </Button>
+              )}
               <Button
                 disabled={!canEdit}
                 fullWidth
