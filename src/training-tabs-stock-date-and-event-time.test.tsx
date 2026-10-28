@@ -45,6 +45,18 @@ describe("Training and Commands are separate top-level views",()=>{
   expect(note).toContain("border-top: 1px solid var(--color-border)");
   expect(note).toContain("padding-top: var(--space-compact-3)");
  });
+ it("keeps the command rename pencil next to the modal title instead of a bottom action",()=>{
+  const training=source("./Training.tsx"),components=source("./components.tsx"),css=source("./training.css");
+  expect(training).toContain('titleAction={');
+  expect(training).toContain('view.kind === "command" && command ? (');
+  expect(training).toContain('label="Редактировать команду"');
+  expect(training).toContain('<Pencil aria-hidden="true" />');
+  expect(training).toContain('onClick={() => setView({ kind: "rename", id: command.id })}');
+  expect(training).not.toMatch(/Редактировать команду\s*<\/Button>/);
+  expect(components).toContain('className="modal-title-action"');
+  expect(css).toContain('.modal-head:has(.modal-title-action) h2');
+  expect(css).toContain('margin-right: auto;');
+ });
 });
 describe("Stock card and event defaults",()=>{
  it("shows compact depletion date beside package icon, not as an extra caption",()=>{
