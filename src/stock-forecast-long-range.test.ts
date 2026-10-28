@@ -71,11 +71,18 @@ describe("Stock UI formats and recurrence fields",()=>{
   expect(ui).toContain("stockForecastLabel(forecast,today())");
   expect(ui).not.toContain('"Примерно на "+forecast.days');
  });
- it("keeps Repeat every and Period equally sized side by side, including phones",()=>{
-  const rules=css.split('/* "Изменить расход": Repeat every and Period share')[1]??"";
+ it("sizes both frequency fields like the smaller Training and Event recurrence controls",()=>{
+  const rules=css.split('/* "Изменить расход": frequency controls share')[1]??"";
+  const trainingCss=readFileSync(new URL("./training.css",import.meta.url),"utf8");
   expect(rules).toContain("grid-template-columns: repeat(2, minmax(0,1fr))");
   expect(rules).toContain(".fields > .field :is(input[type=\"number\"],select)");
-  expect(rules).toContain("height: var(--button-height-sm)");
+  expect(rules).toContain("height: calc(var(--button-height-sm) - var(--space-compact-3))");
+  expect(rules).toContain("min-height: calc(var(--button-height-sm) - var(--space-compact-3))");
+  expect(rules).toContain("font-size: var(--font-size-xs)");
+  expect(rules).toContain("font-size: var(--font-size-sm)");
+  expect(rules).toContain("padding: var(--space-compact-1) var(--field-control-inline)");
+  expect(trainingCss).toContain("height: calc(var(--button-height-sm) - var(--space-compact-3))");
+  expect(trainingCss).toContain("font-size: var(--font-size-xs)");
   expect(rules).toContain("width: 100%");
   expect(rules).toContain("@media (max-width: 420px)");
   expect(ui).toContain('allowedFrequencies={["daily","weekly","monthly"]}');

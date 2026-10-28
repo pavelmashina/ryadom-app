@@ -1404,8 +1404,8 @@ dialog:has(.stock-checkout-form) .stock-checkout-form {
   font-size: var(--font-size-sm);
 }
 
-/* "Изменить расход": Repeat every and Period share an equal 2-column row
-   and identical control height on narrow screens too. */
+/* "Изменить расход": frequency controls share the smaller size used by
+   event and training periodicity settings. Ordinary stock fields stay 44px. */
 .stock-screen .stock-rule-form .recurrence-options-flat-frequency .fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0,1fr));
@@ -1419,16 +1419,21 @@ dialog:has(.stock-checkout-form) .stock-checkout-form {
   min-width: 0;
   margin: 0;
 }
+.stock-screen .stock-rule-form .recurrence-options-flat-frequency .fields > .field > label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-caption);
+}
 .stock-screen .stock-rule-form .recurrence-options-flat-frequency .fields > .field :is(input[type="number"],select) {
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  height: var(--button-height-sm);
-  min-height: var(--button-height-sm);
-  padding: var(--space-compact-3);
+  min-height: calc(var(--button-height-sm) - var(--space-compact-3));
+  height: calc(var(--button-height-sm) - var(--space-compact-3));
+  padding: var(--space-compact-1) var(--field-control-inline);
   font-family: var(--font-family-base);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   line-height: var(--line-height-ui-body);
 }
 @media (max-width: 420px) {
