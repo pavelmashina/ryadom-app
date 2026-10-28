@@ -9,6 +9,7 @@ export default function TrainingHistory({
   commands,
   onOpen,
   onEdit,
+  onStart,
   onMonthVisible,
   petId,
   readOnly = false,
@@ -18,19 +19,13 @@ export default function TrainingHistory({
   commands: Pet["commands"];
   onOpen: (id: string) => void;
   onEdit: (session: TrainingSession) => void;
+  onStart?: (session: TrainingSession) => void;
   onMonthVisible?: (month: string) => Promise<void>;
   petId?: string;
 }) {
-  const latest =
-    sessions
-      .filter((s) => (s.status ?? "completed") === "completed")
-      .reduce((d, s) => (s.date > d ? s.date : d), "") ||
-    sessions
-      .filter((s) => s.status === "planned")
-      .reduce((d, s) => (s.date > d ? s.date : d), "") ||
-    today();
+  // Each fresh calendar visit starts on the current day, not the latest session.
   const [selection, setSelection] = useState<string | null>(null);
-  const selected = selection ?? latest;
+  const selected = selection ?? today();
   const [shownMonth, setMonth] = useState<string | null>(null);
   const month = shownMonth ?? selected.slice(0, 7);
   const requestedMonths = useRef(new Set<string>());
@@ -175,7 +170,8 @@ export default function TrainingHistory({
       {shown.map((s) => (
         <Card
           key={s.id}
-          className={"training-session-summary " + (s.status ?? "completed")}
+          className={"training-session-summary " + (s.status ?? "completed") +
+            (s.status === "planned" && s.date === today() ? " today-planned" : "")}
         >
           <div className="training-session-heading">
             <div className="training-session-title-row">
@@ -230,6 +226,13 @@ export default function TrainingHistory({
               </summary>
               <p className="note">{s.comment}</p>
             </details>
+          )}
+          {s.status === "planned" && s.date === today() && !readOnly && (
+            <div className="training-start-actions">
+              <Button fullWidth variant="primary" onClick={() => onStart?.(s)}>
+                Начать тренировку
+              </Button>
+            </div>
           )}
           {s.status !== "planned" && <div className="training-session-actions">
             <Button size="sm" variant="ghost" onClick={() => onOpen(s.id)}>

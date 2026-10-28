@@ -63,6 +63,8 @@ export default function Stock({
  const active=current?activeStockRule(current):null;
  const settingsItem=visibleItems.find((i)=>i.id===settingsItemId);
  const shoppingItems=visibleShoppingItems(pet.shopping,shoppingDate);
+ // Reopen Stock on the current date after switching pets.
+ useEffect(() => { setShoppingDate(today()); setStartDate(today()); }, [pet.id]);
  const load=useCallback(async()=>{
   const epoch=++loadEpoch.current;
   try {

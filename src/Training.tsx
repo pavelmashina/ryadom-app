@@ -202,6 +202,7 @@ export default function Training({
         commands={pet.commands}
         readOnly={!canEdit}
         onOpen={(id) => setView({ kind: "session", id })}
+        onStart={(session) => setView({ kind: "edit", session })}
         onEdit={(session) => setView(session.status === "planned"
           ? {kind:"plan", session,
              schedule:pet.trainingSchedules?.find(sc => sc.id === session.schedule_id)}

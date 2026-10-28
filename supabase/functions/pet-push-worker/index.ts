@@ -79,7 +79,28 @@ async function updateDelivery(job: Job, status: string, attempts = 1, error = ""
     }),
   });
 }
+/** Resolve the original pet at dispatch time: recipients may have several pets. */
+async function notificationText(job: Job): Promise<{ title: string; body: string }> {
+  const resource = job.kind === "training" ? "training_sessions" : "calendar_events";
+  const targetId = job.kind === "training" ? job.session_id : job.event_id;
+  if (!targetId) throw new Error("Notification target is missing");
+  const records = await api("/" + resource + "?select=pet_id" +
+    (job.kind === "event" ? ",type" : "") + "&id=eq." + q(targetId)) as
+    { pet_id: string; type?: string }[];
+  const petId = records?.[0]?.pet_id;
+  if (!petId) throw new Error("Notification pet is missing");
+  const pets = await api("/pets?select=name&id=eq." + q(petId) + "&deleted_at=is.null")
+    as { name: string }[];
+  const petName = pets?.[0]?.name?.trim();
+  if (!petName) throw new Error("Notification pet name is missing");
+  const prefix = job.kind === "training" ? "Тренировка" :
+    records[0].type === "reminder" ? "Напоминание" : "Событие";
+  const body = [prefix + (job.title?.trim() ? ": " + job.title.trim() : ""),
+    job.comment?.trim()].filter(Boolean).join(" · ").slice(0, 240);
+  return { title: petName.slice(0, 120), body };
+}
 async function deliver(job: Job, server: webpush.ApplicationServer) {
+  const display = await notificationText(job);
   const subs = await api("/push_subscriptions?select=id,endpoint,p256dh,auth&user_id=eq." +
     q(job.user_id)) as Subscription[];
   if (!subs?.length) {
@@ -97,9 +118,8 @@ async function deliver(job: Job, server: webpush.ApplicationServer) {
   for (const sub of subs) {
     if (sent.has(sub.id)) continue;
     const message = JSON.stringify({
-      title: job.kind === "training" ? "Тренировка · " + job.title : job.title,
-      body: job.comment?.slice(0, 240) ||
-        (job.kind === "training" ? "Запланирована тренировка" : "Запланированное событие"),
+      title: display.title,
+      body: display.body,
       ...(job.kind === "training" ? { trainingId: job.session_id } : { eventId: job.event_id }),
       at: job.occurrence_at,
       icon: "/ryadom-app/icon-192.png",

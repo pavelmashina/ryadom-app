@@ -58,7 +58,7 @@ export type TrainingSession = z.infer<typeof trainingSchema>;
 export function isCommandFeedback(text: string): boolean {
   const note=text.trim();
   if (!note) return false;
-  return !/^(?:восстановлено из дневника|связано с дневником|импортировано из дневника|перенесено из дневника|исходная запись)(?:[.!\s]*)$/i.test(note);
+  return !/^(?:восстановлено из дневника|связано с дневником|импортировано из дневника|перенесено из дневника|исходная запись)(?=$|\s|[.:!—–-])/i.test(note);
 }
 
 export function commandProgress(

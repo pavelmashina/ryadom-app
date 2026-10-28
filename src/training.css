@@ -1202,3 +1202,15 @@ dialog:has(.training-modal-content) .modal-head h2 {
   gap: var(--space-compact-3);
   margin: 0;
 }
+
+/* Today's planned training is actionable, future plans retain their dashed border. */
+.training-screen .training-session-summary.planned.today-planned {
+  border-style: solid;
+  border-color: var(--color-primary);
+}
+.training-screen .training-start-actions { margin-top: var(--space-compact-3); }
+.training-screen .training-start-actions .btn {
+  width: 100%;
+  margin: 0;
+  font-size: var(--font-size-sm);
+}

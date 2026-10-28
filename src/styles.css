@@ -2776,3 +2776,30 @@ dialog:has(.event-detail-modal) .modal-head h2 {
   min-height:var(--button-height-sm);font-size:var(--font-size-sm);font-weight:var(--font-weight-regular);cursor:pointer;}
 .notification-pet-option input {width:18px;height:18px;flex:none;accent-color:var(--color-primary);}
 .training-reminder-custom {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-compact-3);}
+
+/* Shared account-row pencil editors, consistently aligned on the far right. */
+.account-content .account-section .account-row {
+  grid-template-columns: var(--icon-size-md) minmax(0, 1fr) var(--button-height-sm);
+  align-items: center;
+}
+.account-content .account-section .account-row > .account-security-edit.btn {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--button-height-sm);
+  height: var(--button-height-sm);
+  min-width: var(--button-height-sm);
+  min-height: var(--button-height-sm);
+  margin: 0;
+  padding: var(--space-compact-2);
+  background: transparent;
+  border: 0;
+  color: var(--color-text-secondary);
+}
+.account-content .account-section .account-row > .account-security-edit.btn svg {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+}

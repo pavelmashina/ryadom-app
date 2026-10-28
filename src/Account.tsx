@@ -1,5 +1,6 @@
 import {
   Button,
+  IconButton,
   Card,
   Field,
   Form,
@@ -8,7 +9,7 @@ import {
   text,
 } from "./components";
 import { useEffect, useState, type ReactNode } from "react";
-import { Mail, LockKeyhole } from "lucide-react";
+import { Mail, LockKeyhole, Pencil } from "lucide-react";
 import { PushSettings } from "./PushSettings";
 import NotificationPreferencesSettings from "./NotificationPreferencesSettings";
 import type { Pet } from "./domain";
@@ -101,30 +102,26 @@ export default function Account({
               <span className="account-email">{user.email}</span>
             </div>
           </div>
-          <Button
-            size="sm"
+          <IconButton label="Изменить email" className="account-security-edit"
             onClick={() => {
               setEmailError("");
               setView("email");
-            }}
-          >
-            Изменить email
-          </Button>
+            }}>
+            <Pencil aria-hidden="true" />
+          </IconButton>
         </div>
         <div className="account-row">
           <LockKeyhole aria-hidden="true" />
           <div>
             <h3>Пароль</h3>
           </div>
-          <Button
-            size="sm"
+          <IconButton label="Изменить пароль" className="account-security-edit"
             onClick={() => {
               setPasswordError("");
               setView("password");
-            }}
-          >
-            Изменить пароль
-          </Button>
+            }}>
+            <Pencil aria-hidden="true" />
+          </IconButton>
         </div>
       </AccountSection>
       <AccountSection title="Уведомления">

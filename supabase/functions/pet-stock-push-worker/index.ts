@@ -41,7 +41,17 @@ async function update(job:Job,status:"sent"|"failed",attempts=1,error=""){
    last_error:error.slice(0,160)}),
  });
 }
+async function notificationText(job:Job):Promise<{title:string;body:string}>{
+ const pets=await api("/pets?select=name&id=eq."+esc(job.pet_id)+"&deleted_at=is.null") as {name:string}[];
+ const name=pets?.[0]?.name?.trim();
+ if(!name)throw Error("Notification pet is missing");
+ return {
+  title:name.slice(0,120),
+  body:[job.title?.trim(),job.comment?.trim()].filter(Boolean).join(" · ").slice(0,240),
+ };
+}
 async function deliver(job:Job,server:webpush.ApplicationServer){
+ const display=await notificationText(job);
  const subs=await api("/push_subscriptions?select=id,endpoint,p256dh,auth&user_id=eq."+esc(job.user_id)) as Subscription[];
  if(!subs?.length){await update(job,"failed",1,"No subscribed devices");return false;}
  const table="/stock_notification_device_deliveries";
@@ -52,7 +62,7 @@ async function deliver(job:Job,server:webpush.ApplicationServer){
   if(done.has(sub.id))continue;
   try{
    const message=JSON.stringify({
-    title:job.title,body:job.comment.slice(0,240),
+    title:display.title,body:display.body,
     stockItemId:job.stock_item_id,at:job.occurrence_at,icon:"/ryadom-app/icon-192.png",
     url:"/ryadom-app/?stockPet="+esc(job.pet_id)+"&stock="+esc(job.stock_item_id),
    });
