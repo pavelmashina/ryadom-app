@@ -58,7 +58,7 @@ it("initial form selection keeps a hidden archived score and announces its count
   expect(html.match(/class="[^"]*command-choice"/g)).toHaveLength(21);
   expect(html).toContain("aria-pressed=");
 });
-it("read-only catalog disables editing while retaining browsing and four initial rows", () => {
+it("read-only Training tab disables edits and hides Commands until selected", () => {
   const html = renderToStaticMarkup(
     <Training
       pet={fixture()}
@@ -72,8 +72,10 @@ it("read-only catalog disables editing while retaining browsing and four initial
     /<button[^>]*aria-label="Добавить или запланировать тренировку"[^>]*disabled=""/,
   );
   expect(html).not.toContain("Добавить команду");
-  expect(html.match(/class="[^"]*interactive-card command-row"/g)).toHaveLength(
-    20,
-  );
+  expect(html).not.toContain('class="command-list"');
+  expect(html).toContain('role="tab" id="training-tab-commands"');
+  expect(html).toContain('aria-selected="false"');
+  expect(readFileSync(new URL("./Training.tsx",import.meta.url),"utf8"))
+    .toContain('activeTab === "commands" && <div');
   expect(html).not.toContain("Показать все");
 });

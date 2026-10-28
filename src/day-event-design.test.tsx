@@ -39,12 +39,12 @@ describe("Day calendar unified with Training calendar layout", () => {
       selected="2026-10-25" onSave={() => {}} />);
     expect(html).toContain("event-editor-modal");
     expect(html).toContain('class="training-date-wrap"');
-    expect(html).toContain('class="training-time-wrap is-disabled"');
+    expect(html).toContain('class="training-time-wrap"');
     expect(html).toContain('name="date"');
     expect(html).toContain('name="time"');
     expect(html).toContain('type="date"');
     expect(html).toContain('type="time"');
-    expect(html).toContain('disabled=""');
+    expect(html).not.toContain('class="training-time-wrap is-disabled"');
     expect(html).toContain('class="training-date-value"');
     expect(source("./EventForm.tsx")).toContain("value={startDate}");
     expect(source("./EventForm.tsx")).toContain("disabled={allDay}");

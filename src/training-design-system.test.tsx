@@ -142,9 +142,10 @@ describe("Training mobile composition (requirements 140–161)", () => {
       pet={pet} session={auth} onSave={async () => {}} canEdit />);
     expect(html).not.toContain("<h1>Занятия</h1>");
     expect(html).not.toContain('class="heading"');
-    expect(html).toContain("<h2>Команды</h2>");
+    expect(html).toContain('role="tab" id="training-tab-commands"');
+    expect(html).toContain('role="tab" id="training-tab-sessions" aria-selected="true"');
     expect(html).toContain("<h2>Календарь</h2>");
-    expect(html).toContain('class="command-list"');
+    expect(html).not.toContain('class="command-list"');
     expect(html).toContain('class="training-calendar"');
     expect(html).toContain('class="training-selected-date"');
     expect(html).toContain("В этот день тренировок нет");

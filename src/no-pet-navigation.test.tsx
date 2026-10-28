@@ -18,17 +18,14 @@ const session: AuthSession = {
 };
 
 describe("Empty pet account navigation and access empties", () => {
-  it("shows the first-command placeholder BELOW the Команды heading", () => {
+  it("shows a disabled Training default and keeps the command empty state inside its own tab", () => {
     const html = renderToStaticMarkup(<Training
       session={session} pet={blankPet("Собака")}
       noPet canEdit={false} onSave={async () => {}} />);
-    const title = html.indexOf(">Команды</h2>");
-    const empty = html.indexOf("Начните с первой команды");
-    const calendar = html.indexOf(">Календарь</h2>");
-    expect(title).toBeGreaterThan(-1);
-    expect(empty).toBeGreaterThan(title);
-    expect(calendar).toBeGreaterThan(empty);
-    expect(html).toContain("Чтобы добавлять команды, сначала выберите питомца.");
+    expect(html).toContain('role="tab" id="training-tab-commands" aria-selected="false"');
+    expect(html).toContain(">Календарь</h2>");
+    expect(html).not.toContain("Начните с первой команды");
+    expect(read("./Training.tsx")).toContain("Чтобы добавлять команды, сначала выберите питомца.");
     expect(html).toMatch(/aria-label="Добавить или запланировать тренировку"[^>]*disabled/);
     expect(read("./CommandGrid.tsx")).toContain("{empty ?? <div");
   });
