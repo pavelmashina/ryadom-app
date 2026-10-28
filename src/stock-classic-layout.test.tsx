@@ -17,7 +17,7 @@ describe("Unified stock and shopping overview",()=>{
   const pet=blankPet("Мася");
   pet.shopping=[{id:"food",name:"Корм",quantity:"3 кг",done:false}];
   const html=renderToStaticMarkup(<Stock pet={pet} session={session}
-   onShop={()=>{}} onToggle={()=>{}}/>);
+   onShop={()=>{}} onToggle={()=>{}} onPurchaseDone={async()=>{}}/>);
   expect(html).toContain("Запасы");
   expect(html).toContain("Купить");
   expect(html).toContain("Корм");

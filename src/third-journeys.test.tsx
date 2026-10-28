@@ -107,7 +107,7 @@ describe("R3: purchase-to-stock checkout", () => {
   it("renders shopping list without the old stock hint and preserves checkout", () => {
     const html = renderToStaticMarkup(<Stock
       pet={initial()} session={{user:{id:"test",email:"test@example.com"},accessToken:"",refreshToken:"",expiresAt:0}}
-      onShop={() => {}} onToggle={() => {}} />);
+      onShop={() => {}} onToggle={() => {}} onPurchaseDone={async()=>{}} />);
     expect(html).toContain("Купить");
     expect(html).toContain("Корм");
     expect(html).not.toContain("Купленный корм можно сразу внести в запас");
