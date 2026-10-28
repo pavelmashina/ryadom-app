@@ -377,12 +377,14 @@ export const text = (d: FormData, n: string) => String(d.get(n) || "").trim();
 export const number = (d: FormData, n: string) => Number(d.get(n));
 export function Modal({
   title,
+  titleAction,
   children,
   onClose,
   restoreFocus = true,
   dismissOnBackdrop = true,
 }: {
   title: string;
+  titleAction?: ReactNode;
   children: ReactNode;
   onClose: () => void;
   restoreFocus?: boolean;
@@ -463,6 +465,7 @@ export function Modal({
     >
       <div className="modal-head">
         <h2 id={titleId}>{title}</h2>
+        {titleAction && <div className="modal-title-action">{titleAction}</div>}
         <IconButton label="Закрыть" onClick={close}>
           <X />
         </IconButton>
