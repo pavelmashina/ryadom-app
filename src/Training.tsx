@@ -1,8 +1,9 @@
-import { Plus } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import {
   Textarea,
   Select,
   Button,
+  IconButton,
   InteractiveCard,
   Card,
   Empty,
@@ -282,6 +283,17 @@ export default function Training({
                       : view.kind === "addCommand"
                         ? "Новая команда"
                         : (command?.name ?? "Тренировка")
+          }
+          titleAction={
+            view.kind === "command" && command ? (
+              <IconButton
+                label="Редактировать команду"
+                disabled={!canEdit}
+                onClick={() => setView({ kind: "rename", id: command.id })}
+              >
+                <Pencil aria-hidden="true" />
+              </IconButton>
+            ) : undefined
           }
           onClose={() => setView(null)}
           restoreFocus={!["command", "comments", "rename", "archive"].includes(view.kind)}
@@ -619,14 +631,6 @@ export default function Training({
                   Посмотреть другие комментарии
                 </Button>
               )}
-              <Button
-                disabled={!canEdit}
-                fullWidth
-                variant="secondary"
-                onClick={() => setView({ kind: "rename", id: command.id })}
-              >
-                Редактировать команду
-              </Button>
               <Button
                 disabled={!canEdit}
                 fullWidth
