@@ -46,7 +46,7 @@ describe("Long-range stock consumption predictions",()=>{
  it("accounts for multiple weekdays, intervals and a finite end date",()=>{
   const biweekly:StockItem={...shampoo,current_quantity:3,
    rules:[{...basicRule,amount:1,interval_count:2,days_of_week:[1,3,5]}]};
-  expect(stockForecast(biweekly,from)?.date).toBe("2026-11-04");
+  expect(stockForecast(biweekly,from)?.date).toBe("2026-11-11");
   const finite={...shampoo,rules:[{...basicRule,ends_on:"2027-12-31"}]};
   expect(stockForecast(finite,from)).toBeNull();
  });

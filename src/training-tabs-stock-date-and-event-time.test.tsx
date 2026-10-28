@@ -50,7 +50,7 @@ describe("Stock card and event defaults",()=>{
  it("shows compact depletion date beside package icon, not as an extra caption",()=>{
   const stock=source("./Stock.tsx");
   expect(stock).toContain('<Badge><Package/>');
-  expect(stock).toContain('"до "+fmt(stockForecast(current,today())!.date,{day:"numeric",month:"short"})');
+  expect(stock).toContain("stockForecastLabel(currentForecast,today())");
   expect(stock).not.toContain("Примерно до");
  });
  it("requires a clock time for new events/reminders, preserving existing all-day events",()=>{
