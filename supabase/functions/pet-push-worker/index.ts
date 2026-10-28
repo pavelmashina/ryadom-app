@@ -89,8 +89,7 @@ async function notificationText(job: Job): Promise<{ title: string; body: string
     { pet_id: string; type?: string }[];
   const petId = records?.[0]?.pet_id;
   if (!petId) throw new Error("Notification pet is missing");
-  const pets = await api("/pets?select=name&id=eq." + q(petId) + "&deleted_at=is.null")
-    as { name: string }[];
+  const pets = (await api("/pets?select=name&id=eq." + q(petId) + "&deleted_at=is.null")) as { name: string }[];
   const petName = pets?.[0]?.name?.trim();
   if (!petName) throw new Error("Notification pet name is missing");
   const prefix = job.kind === "training" ? "Тренировка" :
