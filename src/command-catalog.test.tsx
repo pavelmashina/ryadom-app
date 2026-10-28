@@ -1,5 +1,6 @@
 import { expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+import { readFileSync } from "node:fs";
 import Training, { TrainingForm } from "./Training";
 import type { AuthSession } from "./backend";
 import { blankPet } from "./domain";
