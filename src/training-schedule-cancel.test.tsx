@@ -73,7 +73,7 @@ describe("Scheduled training editor and cancellation",()=>{
  it("does not expose details or separate reschedule controls on planned calendar cards",()=>{
   const pet=fixture();
   const html=renderToStaticMarkup(<TrainingHistory
-    sessions={[pet.workouts[1]]} commands={pet.commands}
+    initialDate="2026-10-23" sessions={[pet.workouts[1]]} commands={pet.commands}
     onOpen={()=>{}} onEdit={()=>{}}/>);
   expect(html).toContain("Запланирована");
   expect(html).toContain("Редактировать");

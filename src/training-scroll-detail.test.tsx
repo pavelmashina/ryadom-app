@@ -18,7 +18,7 @@ const occurrence:TrainingSession={
 describe("Planned training card and scroll conventions",()=>{
   it("aligns the edit icon to the right of the planned workout title without an action footer",()=>{
     const html=renderToStaticMarkup(<TrainingHistory
-      sessions={[occurrence]} commands={[]}
+      initialDate="2026-10-23" sessions={[occurrence]} commands={[]}
       onOpen={()=>{}} onEdit={()=>{}} />);
     expect(html).toContain('class="training-session-title-row"');
     expect(html).toContain('class="training-inline-edit"');

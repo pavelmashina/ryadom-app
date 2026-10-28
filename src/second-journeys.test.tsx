@@ -129,7 +129,7 @@ describe("R2: quick planned training actions", () => {
   it("keeps only edit on the planned card while preserving the standalone reschedule editor", () => {
     const pet = blankPet("Бублик");pet.workouts = [session];
     const html = renderToStaticMarkup(<TrainingHistory
-      sessions={pet.workouts} commands={[]} onOpen={() => {}} onEdit={() => {}} />);
+      initialDate={session.date} sessions={pet.workouts} commands={[]} onOpen={() => {}} onEdit={() => {}} />);
     expect(html).toContain("Редактировать");
     expect(html).not.toContain(">Перенести</button>");
     expect(html).not.toContain(">Подробнее</button>");

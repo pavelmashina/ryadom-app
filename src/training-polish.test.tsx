@@ -28,7 +28,7 @@ describe("Training screen refinements",()=>{
  it("colors every completed command by score range while keeping unrated neutral",()=>{
   const scores=[5,4,3,2,1,null];
   const html=renderToStaticMarkup(<TrainingHistory
-   sessions={[fixture(scores)]}
+   initialDate="2026-10-23" sessions={[fixture(scores)]}
    commands={scores.map((_,i)=>({id:"c"+i,name:"Команда "+i}))}
    onOpen={()=>{}} onEdit={()=>{}} />);
   expect((html.match(/quality-excellent/g)??[]).length).toBe(1);

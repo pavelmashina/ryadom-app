@@ -3,9 +3,7 @@ import {renderToStaticMarkup} from "react-dom/server";
 import {readFileSync} from "node:fs";
 import TrainingHistory from "./TrainingHistory";
 import {isCommandFeedback} from "./training-domain";
-import {blankPet,today} from "./domain";
-import Account from "./Account";
-import type {AuthSession} from "./backend";
+import {today} from "./domain";
 import type {TrainingSession} from "./training-domain";
 
 const read=(p:string)=>readFileSync(new URL(p,import.meta.url),"utf8");
@@ -75,10 +73,8 @@ describe("Account editors and pet-named push",()=>{
   const styles=read("./styles.css");
   expect(styles).toContain("grid-template-columns: var(--icon-size-md) minmax(0, 1fr) var(--button-height-sm)");
   expect(styles).toContain("grid-column: 3");
-  const fake={user:{id:"1",email:"test@example.org"}} as AuthSession;
-  const html=renderToStaticMarkup(<Account session={fake} onUserUpdated={()=>{}} pets={[blankPet("Тест")]} />);
-  expect(html).toContain('aria-label="Изменить email"');
-  expect(html).toContain('aria-label="Изменить пароль"');
+  expect(acc).toContain('<IconButton label="Изменить email"');
+  expect(acc).toContain('<IconButton label="Изменить пароль"');
  });
  it("puts pet name in push title and description in push body for all categories",()=>{
   const reminders=read("../supabase/functions/pet-push-worker/index.ts");

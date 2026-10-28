@@ -10,6 +10,7 @@ export default function TrainingHistory({
   onOpen,
   onEdit,
   onStart,
+  initialDate,
   onMonthVisible,
   petId,
   readOnly = false,
@@ -20,11 +21,12 @@ export default function TrainingHistory({
   onOpen: (id: string) => void;
   onEdit: (session: TrainingSession) => void;
   onStart?: (session: TrainingSession) => void;
+  initialDate?: string;
   onMonthVisible?: (month: string) => Promise<void>;
   petId?: string;
 }) {
   // Each fresh calendar visit starts on the current day, not the latest session.
-  const [selection, setSelection] = useState<string | null>(null);
+  const [selection, setSelection] = useState<string | null>(initialDate ?? null);
   const selected = selection ?? today();
   const [shownMonth, setMonth] = useState<string | null>(null);
   const month = shownMonth ?? selected.slice(0, 7);

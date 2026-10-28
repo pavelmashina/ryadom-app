@@ -38,9 +38,10 @@ it("keeps all sessions on a date and leaves empty dates empty", () => {
   ]);
   expect(sessionsOnDate(all, "2026-05-03")).toEqual([]);
 });
-it("initially displays the latest actual day, all its sessions and only actual dots", () => {
+it("shows an explicitly selected historical day and all its sessions", () => {
   const html = renderToStaticMarkup(
     <TrainingHistory
+      initialDate="2025-01-07"
       sessions={[
         session("a", "2025-01-03"),
         session("b", "2025-01-07"),

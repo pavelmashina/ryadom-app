@@ -25,6 +25,7 @@ const commands = [{ id: "c1", name: "Рядом" }, { id: "c2", name: "Ко мн
 describe("Training mobile composition (requirements 140–161)", () => {
   it("uses a single selected-day heading, never repeats the date inside cards", () => {
     const html = renderToStaticMarkup(<TrainingHistory
+      initialDate="2026-10-15"
       sessions={[session("s1", "10:00"), session("s2", "19:00")]}
       commands={commands} onOpen={() => {}} onEdit={() => {}} />);
     expect(html).toContain("<h2>Календарь</h2>");
@@ -44,7 +45,7 @@ describe("Training mobile composition (requirements 140–161)", () => {
     const lone = session("s1", "12:00");
     lone.results = lone.results.slice(0, 1);
     const html = renderToStaticMarkup(<TrainingHistory
-      sessions={[lone]} commands={commands}
+      initialDate="2026-10-15" sessions={[lone]} commands={commands}
       onOpen={() => {}} onEdit={() => {}} />);
     expect(html).toContain('class="training-result-chips app-horizontal-scroll single"');
     expect(css).toContain(".training-screen .training-result-chips.single");
@@ -146,7 +147,7 @@ describe("Training mobile composition (requirements 140–161)", () => {
     expect(html).toContain('class="command-list"');
     expect(html).toContain('class="training-calendar"');
     expect(html).toContain('class="training-selected-date"');
-    expect(html).toMatch(/class="card\s+training-session-summary completed"/);
+    expect(html).toContain("В этот день тренировок нет");
   });
 
   it("uses the Calendar heading gap consistently after Commands and selected-date headings", () => {
