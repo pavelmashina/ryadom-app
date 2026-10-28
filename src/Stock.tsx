@@ -546,7 +546,7 @@ export default function Stock({
        {stockAmount(current.current_quantity,current.display_unit)} <small>{current.display_unit}</small>
       </div>
       <Badge><Package/>{stockForecast(current,today())
-       ? "≈ "+stockForecast(current,today())!.days+" дн."
+       ? "до "+fmt(stockForecast(current,today())!.date,{day:"numeric",month:"short"})
        : active?"Прогноз недоступен":"Укажите расход"}</Badge>
      </div>
      <progress value={stockProgress(current)} max={100}
@@ -555,7 +555,6 @@ export default function Stock({
       <span>0 {current.display_unit}</span>
       <span>{stockAmount(current.reference_quantity,current.display_unit)} {current.display_unit} · ориентир</span>
      </div>
-     {stockForecast(current,today())&&<p className="stock-muted">Примерно до {fmt(stockForecast(current,today())!.date)}</p>}
      {stockStatus(current)!=="normal"&&<p className="stock-warning">
       {stockStatus(current)==="empty"?"Запас закончился":"Запас скоро закончится"}</p>}
      <div className="stock-detail-actions">

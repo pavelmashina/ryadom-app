@@ -79,6 +79,7 @@ export default function Training({
   onMonthVisible?: (month: string) => Promise<void>;
 }) {
   const [view, setView] = useState<View>(null);
+  const [activeTab, setActiveTab] = useState<"sessions" | "commands">("sessions");
   const [cancelBusy,setCancelBusy]=useState(false);
   const [cancelError,setCancelError]=useState("");
   useEffect(() => {
@@ -134,8 +135,17 @@ export default function Training({
   }
   return (
     <div className="training-screen">
+      <div className="training-section-tabs" role="tablist" aria-label="Раздел занятий">
+        <button type="button" role="tab" id="training-tab-sessions"
+          aria-selected={activeTab === "sessions"} aria-controls="training-panel-sessions"
+          onClick={() => setActiveTab("sessions")}>Занятия</button>
+        <button type="button" role="tab" id="training-tab-commands"
+          aria-selected={activeTab === "commands"} aria-controls="training-panel-commands"
+          onClick={() => setActiveTab("commands")}>Команды</button>
+      </div>
+      {activeTab === "commands" && <div className="training-commands-panel"
+        role="tabpanel" id="training-panel-commands" aria-labelledby="training-tab-commands">
       <CommandGrid
-        title="Команды"
         empty={!activeCommands.length ? (
           <Empty title="Начните с первой команды">
             {noPet
@@ -194,6 +204,17 @@ export default function Training({
           );
         })}
       </CommandGrid>
+      <details className="explanation">
+        <summary>Как считается прогресс</summary>
+        <p>
+          Средняя оценка последних пяти тренировок с этой командой: ниже 2,5 —
+          изучаем; от 2,5 — нестабильно; от 3,5 — уверенно; от 4,5 — усвоено. До
+          трёх тренировок оценка предварительная. Это ориентир для дневника.
+        </p>
+      </details>
+      </div>}
+      {activeTab === "sessions" && <div className="training-sessions-panel"
+        role="tabpanel" id="training-panel-sessions" aria-labelledby="training-tab-sessions">
       <TrainingHistory
         key={pet.id}
         petId={pet.id}
@@ -225,21 +246,14 @@ export default function Training({
           ))}
         </details>
       )}
-      <details className="explanation">
-        <summary>Как считается прогресс</summary>
-        <p>
-          Средняя оценка последних пяти тренировок с этой командой: ниже 2,5 —
-          изучаем; от 2,5 — нестабильно; от 3,5 — уверенно; от 4,5 — усвоено. До
-          трёх тренировок оценка предварительная. Это ориентир для дневника.
-        </p>
-      </details>
+      </div>}
       <Button
         className="training-fab"
         variant="primary"
         disabled={!canEdit}
-        aria-label="Добавить или запланировать тренировку"
+        aria-label={activeTab === "commands" ? "Добавить команду" : "Добавить или запланировать тренировку"}
         aria-haspopup="dialog"
-        onClick={() => setView({ kind: "actions" })}
+        onClick={() => setView(activeTab === "commands" ? {kind:"addCommand"} : { kind: "actions" })}
       >
         <Plus aria-hidden="true" />
       </Button>
@@ -476,9 +490,9 @@ export default function Training({
                       }[r.mode]
                     }
                   </small>
-                  <p className="note">
-                    {r.comment || "Без комментария к команде"}
-                  </p>
+                  {r.comment.trim() && (
+                    <p className="note training-detail-command-note">{r.comment}</p>
+                  )}
                 </Card>
               ))}
               <Button

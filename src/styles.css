@@ -2803,3 +2803,14 @@ dialog:has(.event-detail-modal) .modal-head h2 {
   width: var(--icon-size-md);
   height: var(--icon-size-md);
 }
+
+/* Compact account credential rows while retaining a 36px pencil hit target. */
+.account-content .account-section .account-row {
+  padding-top: var(--space-compact-1);
+  padding-bottom: var(--space-compact-1);
+  gap: var(--space-compact-2);
+}
+.account-content .account-section .account-row:last-child {
+  padding-bottom: var(--space-compact-1);
+}
+.account-content .account-section .account-row > div h3 { margin: 0; }

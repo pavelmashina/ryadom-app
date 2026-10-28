@@ -39,7 +39,7 @@ export default function EventForm({
   const [kind, setKind] = useState<"event" | "reminder">(existing?.kind ?? "event");
   const [startDate, setStartDate] = useState(initialDate);
   const [intervalText, setIntervalText] = useState(String(existing?.repeatInterval ?? 1));
-  const [allDay, setAllDay] = useState(!existing?.time);
+  const [allDay, setAllDay] = useState(existing ? !existing.time : false);
   const [recurrence, setRecurrence] = useState<RecurrenceDraft>(() => ({
     ...draftForDate(initialDate),
     frequency: existing?.repeat ?? "once",
