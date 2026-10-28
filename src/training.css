@@ -1331,3 +1331,23 @@ dialog:has(.training-modal-content) .modal-head h2 {
   width: var(--icon-size-sm);
   height: var(--icon-size-sm);
 }
+
+/* Command title pencil stays beside the name; close action remains right-aligned. */
+dialog:has(.training-modal-content) .modal-head:has(.modal-title-action) {
+  gap: var(--space-compact-2);
+}
+dialog:has(.training-modal-content) .modal-head:has(.modal-title-action) h2 {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+dialog:has(.training-modal-content) .modal-head .modal-title-action {
+  display: flex;
+  align-items: center;
+  flex: none;
+  margin-right: auto;
+}
+dialog:has(.training-modal-content) .modal-head .modal-title-action svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
