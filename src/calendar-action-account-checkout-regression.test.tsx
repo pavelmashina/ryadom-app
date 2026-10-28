@@ -73,7 +73,7 @@ describe("Three purchase completion modes",()=>{
   expect(migration).toContain("pg_advisory_xact_lock");
   expect(migration).toContain("external_key=ref");
   expect(migration).toContain("p_mode='existing'");
-  expect(migration).toContain("p_mode='new'");
+  expect(migration).toContain("p_mode not in ('existing','new')");
   expect(migration).toContain("pet_private.member_role(p_pet)");
   expect(migration).toContain("grant execute on function public.checkout_stock_purchase");
   const pet=blankPet("Питомец");
