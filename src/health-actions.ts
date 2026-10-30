@@ -30,6 +30,9 @@ export function deleteMedicalRecord(pet: Pet, entryId: string): Pet {
   return {
     ...pet,
     records: pet.records.filter((r) => r.id !== entryId),
+    // Preserve uploaded files in Documents even if their medical entry is removed.
+    documents: pet.documents.map((doc) => doc.linkedRecord === entryId
+      ? { ...doc, linkedRecord: undefined } : doc),
     // Keep appointments, but never point them at a removed medical record.
     events: pet.events.map((event) => event.linkedRecord === entryId
       ? { ...event, linkedRecord: undefined } : event),
