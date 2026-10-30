@@ -1235,9 +1235,6 @@ export default function App({
       case "summary":
         return (
           <div className="health-summary">
-            <p className="health-summary-preview">
-              Предпросмотр сводки. Экспорт PDF пока не реализован.
-            </p>
             <h3>
               {pet.name}
               {pet.demo ? " · демонстрационный пример" : ""}
