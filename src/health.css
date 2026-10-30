@@ -1,3 +1,7 @@
+/* Keep the first Health heading on exactly the same baseline as Day / Наши планы. */
+.app main:has(> .health-screen) {
+  padding-top: var(--space-compact-3);
+}
 /* Health uses the same five Manrope sizes and compact spacing as Training and Day. */
 .health-screen {
   display: grid;
@@ -426,29 +430,28 @@ dialog:has(.health-modal-content) .modal-head h2 {
   line-height: var(--line-height-ui-caption);
 }
 .health-screen .health-chart-empty { margin: 0; font-size: var(--font-size-sm); }
-.health-screen .health-weight-open {
-  display: flex;
+.health-screen .health-weight-value {
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-compact-3);
-  width: 100%;
-  min-height: var(--button-height-sm);
-  box-sizing: border-box;
-  padding: var(--space-compact-3) 0 0;
-  border: 0;
-  border-top: 1px solid var(--color-border);
-  background: transparent;
-  color: var(--color-primary);
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  text-align: left;
-  cursor: pointer;
 }
-.health-screen .health-weight-open svg {
+.health-screen .health-weight-value .health-weight-history-trigger.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-size-lg);
+  min-width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+  min-height: var(--icon-size-lg);
+  margin: 0 0 0 var(--space-compact-2);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  box-shadow: none;
+}
+.health-screen .health-weight-history-trigger svg {
   width: var(--icon-size-sm);
   height: var(--icon-size-sm);
-  flex: none;
 }
 .health-screen .health-list-title {
   margin: 0;
