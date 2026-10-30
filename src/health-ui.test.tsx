@@ -19,10 +19,11 @@ const props = (pet: ReturnType<typeof blankPet>, readOnly = false) => ({
 describe("Health screen follows the shared PET APP design system", () => {
   it("has one compact title without the old introductory labels", () => {
     const html = renderToStaticMarkup(<Health {...props(blankPet("Мася"))} />);
-    expect(html).toContain('id="health-screen-title"');
-    expect(html).toContain("Здоровье");
-    expect(html).toContain("Вес");
-    expect(html).toContain("Медицинская история");
+    expect(html).toContain('aria-label="Здоровье"');
+    expect(html).not.toContain("<h1");
+    expect(html).toContain('<h2 id="health-weight-title">Вес</h2>');
+    expect(html).toContain('<h2 id="health-record-title">Медицинская история</h2>');
+    expect(html.indexOf('id="health-weight-title"')).toBeLessThan(html.indexOf('id="health-record-title"'));
     expect(html).not.toContain("История заботы");
     expect(html).not.toContain("Записи, назначения и самочувствие");
     expect(html).toContain("Добавить запись");
@@ -44,6 +45,19 @@ describe("Health screen follows the shared PET APP design system", () => {
     expect(html).not.toContain("Без заметки");
     const readonlyHtml = renderToStaticMarkup(<Health {...props(pet, true)} />);
     expect((readonlyHtml.match(/disabled=""/g) ?? []).length).toBeGreaterThanOrEqual(5);
+  });
+
+  it("uses the shared bounded date field in both weight and medical record forms", () => {
+    const app = source("./App.tsx");
+    const css = source("./health.css");
+    const weightForm = app.split('case "weight":')[1]?.split('case "record":')[0] ?? "";
+    const recordForm = app.split('case "record":')[1]?.split('case "deleteWeight":')[0] ?? "";
+    expect(weightForm).toContain('<TrainingDateField label="Дата измерения" name="date"');
+    expect(recordForm).toContain('<TrainingDateField label="Дата" name="date"');
+    expect(weightForm).not.toContain('<Field label="Дата измерения" name="date" type="date"');
+    expect(recordForm).not.toContain('<Field label="Дата" name="date" type="date"');
+    expect(css).toContain('.health-modal-content .training-date-wrap input[type="date"]');
+    expect(css).toContain('overflow: hidden;');
   });
 
   it("uses the same typography and spacing tokens for every health dialog", () => {
