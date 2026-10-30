@@ -75,6 +75,8 @@ describe("Health screen follows the shared PET APP design system", () => {
     const css = source("./health.css");
     expect(css).toContain(".health-screen .health-title-row .health-header-edit.icon-button");
     expect(css).toContain(".health-screen .health-title-row .health-header-add.btn");
+    const headerActionsStyle = css.split(".health-screen .health-title-row .health-header-actions {")[1]?.split("}")[0] ?? "";
+    expect(headerActionsStyle).toContain("gap: var(--space-compact-3)");
     expect(css).toContain("width: var(--icon-size-lg)");
     expect(css).toContain("height: var(--icon-size-lg)");
     expect(css).toContain(".health-screen .card.health-weight-card {");
