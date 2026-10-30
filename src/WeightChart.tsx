@@ -4,9 +4,11 @@ import { fmt } from "./domain";
 
 type Weight = Pet["weights"][number];
 
-// Keep axis labels equally close to the left and bottom edges of the card.
+// Maintain the approved left-axis inset. The chart needs top breathing room,
+// while the bottom axis and its date labels move down as one coordinated group.
 const EDGE_GAP = 5;
-const SIZE = { width: 360, height: 148, right: 357, top: 10, bottom: 115 };
+const SIZE = { width: 360, height: 167, right: 357, top: 31, bottom: 141 };
+const DATE_LABEL_BASELINE = SIZE.height - EDGE_GAP - 3;
 const displayKg = (n: number) => n.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
 const stamp = (date: string, includeYear: boolean) =>
   fmt(date, { day: "numeric", month: "short", ...(includeYear ? { year: "2-digit" as const } : {}) });
@@ -68,7 +70,7 @@ export default function WeightChart({
     <div className={compact ? "health-chart health-chart-compact" : "health-chart"}>
       <svg viewBox={`0 0 ${SIZE.width} ${SIZE.height}`} role="group"
         aria-label={`График веса по датам: ${points.length} измерений, от ${displayKg(minimum)} до ${displayKg(maximum)} кг`}>
-        <text className="health-chart-axis-unit" x={left} y="9">кг</text>
+        <text className="health-chart-axis-unit" x={left} y="21">кг</text>
         {yTicks.map((tick, i) => {
           const y = toY(tick);
           return <g key={i}>
@@ -106,7 +108,7 @@ export default function WeightChart({
         {xTicks.map((tick, i) => <g key={i}>
           <line className="health-chart-axis" x1={tick.x} x2={tick.x}
             y1={SIZE.bottom} y2={SIZE.bottom + 4} />
-          <text className="health-chart-axis-label" x={tick.x} y={SIZE.height - EDGE_GAP}
+          <text className="health-chart-axis-label" x={tick.x} y={DATE_LABEL_BASELINE}
             textAnchor={tick.anchor}>{stamp(tick.date, includeYear)}</text>
         </g>)}
         {selected && dot && (
