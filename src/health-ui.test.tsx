@@ -50,6 +50,39 @@ describe("Health screen follows the shared PET APP design system", () => {
     expect((readonlyHtml.match(/disabled=""/g) ?? []).length).toBeGreaterThanOrEqual(5);
   });
 
+  it("uses stock quantity typography and a shared header-sized add icon for medical history", () => {
+    const pet = blankPet("Мася");
+    pet.weights = [
+      { id: "old", date: "2026-10-17", value: 8.7 },
+      { id: "recent", date: "2026-10-29", value: 9.6 },
+    ];
+    const html = renderToStaticMarkup(<Health {...props(pet)} />);
+    const currentWeight = html.split('class="health-current-weight"')[1]?.split('class="health-chart"')[0] ?? "";
+    expect(currentWeight).toContain("9,6");
+    expect(currentWeight).toContain("<small>кг</small>");
+    expect(currentWeight).toContain('aria-label="Открыть историю веса"');
+    expect(currentWeight).not.toContain('health-weight-date');
+    expect(html.match(/aria-label="Добавить запись"/g)).toHaveLength(1);
+    expect(html).toMatch(/<h2 id="health-record-title">Медицинская история<\/h2><button[^>]*aria-label="Добавить запись"/);
+    expect(html).toContain("health-header-add health-weight-add");
+    expect(html).toContain("health-header-add health-record-add");
+    const readOnlyHtml = renderToStaticMarkup(<Health {...props(pet, true)} />);
+    expect(readOnlyHtml).toMatch(/aria-label="Добавить запись"[^>]*disabled/);
+
+    const css = source("./health.css");
+    const stock = source("./stock.css");
+    expect(css).toContain(".health-screen .health-title-row .health-header-add.btn");
+    expect(css).toContain("width: var(--icon-size-lg)");
+    expect(css).toContain("height: var(--icon-size-lg)");
+    expect(css).toContain("width: calc(100% + var(--space-compact-3) + var(--space-compact-3))");
+    expect(css).toContain("margin-inline: calc(-1 * var(--space-compact-3))");
+    expect(css).toContain(".health-screen .health-weight-value small");
+    for (const token of ["--font-size-xl", "--font-weight-semibold", "--font-size-md", "--font-weight-medium"]) {
+      expect(css).toContain(token);
+      expect(stock).toContain(token);
+    }
+  });
+
   it("matches the Training add button and keeps chart only on the main Health screen", () => {
     const health = source("./Health.tsx");
     const css = source("./health.css");
