@@ -1,8 +1,11 @@
 import { download } from "./storage";
 import { fmt, today, type Pet } from "./domain";
 
-const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (char) =>
-  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] ?? char);
+const HTML_ENTITIES: Record<string, string> = {
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+};
+const escapeHtml = (value: string) =>
+  value.replace(/[&<>"']/g, (char) => HTML_ENTITIES[char] ?? char);
 
 /** Portable one-file medical dossier with embedded attachment data links. */
 export function medicalHistoryHtml(pet: Pet): string {
