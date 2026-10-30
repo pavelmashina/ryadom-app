@@ -68,15 +68,15 @@ export default function Health({
     <section className="health-screen" aria-label="Здоровье">
       <section className="health-section" aria-labelledby="health-weight-title">
         <div className="health-title-row">
-          <h2 id="health-weight-title">Вес</h2>
-          <div className="health-header-actions">
+          <div className="health-title-leading">
+            <h2 id="health-weight-title">Вес</h2>
             <IconButton label="Открыть историю веса"
               className="health-header-edit"
               onClick={() => setWeightDetails(true)}>
               <Pencil aria-hidden="true" />
             </IconButton>
-            {addWeight}
           </div>
+          {addWeight}
         </div>
         <Card className="health-weight-card" variant="info">
           {weights.length
