@@ -29,7 +29,7 @@ export default function Health({
   const records = [...pet.records].sort((a, b) => b.date.localeCompare(a.date));
   const addWeight = (
     <Button size="sm" variant="primary" aria-label="Записать вес"
-      className="health-weight-add" onClick={onWeight} disabled={readOnly}>
+      className="health-header-add health-weight-add" onClick={onWeight} disabled={readOnly}>
       <Plus aria-hidden="true" />
     </Button>
   );
@@ -77,14 +77,13 @@ export default function Health({
               <div className="health-current-weight">
                 <div className="health-weight-value">
                   <strong>{weights[0].value.toLocaleString("ru-RU")}</strong>
-                  <span>кг</span>
+                  <small>кг</small>
                   <IconButton label="Открыть историю веса"
                     className="health-weight-history-trigger"
                     onClick={() => setWeightDetails(true)}>
                     <Pencil aria-hidden="true" />
                   </IconButton>
                 </div>
-                <span className="health-weight-date">{fmt(weights[0].date)}</span>
               </div>
               <WeightChart measurements={weights} compact />
             </>
@@ -93,7 +92,14 @@ export default function Health({
       </section>
 
       <section className="health-section" aria-labelledby="health-record-title">
-        <h2 id="health-record-title">Медицинская история</h2>
+        <div className="health-title-row">
+          <h2 id="health-record-title">Медицинская история</h2>
+          <Button size="sm" variant="primary" aria-label="Добавить запись"
+            className="health-header-add health-record-add"
+            onClick={onRecord} disabled={readOnly}>
+            <Plus aria-hidden="true" />
+          </Button>
+        </div>
         {records.length ? (
           <div className="health-record-list">
             {records.map((r) => {
@@ -139,10 +145,6 @@ export default function Health({
           Добавьте визит, анализы, прививку или назначение.
         </Empty>}
         <div className="health-actions">
-          <Button onClick={onRecord} fullWidth variant="primary" disabled={readOnly}>
-            <Plus aria-hidden="true" />
-            Добавить запись
-          </Button>
           <Button onClick={() => onPlan("")} fullWidth variant="secondary" disabled={readOnly}>
             Запланировать визит
           </Button>
