@@ -79,7 +79,7 @@ const docSchema = z.object({
     .string()
     .max(2800000)
     .refine((s) =>
-      /^data:(application\/pdf|image\/(png|jpeg|webp));base64,[A-Za-z0-9+/=]+$/.test(
+      /^data:(application\/(pdf|vnd\.openxmlformats-officedocument\.wordprocessingml\.document)|image\/(png|jpeg|webp|heic|heif));base64,[A-Za-z0-9+/=]+$/.test(
         s,
       ),
     ),
