@@ -69,25 +69,19 @@ export default function Health({
       <section className="health-section" aria-labelledby="health-weight-title">
         <div className="health-title-row">
           <h2 id="health-weight-title">Вес</h2>
-          {addWeight}
+          <div className="health-header-actions">
+            <IconButton label="Открыть историю веса"
+              className="health-header-edit"
+              onClick={() => setWeightDetails(true)}>
+              <Pencil aria-hidden="true" />
+            </IconButton>
+            {addWeight}
+          </div>
         </div>
         <Card className="health-weight-card" variant="info">
-          {weights[0] ? (
-            <>
-              <div className="health-current-weight">
-                <div className="health-weight-value">
-                  <strong>{weights[0].value.toLocaleString("ru-RU")}</strong>
-                  <small>кг</small>
-                  <IconButton label="Открыть историю веса"
-                    className="health-weight-history-trigger"
-                    onClick={() => setWeightDetails(true)}>
-                    <Pencil aria-hidden="true" />
-                  </IconButton>
-                </div>
-              </div>
-              <WeightChart measurements={weights} compact />
-            </>
-          ) : <p className="health-empty-weight">Измерений пока нет.</p>}
+          {weights.length
+            ? <WeightChart measurements={weights} compact />
+            : <p className="health-empty-weight">Измерений пока нет.</p>}
         </Card>
       </section>
 
