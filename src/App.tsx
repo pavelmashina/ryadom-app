@@ -1139,7 +1139,7 @@ export default function App({
             >
               <Field label="Вес, кг" name="value" type="number" min="0.01"
                 max="300" step="0.01" defaultValue={existing?.value ?? ""} required />
-              <Field label="Дата измерения" name="date" type="date"
+              <TrainingDateField label="Дата измерения" name="date"
                 defaultValue={existing?.date ?? today()} max={today()} required />
             </Form>
             {existing && (
@@ -1176,7 +1176,7 @@ export default function App({
               </Select>
               <Field label="Название" name="name" defaultValue={existing?.name ?? ""}
                 required maxLength={120} />
-              <Field label="Дата" name="date" type="date"
+              <TrainingDateField label="Дата" name="date"
                 defaultValue={existing?.date ?? today()} max={today()} required />
               <Note label="Результат или назначение" value={existing?.note ?? ""} />
               <p className="hint">Запись можно связать с событием, а файлы добавить в документы питомца.</p>
