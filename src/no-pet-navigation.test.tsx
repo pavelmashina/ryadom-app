@@ -63,10 +63,13 @@ describe("Empty pet account navigation and access empties", () => {
       onWeight={() => {}} onRecord={() => {}} onEditWeight={() => {}}
       onEditRecord={() => {}} onSummary={() => {}} onPlan={() => {}} />);
     expect(html).toContain("Здоровье");
-    for (const text of ["Записать вес", "Добавить запись", "Запланировать визит или прививку", "Сводка для ветеринара"]) {
-      const index = html.indexOf(text);
-      expect(index).toBeGreaterThan(-1);
-      expect(html.slice(Math.max(0, html.lastIndexOf("<button", index)), index)).toContain("disabled");
+    // The weight action uses an icon-only button: its accessible name is
+    // in aria-label, which may appear before the disabled attribute.
+    const buttons = [...html.matchAll(/<button\\b[^>]*>[\\s\\S]*?<\\/button>/g)].map(([markup]) => markup);
+    for (const label of ["Записать вес", "Добавить запись", "Запланировать визит или прививку", "Сводка для ветеринара"]) {
+      const button = buttons.find((markup) => markup.includes(label));
+      expect(button, `Missing action: ${label}`).toBeDefined();
+      expect(button!.slice(0, button!.indexOf(">"))).toContain("disabled");
     }
   });
 
