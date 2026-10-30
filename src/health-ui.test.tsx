@@ -37,8 +37,10 @@ describe("Health screen follows the shared PET APP design system", () => {
       name: "Прививка", note: "Без осложнений",
     }];
     const html = renderToStaticMarkup(<Health {...props(pet)} />);
-    expect(html).toContain("Посмотреть все измерения");
+    expect(html).toContain("Открыть историю веса");
     expect(html).toContain('aria-label="Записать вес"');
+    expect(html).not.toContain("Посмотреть все измерения");
+    expect(html).toContain("Запланировать визит");
     expect(html).not.toContain("История измерений (1)");
     expect(html).toContain("Редактировать запись: Прививка");
     expect(html).toContain("Без осложнений");
