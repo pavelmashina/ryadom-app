@@ -460,12 +460,15 @@ dialog:has(.health-modal-content) .modal-head h2 {
   line-height: var(--line-height-ui-caption);
 }
 .health-screen .health-chart-empty { margin: 0; font-size: var(--font-size-sm); }
-.health-screen .health-title-row .health-header-actions {
+/* Keep history directly after the Weight heading; the add button stays right. */
+.health-screen .health-title-row .health-title-leading {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  gap: var(--space-compact-2);
+  min-width: 0;
+}
+.health-screen .health-title-row .health-title-leading h2 {
   flex: none;
-  gap: var(--space-compact-4);
 }
 .health-screen .health-title-row .health-header-edit.icon-button {
   display: inline-flex;
