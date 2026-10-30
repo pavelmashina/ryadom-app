@@ -402,11 +402,8 @@ dialog:has(.health-modal-content) .modal-head h2 {
 .health-screen .health-chart-axis-unit {
   fill: var(--color-text-secondary);
   font-family: var(--font-family-base);
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-regular);
-}
-.health-screen .health-chart-axis-unit {
-  font-size: 9px;
 }
 .health-screen .health-chart-line {
   fill: none;
