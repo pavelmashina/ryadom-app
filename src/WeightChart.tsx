@@ -65,6 +65,16 @@ export default function WeightChart({
   const dot = selectedIndex >= 0 ? positions[selectedIndex] : null;
   const noteX = dot ? Math.max(3, Math.min(SIZE.width - 149, dot.x - 73)) : 0;
   const noteY = dot ? (dot.y > SIZE.top + 48 ? dot.y - 51 : dot.y + 14) : 0;
+  // The most recent value is always visible, independent of tapped point tooltips.
+  const latest = points[points.length - 1];
+  const latestPosition = positions[positions.length - 1];
+  const latestLabel = `${displayKg(latest.value)} кг`;
+  const latestLabelWidth = Math.max(50, latestLabel.length * 7 + 14);
+  const latestLabelX = Math.max(EDGE_GAP, Math.min(
+    SIZE.width - EDGE_GAP - latestLabelWidth,
+    latestPosition.x - latestLabelWidth / 2,
+  ));
+  const latestLabelY = Math.max(EDGE_GAP, latestPosition.y - 29);
 
   return (
     <div className={compact ? "health-chart health-chart-compact" : "health-chart"}>
@@ -111,6 +121,12 @@ export default function WeightChart({
           <text className="health-chart-axis-label" x={tick.x} y={DATE_LABEL_BASELINE}
             textAnchor={tick.anchor}>{stamp(tick.date, includeYear)}</text>
         </g>)}
+        <g className="health-chart-latest" pointerEvents="none"
+          aria-label={`Последнее измерение: ${latestLabel}`}>
+          <rect x={latestLabelX} y={latestLabelY} width={latestLabelWidth} height={20} rx={6} />
+          <text x={latestLabelX + latestLabelWidth / 2} y={latestLabelY + 14}
+            textAnchor="middle">{latestLabel}</text>
+        </g>
         {selected && dot && (
           <g className="health-chart-note" pointerEvents="none" aria-hidden="true">
             <rect x={noteX} y={noteY} width={146} height={42} rx={8} />
