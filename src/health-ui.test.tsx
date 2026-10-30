@@ -59,7 +59,7 @@ describe("Health screen follows the shared PET APP design system", () => {
     const html = renderToStaticMarkup(<Health {...props(pet)} />);
     const weightHeader = html.split('<h2 id="health-weight-title">Вес</h2>')[1]?.split('health-weight-card')[0] ?? "";
     expect(weightHeader).toContain("health-title-leading");
-    expect(weightHeader).toMatch(/aria-label="Открыть историю веса"[\\s\\S]*?<\\/div><button[^>]*aria-label="Записать вес"/);
+    expect(weightHeader).toMatch(/aria-label="Открыть историю веса"[\s\S]*?<\/div><button[^>]*aria-label="Записать вес"/);
     expect(weightHeader).toContain('aria-label="Открыть историю веса"');
     expect(weightHeader).toContain('aria-label="Записать вес"');
     expect(weightHeader.indexOf("Открыть историю веса")).toBeLessThan(weightHeader.indexOf("Записать вес"));
