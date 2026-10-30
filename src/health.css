@@ -421,6 +421,30 @@ dialog:has(.health-modal-content) .modal-head h2 {
   stroke: var(--color-surface);
   stroke-width: 1.5;
 }
+.health-screen .health-chart-point-hit {
+  cursor: pointer;
+}
+.health-screen .health-chart-hitarea {
+  fill: transparent;
+}
+.health-screen .health-chart-point-hit:focus-visible .health-chart-hitarea {
+  stroke: var(--color-primary);
+  stroke-width: 2;
+}
+.health-screen .health-chart-note rect {
+  fill: var(--color-surface);
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+.health-screen .health-chart-note text {
+  fill: var(--color-text-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+}
+.health-screen .health-chart-note .health-chart-note-weight {
+  font-weight: var(--font-weight-medium);
+}
 .health-screen .health-chart-dates {
   display: flex;
   justify-content: space-between;
