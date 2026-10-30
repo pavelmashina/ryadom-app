@@ -295,6 +295,10 @@ dialog:has(.health-modal-content) .modal-head h2 {
   border-radius: var(--radius-md);
   background: var(--color-surface);
 }
+.health-modal-content .health-summary-record > strong {
+  font-weight: var(--font-weight-medium);
+  overflow-wrap: anywhere;
+}
 .health-modal-content .health-summary-note {
   color: var(--color-text-secondary);
   white-space: pre-wrap;
