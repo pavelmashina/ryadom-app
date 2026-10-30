@@ -453,7 +453,7 @@ dialog:has(.health-modal-content) .modal-head h2 {
   align-items: center;
   justify-content: flex-end;
   flex: none;
-  gap: var(--space-compact-2);
+  gap: var(--space-compact-3);
 }
 .health-screen .health-title-row .health-header-edit.icon-button {
   display: inline-flex;
