@@ -49,6 +49,7 @@ import EventForm from "./EventForm";
 import FirstPetSetup from "./FirstPetSetup";
 import { needsFirstPetSetup, type PetBasics } from "./first-pet-setup";
 import { saveWeight, deleteWeight, saveMedicalRecord, deleteMedicalRecord, deletePetDocument } from "./health-actions";
+import { downloadMedicalHistory } from "./medical-history-export";
 import { ACCEPT_MEDICAL_FILES, readMedicalAttachments } from "./medical-attachments";
 import { setSharedEventReminder } from "./push-api";
 import {
@@ -1279,6 +1280,10 @@ export default function App({
                 <p>Записей нет.</p>
               )}
             </section>
+            <Button fullWidth variant="secondary" onClick={() => downloadMedicalHistory(pet)}>
+              <Download aria-hidden="true" />
+              Скачать медицинскую историю
+            </Button>
           </div>
         );
       case "finishShopping": {
