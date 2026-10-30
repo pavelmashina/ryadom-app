@@ -3,7 +3,6 @@ import { Button, Card, Empty, IconButton } from "./components";
 import { ArrowLeft, CalendarPlus, ChevronRight, FileText, Paperclip, Pencil, Plus } from "lucide-react";
 import { fmt, type Pet } from "./domain";
 import WeightChart from "./WeightChart";
-import { downloadMedicalHistory } from "./medical-history-export";
 import "./health.css";
 
 export default function Health({
@@ -29,35 +28,20 @@ export default function Health({
   const weights = [...pet.weights].sort((a, b) => b.date.localeCompare(a.date));
   const records = [...pet.records].sort((a, b) => b.date.localeCompare(a.date));
   const addWeight = (
-    <IconButton label="Записать вес" className="health-weight-add"
-      onClick={onWeight} disabled={readOnly}>
+    <Button size="sm" variant="primary" aria-label="Записать вес"
+      className="health-weight-add" onClick={onWeight} disabled={readOnly}>
       <Plus aria-hidden="true" />
-    </IconButton>
+    </Button>
   );
 
   if (weightDetails) {
     return (
       <section className="health-screen health-weight-page" aria-label="История веса">
-        <div className="health-title-row">
+        <div className="health-weight-back">
           <IconButton label="Вернуться к здоровью" onClick={() => setWeightDetails(false)}>
             <ArrowLeft aria-hidden="true" />
           </IconButton>
-          <h2>Вес</h2>
-          {addWeight}
         </div>
-        <Card className="health-weight-card" variant="info">
-          {weights.length ? <>
-            <div className="health-current-weight">
-              <div className="health-weight-value">
-                <strong>{weights[0].value.toLocaleString("ru-RU")}</strong>
-                <span>кг</span>
-              </div>
-              <span className="health-weight-date">{fmt(weights[0].date)}</span>
-            </div>
-            <WeightChart measurements={weights} />
-          </> : <p className="health-empty-weight">Измерений пока нет.</p>}
-        </Card>
-        <h3 className="health-list-title">История измерений</h3>
         {weights.length ? (
           <Card className="health-weight-list">
             {weights.map((w) => (
@@ -165,10 +149,6 @@ export default function Health({
           <Button onClick={onSummary} fullWidth variant="secondary" disabled={readOnly}>
             <FileText aria-hidden="true" />
             Сводка для ветеринара
-          </Button>
-          <Button onClick={() => downloadMedicalHistory(pet)} fullWidth variant="secondary">
-            <FileText aria-hidden="true" />
-            Скачать медицинскую историю
           </Button>
         </div>
       </section>
