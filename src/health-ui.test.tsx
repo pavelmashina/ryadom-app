@@ -37,14 +37,39 @@ describe("Health screen follows the shared PET APP design system", () => {
       name: "Прививка", note: "Без осложнений",
     }];
     const html = renderToStaticMarkup(<Health {...props(pet)} />);
-    expect(html).toContain("История измерений (1)");
-    expect(html).toContain("Редактировать вес от");
+    expect(html).toContain("Посмотреть все измерения");
+    expect(html).toContain('aria-label="Записать вес"');
+    expect(html).not.toContain("История измерений (1)");
     expect(html).toContain("Редактировать запись: Прививка");
     expect(html).toContain("Без осложнений");
     expect(html).toContain("Связать с событием");
     expect(html).not.toContain("Без заметки");
     const readonlyHtml = renderToStaticMarkup(<Health {...props(pet, true)} />);
     expect((readonlyHtml.match(/disabled=""/g) ?? []).length).toBeGreaterThanOrEqual(5);
+  });
+
+  it("keeps the Day top alignment and adds a weight graph and a separate history view", () => {
+    const health = source("./Health.tsx");
+    const css = source("./health.css");
+    expect(health).toContain("useState(false)");
+    expect(health).toContain("<WeightChart measurements={weights} compact />");
+    expect(health).toContain("setWeightDetails(true)");
+    expect(health).toContain('className="health-weight-page"'.replace('className="health-weight-page"', 'health-weight-page'));
+    expect(health).toContain('label="Вернуться к здоровью"');
+    expect(health).toContain("Редактировать вес от");
+    expect(css).toContain(".health-screen .health-title-row h2");
+    expect(css).toContain("margin-top: var(--space-compact-6)");
+  });
+
+  it("attaches medical files and exports a combined history", () => {
+    const html = source("./Health.tsx");
+    const app = source("./App.tsx");
+    expect(html).toContain("downloadMedicalHistory(pet)");
+    expect(html).toContain("d.linkedRecord === r.id");
+    expect(html).toContain("download={d.filename}");
+    expect(app).toContain('name="attachments"');
+    expect(app).toContain("d.getAll(\"attachments\")");
+    expect(app).toContain("documents: [...p.documents, ...attachments]");
   });
 
   it("uses the shared bounded date field in both weight and medical record forms", () => {
