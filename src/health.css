@@ -363,36 +363,50 @@ dialog:has(.health-modal-content) .modal-head h2 {
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-ui-heading);
 }
+/* Exactly the same 24px square add button as the Training calendar header. */
 .health-screen .health-title-row .health-weight-add.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: none;
-  width: var(--button-height-sm);
-  min-width: var(--button-height-sm);
-  height: var(--button-height-sm);
-  min-height: var(--button-height-sm);
+  width: var(--icon-size-lg);
+  min-width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+  min-height: var(--icon-size-lg);
   margin: 0;
   padding: 0;
-  border: none;
-  border-radius: var(--radius-full);
-  background: var(--color-primary);
-  color: var(--color-on-primary);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
 }
-.health-screen .health-weight-add svg {
-  width: var(--icon-size-lg);
-  height: var(--icon-size-lg);
+.health-screen .health-title-row .health-weight-add.btn svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
 }
 .health-screen .health-chart { min-width: 0; width: 100%; }
 .health-screen .health-chart svg {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 150px;
+  max-width: 100%;
 }
-.health-screen .health-chart-compact svg { max-height: 100px; }
 .health-screen .health-chart-grid {
-  fill: none;
   stroke: var(--color-border);
   stroke-width: 1;
   stroke-dasharray: 3 5;
+}
+.health-screen .health-chart-axis {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+.health-screen .health-chart-axis-label,
+.health-screen .health-chart-axis-unit {
+  fill: var(--color-text-secondary);
+  font-family: var(--font-family-base);
+  font-size: 10px;
+  font-weight: var(--font-weight-regular);
+}
+.health-screen .health-chart-axis-unit {
+  font-size: 9px;
 }
 .health-screen .health-chart-line {
   fill: none;
@@ -448,8 +462,22 @@ dialog:has(.health-modal-content) .modal-head h2 {
   display: grid;
   gap: 0;
 }
-.health-screen.health-weight-page > .health-title-row {
+.health-screen.health-weight-page {
+  align-content: start;
+  gap: var(--space-compact-4);
+}
+.health-screen.health-weight-page .health-weight-back {
+  display: flex;
+  align-items: center;
+  height: var(--button-height-sm);
   margin: 0;
+}
+.health-screen.health-weight-page .health-weight-list {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.health-screen.health-weight-page .health-history-row:first-child {
+  border-top: 0;
 }
 .health-screen .health-attachments {
   display: grid;
