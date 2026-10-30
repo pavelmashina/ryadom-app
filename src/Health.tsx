@@ -26,9 +26,7 @@ export default function Health({
   const records = [...pet.records].sort((a, b) => b.date.localeCompare(a.date));
 
   return (
-    <section className="health-screen" aria-labelledby="health-screen-title">
-      <h1 id="health-screen-title">Здоровье</h1>
-
+    <section className="health-screen" aria-label="Здоровье">
       <section className="health-section" aria-labelledby="health-weight-title">
         <h2 id="health-weight-title">Вес</h2>
         <Card className="health-weight-card" variant="info">
