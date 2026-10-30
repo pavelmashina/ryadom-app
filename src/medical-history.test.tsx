@@ -53,7 +53,9 @@ describe("Medical record attachments and history", () => {
     const html = renderToStaticMarkup(<WeightChart
       measurements={[{ id: "w1", date: "2026-10-28", value: 9.3 }]} compact />);
     expect(html).toContain("График веса");
-    expect(html).toContain("9.3");
+    expect(html).toContain("9,3");
+    expect(html).toContain("health-chart-axis-label");
+    expect(html).toContain("28 окт.");
     expect(html).toContain("<circle");
   });
 });
