@@ -1269,6 +1269,10 @@ export default function App({
                     <strong>{r.type}: {r.name}</strong>
                     <p>{fmt(r.date)}</p>
                     {r.note?.trim() && <p className="health-summary-note">{r.note}</p>}
+                    {pet.documents.filter(d => d.linkedRecord === r.id).map(d => (
+                      <a key={d.id} href={d.data} download={d.filename}
+                        className="health-summary-attachment">{d.filename}</a>
+                    ))}
                   </div>
                 ))
               ) : (
