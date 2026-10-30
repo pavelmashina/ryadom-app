@@ -84,6 +84,7 @@ const docSchema = z.object({
       ),
     ),
   filename: z.string(),
+  linkedRecord: z.string().optional(),
 });
 export const petSchema = z.object({
   id: z.string(),
