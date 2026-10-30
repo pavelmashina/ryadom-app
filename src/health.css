@@ -1,0 +1,305 @@
+/* Health uses the same five Manrope sizes and compact spacing as Training and Day. */
+.health-screen {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-compact-5);
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--font-family-base);
+}
+.health-screen > h1 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-heading);
+}
+.health-screen .health-section,
+.health-screen .health-record-list,
+.health-screen .health-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-compact-3);
+  min-width: 0;
+}
+.health-screen .health-section > h2 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-heading);
+}
+.health-screen .card,
+.health-screen .empty {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: var(--space-compact-4);
+  border-radius: var(--radius-md);
+}
+.health-screen .empty {
+  font-size: var(--font-size-sm);
+}
+.health-screen .empty strong {
+  font-weight: var(--font-weight-medium);
+}
+.health-screen .health-weight-card,
+.health-screen .health-record-card {
+  display: grid;
+  gap: var(--space-compact-4);
+}
+.health-screen .health-current-weight {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-compact-3);
+  min-width: 0;
+}
+.health-screen .health-weight-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-compact-2);
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-ui-heading);
+}
+.health-screen .health-weight-value strong {
+  font-weight: var(--font-weight-medium);
+}
+.health-screen .health-weight-value > span,
+.health-screen .health-weight-date,
+.health-screen .health-empty-weight,
+.health-screen .health-history-date {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-ui-caption);
+}
+.health-screen .health-empty-weight { margin: 0; }
+.health-screen .health-weight-history {
+  min-width: 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+.health-screen .health-weight-history > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-compact-3);
+  min-height: var(--button-height-sm);
+  box-sizing: border-box;
+  margin: 0;
+  padding: var(--space-compact-3) 0;
+  list-style: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+.health-screen .health-weight-history > summary::-webkit-details-marker { display: none; }
+.health-screen .health-weight-history > summary svg {
+  flex: none;
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  transition: transform var(--transition-fast);
+}
+.health-screen .health-weight-history[open] > summary svg { transform: rotate(180deg); }
+.health-screen .health-history-list {
+  display: grid;
+  min-width: 0;
+}
+.health-screen .health-history-row {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto var(--button-height-sm);
+  align-items: center;
+  gap: var(--space-compact-3);
+  min-width: 0;
+  padding: var(--space-compact-2) 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 0;
+}
+.health-screen .health-history-row > strong {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+.health-screen .health-history-row .icon-button,
+.health-screen .health-record-head .icon-button {
+  width: var(--button-height-sm);
+  min-width: var(--button-height-sm);
+  min-height: var(--button-height-sm);
+  height: var(--button-height-sm);
+  padding: 0;
+  margin: 0;
+}
+.health-screen .icon-button svg {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+}
+.health-screen .health-record-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-compact-3);
+  min-width: 0;
+}
+.health-screen .health-record-heading {
+  display: grid;
+  gap: var(--space-compact-2);
+  flex: 1;
+  min-width: 0;
+}
+.health-screen .health-record-meta,
+.health-screen .health-linked-count {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-ui-caption);
+}
+.health-screen .health-record-heading h3 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-heading);
+  overflow-wrap: anywhere;
+}
+.health-screen .health-record-note {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-ui-body);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.health-screen .btn:not(.icon-button) {
+  width: 100%;
+  min-height: var(--button-height-sm);
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-caption);
+}
+.health-screen .btn:not(.icon-button) svg {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+}
+
+/* Every weight, record, delete and summary dialog shares the same modal rhythm. */
+dialog:has(.health-modal-content) .modal-head,
+dialog:has(.health-modal-content) .modal-content {
+  box-sizing: border-box;
+  padding: var(--space-compact-4);
+  min-width: 0;
+  max-width: 100%;
+}
+dialog:has(.health-modal-content) .modal-head h2 {
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-heading);
+}
+.health-modal-content,
+.health-modal-content form,
+.health-modal-content .form-fields,
+.health-modal-content .health-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-compact-4);
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+}
+.health-modal-content .form-fields {
+  border: 0;
+  padding: 0;
+}
+.health-modal-content .field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-compact-2);
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+}
+.health-modal-content .field > label {
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-caption);
+}
+.health-modal-content .field :is(input,select,textarea) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: var(--button-height-sm);
+  padding: var(--space-compact-3) var(--field-control-inline);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-ui-body);
+}
+.health-modal-content .field textarea {
+  min-height: 80px;
+}
+.health-modal-content .form-actions {
+  margin: var(--space-compact-3) 0 0;
+  padding: 0 0 var(--form-action-bottom-inset);
+}
+.health-modal-content .btn {
+  min-height: var(--button-height-sm);
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+.health-modal-content > .health-delete-action {
+  border: 0;
+  background: transparent;
+  color: var(--color-danger);
+  margin: 0;
+}
+.health-modal-content .health-confirmation {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-ui-body);
+}
+.health-modal-content .health-summary > h3,
+.health-modal-content .health-summary-section > h4 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-heading);
+}
+.health-modal-content .health-summary > p,
+.health-modal-content .health-summary-section > p,
+.health-modal-content .health-summary-record > p,
+.health-modal-content .health-summary-record > strong {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-ui-body);
+}
+.health-modal-content .health-summary-section {
+  display: grid;
+  gap: var(--space-compact-3);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-compact-4);
+}
+.health-modal-content .health-summary-record {
+  display: grid;
+  gap: var(--space-compact-2);
+  padding: var(--space-compact-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.health-modal-content .health-summary-note {
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+}
+.health-modal-content .health-summary-preview {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs) !important;
+}
