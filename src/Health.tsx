@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, Card, Empty, IconButton } from "./components";
-import { ArrowLeft, CalendarPlus, ChevronRight, FileText, Paperclip, Pencil, Plus } from "lucide-react";
+import { ArrowLeft, CalendarPlus, FileText, Paperclip, Pencil, Plus } from "lucide-react";
 import { fmt, type Pet } from "./domain";
 import WeightChart from "./WeightChart";
 import "./health.css";
@@ -78,17 +78,17 @@ export default function Health({
                 <div className="health-weight-value">
                   <strong>{weights[0].value.toLocaleString("ru-RU")}</strong>
                   <span>кг</span>
+                  <IconButton label="Открыть историю веса"
+                    className="health-weight-history-trigger"
+                    onClick={() => setWeightDetails(true)}>
+                    <Pencil aria-hidden="true" />
+                  </IconButton>
                 </div>
                 <span className="health-weight-date">{fmt(weights[0].date)}</span>
               </div>
               <WeightChart measurements={weights} compact />
             </>
           ) : <p className="health-empty-weight">Измерений пока нет.</p>}
-          <button type="button" className="health-weight-open"
-            onClick={() => setWeightDetails(true)}>
-            Посмотреть все измерения
-            <ChevronRight aria-hidden="true" />
-          </button>
         </Card>
       </section>
 
@@ -144,7 +144,7 @@ export default function Health({
             Добавить запись
           </Button>
           <Button onClick={() => onPlan("")} fullWidth variant="secondary" disabled={readOnly}>
-            Запланировать визит или прививку
+            Запланировать визит
           </Button>
           <Button onClick={onSummary} fullWidth variant="secondary" disabled={readOnly}>
             <FileText aria-hidden="true" />
