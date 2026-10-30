@@ -58,7 +58,8 @@ describe("Health screen follows the shared PET APP design system", () => {
     ];
     const html = renderToStaticMarkup(<Health {...props(pet)} />);
     const weightHeader = html.split('<h2 id="health-weight-title">Вес</h2>')[1]?.split('health-weight-card')[0] ?? "";
-    expect(weightHeader).toContain("health-header-actions");
+    expect(weightHeader).toContain("health-title-leading");
+    expect(weightHeader).toMatch(/aria-label="Открыть историю веса"[\\s\\S]*?<\\/div><button[^>]*aria-label="Записать вес"/);
     expect(weightHeader).toContain('aria-label="Открыть историю веса"');
     expect(weightHeader).toContain('aria-label="Записать вес"');
     expect(weightHeader.indexOf("Открыть историю веса")).toBeLessThan(weightHeader.indexOf("Записать вес"));
@@ -75,8 +76,10 @@ describe("Health screen follows the shared PET APP design system", () => {
     const css = source("./health.css");
     expect(css).toContain(".health-screen .health-title-row .health-header-edit.icon-button");
     expect(css).toContain(".health-screen .health-title-row .health-header-add.btn");
-    const headerActionsStyle = css.split(".health-screen .health-title-row .health-header-actions {")[1]?.split("}")[0] ?? "";
-    expect(headerActionsStyle).toContain("gap: var(--space-compact-4)");
+    const leadingStyle = css.split(".health-screen .health-title-row .health-title-leading {")[1]?.split("}")[0] ?? "";
+    expect(leadingStyle).toContain("gap: var(--space-compact-2)");
+    expect(css).toContain(".health-screen .health-title-row .health-title-leading h2");
+    expect(css).toContain("flex: none;");
     expect(css).toContain("width: var(--icon-size-lg)");
     expect(css).toContain("height: var(--icon-size-lg)");
     expect(css).toContain(".health-screen .card.health-weight-card {");
