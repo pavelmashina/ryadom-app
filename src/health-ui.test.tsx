@@ -48,23 +48,33 @@ describe("Health screen follows the shared PET APP design system", () => {
     expect((readonlyHtml.match(/disabled=""/g) ?? []).length).toBeGreaterThanOrEqual(5);
   });
 
-  it("keeps the Day top alignment and adds a weight graph and a separate history view", () => {
+  it("matches the Training add button and keeps chart only on the main Health screen", () => {
     const health = source("./Health.tsx");
     const css = source("./health.css");
     expect(health).toContain("useState(false)");
     expect(health).toContain("<WeightChart measurements={weights} compact />");
     expect(health).toContain("setWeightDetails(true)");
-    expect(health).toContain('className="health-weight-page"'.replace('className="health-weight-page"', 'health-weight-page'));
-    expect(health).toContain('label="Вернуться к здоровью"');
-    expect(health).toContain("Редактировать вес от");
+    const detail = health.split("if (weightDetails) {")[1]?.split("  return (\n    <section className=\"health-screen\"")[0] ?? "";
+    expect(detail).toContain('className="health-screen health-weight-page"');
+    expect(detail).toContain('label="Вернуться к здоровью"');
+    expect(detail).toContain("Редактировать вес от");
+    expect(detail).not.toContain("<WeightChart");
+    expect(detail).not.toContain("<h2");
+    expect(detail).not.toContain("<h3");
+    expect(detail).not.toContain("health-current-weight");
     expect(css).toContain(".health-screen .health-title-row h2");
+    expect(css).toContain("width: var(--icon-size-lg)");
+    expect(css).toContain("height: var(--icon-size-lg)");
     expect(css).toContain("margin-top: var(--space-compact-6)");
   });
 
   it("attaches medical files and exports a combined history", () => {
     const html = source("./Health.tsx");
     const app = source("./App.tsx");
-    expect(html).toContain("downloadMedicalHistory(pet)");
+    expect(html).not.toContain("downloadMedicalHistory(pet)");
+    expect(app).toContain("downloadMedicalHistory(pet)");
+    const summary = app.split('case "summary":')[1]?.split('case "finishShopping":')[0] ?? "";
+    expect(summary).toContain("Скачать медицинскую историю");
     expect(html).toContain("d.linkedRecord === r.id");
     expect(html).toContain("download={d.filename}");
     expect(app).toContain('name="attachments"');
