@@ -48,7 +48,7 @@
 .health-screen .health-current-weight {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
+  justify-content: flex-end;
   flex-wrap: wrap;
   gap: var(--space-compact-3);
   min-width: 0;
@@ -57,11 +57,19 @@
   display: inline-flex;
   align-items: baseline;
   gap: var(--space-compact-2);
+  min-width: 0;
   font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-ui-heading);
 }
 .health-screen .health-weight-value strong {
+  font-weight: var(--font-weight-semibold);
+}
+.health-screen .health-weight-value small {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-ui-heading);
 }
 .health-screen .health-weight-value > span,
 .health-screen .health-weight-date,
@@ -368,7 +376,7 @@ dialog:has(.health-modal-content) .modal-head h2 {
   line-height: var(--line-height-ui-heading);
 }
 /* Exactly the same 24px square add button as the Training calendar header. */
-.health-screen .health-title-row .health-weight-add.btn {
+.health-screen .health-title-row .health-header-add.btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -382,11 +390,17 @@ dialog:has(.health-modal-content) .modal-head h2 {
   border-radius: var(--radius-sm);
   box-shadow: none;
 }
-.health-screen .health-title-row .health-weight-add.btn svg {
+.health-screen .health-title-row .health-header-add.btn svg {
   width: var(--icon-size-sm);
   height: var(--icon-size-sm);
 }
-.health-screen .health-chart { min-width: 0; width: 100%; }
+/* Extend plotting scales toward the inside edges of the weight card. */
+.health-screen .health-weight-card .health-chart {
+  box-sizing: border-box;
+  min-width: 0;
+  width: calc(100% + var(--space-compact-3) + var(--space-compact-3));
+  margin-inline: calc(-1 * var(--space-compact-3));
+}
 .health-screen .health-chart svg {
   display: block;
   width: 100%;
