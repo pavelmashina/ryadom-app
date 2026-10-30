@@ -25,6 +25,27 @@ describe("Medical record attachments and history", () => {
     expect(removed.documents[0].filename).toBe("results.pdf");
   });
 
+  it("exports the full basic pet profile and latest measured weight", () => {
+    const pet = blankPet("Бим");
+    pet.breed = "Вельш-корги";
+    pet.birthday = "2020-05-15";
+    pet.sex = "Мальчик";
+    pet.chip = "999000111222333";
+    pet.weights = [
+      { id: "older", date: "2026-10-10", value: 10.1 },
+      { id: "latest", date: "2026-10-28", value: 10.4 },
+    ];
+    const html = medicalHistoryHtml(pet);
+    expect(html).toContain("Данные питомца");
+    for (const value of [
+      "Кличка", "Бим", "Порода", "Вельш-корги",
+      "Дата рождения", "15 мая", "Пол", "Мальчик",
+      "Номер чипа", "999000111222333",
+      "Последний вес", "10,4 кг",
+    ]) expect(html).toContain(value);
+    expect(html).toContain("История веса");
+  });
+
   it("escapes user-supplied text in portable medical history", () => {
     const pet = blankPet("<script>alert(1)</script>");
     pet.records = [{ id: "record-2", name: "<img src=x>", type: "Визит",
@@ -57,5 +78,9 @@ describe("Medical record attachments and history", () => {
     expect(html).toContain("health-chart-axis-label");
     expect(html).toContain("28 окт.");
     expect(html).toContain("<circle");
+    expect(html).toContain('role="button"');
+    expect(html).toContain('tabindex="0"');
+    expect(html).toContain("health-chart-axis-label");
+    expect(html).toContain("health-chart-hitarea");
   });
 });
