@@ -343,3 +343,151 @@ dialog:has(.health-modal-content) .modal-head h2 {
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs) !important;
 }
+
+
+/* Match the Day screen title's zero top offset and 20px type. */
+.health-screen .health-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-compact-3);
+  min-width: 0;
+  margin: 0;
+}
+.health-screen .health-title-row h2 {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-ui-heading);
+}
+.health-screen .health-title-row .health-weight-add.btn {
+  flex: none;
+  width: var(--button-height-sm);
+  min-width: var(--button-height-sm);
+  height: var(--button-height-sm);
+  min-height: var(--button-height-sm);
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.health-screen .health-weight-add svg {
+  width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+}
+.health-screen .health-chart { min-width: 0; width: 100%; }
+.health-screen .health-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 150px;
+}
+.health-screen .health-chart-compact svg { max-height: 100px; }
+.health-screen .health-chart-grid {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+}
+.health-screen .health-chart-line {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.health-screen .health-chart-point {
+  fill: var(--color-primary);
+  stroke: var(--color-surface);
+  stroke-width: 1.5;
+}
+.health-screen .health-chart-dates {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-compact-3);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-ui-caption);
+}
+.health-screen .health-chart-empty { margin: 0; font-size: var(--font-size-sm); }
+.health-screen .health-weight-open {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-compact-3);
+  width: 100%;
+  min-height: var(--button-height-sm);
+  box-sizing: border-box;
+  padding: var(--space-compact-3) 0 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+  cursor: pointer;
+}
+.health-screen .health-weight-open svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  flex: none;
+}
+.health-screen .health-list-title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+}
+.health-screen .health-weight-list {
+  display: grid;
+  gap: 0;
+}
+.health-screen .health-weight-page > .health-title-row {
+  margin: 0;
+}
+.health-screen .health-attachments {
+  display: grid;
+  gap: var(--space-compact-2);
+  min-width: 0;
+}
+.health-screen .health-attachment-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-compact-2);
+  min-width: 0;
+  min-height: 32px;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-ui-caption);
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+.health-screen .health-attachment-link svg {
+  flex: none;
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+.health-screen .health-section > .health-actions {
+  margin-top: var(--space-compact-6);
+}
+.health-modal-content .field input[type="file"] {
+  overflow: hidden;
+  max-width: 100%;
+  padding: var(--space-compact-3);
+  font-size: var(--font-size-sm);
+}
+.health-modal-content .field input[type="file"]::file-selector-button {
+  margin-right: var(--space-compact-3);
+  padding: var(--space-compact-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-secondary);
+  color: var(--color-text-primary);
+  font: inherit;
+}
