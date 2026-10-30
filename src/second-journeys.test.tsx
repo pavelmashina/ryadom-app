@@ -87,9 +87,9 @@ describe("R2: correcting health history and deleting documents", () => {
     const html = renderToStaticMarkup(<Health pet={pet} onWeight={() => {}}
       onEditWeight={() => {}} onEditRecord={() => {}}
       onRecord={() => {}} onPlan={() => {}} onSummary={() => {}} />);
-    expect(html).toContain("Изменить вес от");
-    expect(html).toContain("Связать с новым событием");
-    expect(html).toContain("Изменить");
+    expect(html).toContain("Редактировать вес от");
+    expect(html).toContain("Редактировать запись: Врач");
+    expect(html).toContain("Связать с событием");
     expect(source("./App.tsx")).toContain('kind: "deleteRecord"');
     expect(source("./App.tsx")).toContain('kind: "deleteDocument"');
   });
