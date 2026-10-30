@@ -74,7 +74,10 @@ describe("Medical record attachments and history", () => {
   it("keeps date and weight labels equally close to graph edges", () => {
     const chartSource = readFileSync(new URL("./WeightChart.tsx", import.meta.url), "utf8");
     expect(chartSource).toContain("const EDGE_GAP = 5;");
-    expect(chartSource).toContain("SIZE.height - EDGE_GAP");
+    expect(chartSource).toContain("top: 31, bottom: 141");
+    expect(chartSource).toContain("DATE_LABEL_BASELINE = SIZE.height - EDGE_GAP - 3");
+    expect(chartSource).toContain("y={DATE_LABEL_BASELINE}");
+    expect(chartSource).toContain('y="21">кг</text>');
     expect(chartSource).toContain("displayKg(v).length");
     expect(chartSource).toContain("x={left - 3}");
   });
@@ -83,6 +86,9 @@ describe("Medical record attachments and history", () => {
     const html = renderToStaticMarkup(<WeightChart
       measurements={[{ id: "w1", date: "2026-10-28", value: 9.3 }]} compact />);
     expect(html).toContain("График веса");
+    expect(html).toContain('viewBox="0 0 360 167"');
+    expect(html).toContain('y1="31" y2="141"');
+    expect(html).toContain('y="159"');
     expect(html).toContain("9,3");
     expect(html).toContain("health-chart-axis-label");
     expect(html).toContain("28 окт.");
