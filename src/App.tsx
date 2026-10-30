@@ -49,6 +49,7 @@ import EventForm from "./EventForm";
 import FirstPetSetup from "./FirstPetSetup";
 import { needsFirstPetSetup, type PetBasics } from "./first-pet-setup";
 import { saveWeight, deleteWeight, saveMedicalRecord, deleteMedicalRecord, deletePetDocument } from "./health-actions";
+import { ACCEPT_MEDICAL_FILES, readMedicalAttachments } from "./medical-attachments";
 import { setSharedEventReminder } from "./push-api";
 import {
   blankPet,
@@ -1160,12 +1161,20 @@ export default function App({
           <>
             <Form label={existing ? "Сохранить изменения" : "Добавить запись"}
               onSave={async (d) => {
-                await saved(() => update((p) => saveMedicalRecord(p, {
-                  id: existing?.id ?? id(),
-                  name: text(d, "name"),
-                  date: text(d, "date"),
-                  type: text(d, "type") as Pet["records"][number]["type"],
-                  note: text(d, "note"),
+                const recordId = existing?.id ?? id();
+                const recordName = text(d, "name");
+                const attachments = await readMedicalAttachments(
+                  d.getAll("attachments"), recordId, recordName,
+                );
+                await saved(() => update((p) => ({
+                  ...saveMedicalRecord(p, {
+                    id: recordId,
+                    name: recordName,
+                    date: text(d, "date"),
+                    type: text(d, "type") as Pet["records"][number]["type"],
+                    note: text(d, "note"),
+                  }),
+                  documents: [...p.documents, ...attachments],
                 })));
               }}
             >
@@ -1179,7 +1188,9 @@ export default function App({
               <TrainingDateField label="Дата" name="date"
                 defaultValue={existing?.date ?? today()} max={today()} required />
               <Note label="Результат или назначение" value={existing?.note ?? ""} />
-              <p className="hint">Запись можно связать с событием, а файлы добавить в документы питомца.</p>
+              <Field label="Прикрепить файлы или фотографии" name="attachments"
+                type="file" accept={ACCEPT_MEDICAL_FILES} multiple />
+              <p className="hint">До 4 файлов (PDF, DOCX, фотографии), каждый до 2 МБ, вместе до 5 МБ. Они сохраняются в медицинской истории и документах питомца.</p>
             </Form>
             {existing && (
               <Button fullWidth variant="ghost" className="health-delete-action" onClick={() =>
