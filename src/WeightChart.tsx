@@ -4,8 +4,9 @@ import { fmt } from "./domain";
 
 type Weight = Pet["weights"][number];
 
-// Use nearly the full plot width; reserve only the room needed for kilogram labels.
-const SIZE = { width: 360, height: 144, right: 357, top: 10, bottom: 109 };
+// Keep axis labels equally close to the left and bottom edges of the card.
+const EDGE_GAP = 5;
+const SIZE = { width: 360, height: 148, right: 357, top: 10, bottom: 115 };
 const displayKg = (n: number) => n.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
 const stamp = (date: string, includeYear: boolean) =>
   fmt(date, { day: "numeric", month: "short", ...(includeYear ? { year: "2-digit" as const } : {}) });
@@ -29,7 +30,8 @@ export default function WeightChart({
   const high = Math.ceil((maximum + padding) * 10) / 10;
   const range = Math.max(0.1, high - low);
   const yTicks = [low, low + range / 2, high];
-  const left = Math.max(32, Math.ceil(Math.max(...yTicks.map((v) => displayKg(v).length)) * 7 + 8));
+  // Reserve only the width needed by the tick labels, with a 5px outer gap.
+  const left = Math.max(30, Math.ceil(Math.max(...yTicks.map((v) => displayKg(v).length)) * 6.7 + EDGE_GAP + 3));
   const toY = (value: number) =>
     SIZE.bottom - ((value - low) / range) * (SIZE.bottom - SIZE.top);
 
@@ -71,7 +73,7 @@ export default function WeightChart({
           const y = toY(tick);
           return <g key={i}>
             <line className="health-chart-grid" x1={left} x2={SIZE.right} y1={y} y2={y} />
-            <text className="health-chart-axis-label" x={left - 6} y={y + 4}
+            <text className="health-chart-axis-label" x={left - 3} y={y + 4}
               textAnchor="end">{displayKg(tick)}</text>
           </g>;
         })}
@@ -104,7 +106,7 @@ export default function WeightChart({
         {xTicks.map((tick, i) => <g key={i}>
           <line className="health-chart-axis" x1={tick.x} x2={tick.x}
             y1={SIZE.bottom} y2={SIZE.bottom + 4} />
-          <text className="health-chart-axis-label" x={tick.x} y={SIZE.bottom + 19}
+          <text className="health-chart-axis-label" x={tick.x} y={SIZE.height - EDGE_GAP}
             textAnchor={tick.anchor}>{stamp(tick.date, includeYear)}</text>
         </g>)}
         {selected && dot && (
