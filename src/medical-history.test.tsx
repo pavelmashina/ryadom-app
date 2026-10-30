@@ -82,6 +82,18 @@ describe("Medical record attachments and history", () => {
     expect(chartSource).toContain("x={left - 3}");
   });
 
+  it("always labels the most recent chart point even without a tap", () => {
+    const html = renderToStaticMarkup(<WeightChart
+      measurements={[
+        { id: "latest", date: "2026-10-29", value: 11.6 },
+        { id: "older", date: "2026-10-20", value: 9.3 },
+      ]} compact />);
+    expect(html).toContain('class="health-chart-latest"');
+    expect(html).toContain("Последнее измерение: 11,6 кг");
+    expect(html).toContain(">11,6 кг</text>");
+    expect(html).not.toContain('class="health-chart-note"');
+  });
+
   it("shows chart data even with a single measurement", () => {
     const html = renderToStaticMarkup(<WeightChart
       measurements={[{ id: "w1", date: "2026-10-28", value: 9.3 }]} compact />);
