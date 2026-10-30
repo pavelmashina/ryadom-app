@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+import { readFileSync } from "node:fs";
 import { blankPet, petSchema } from "./domain";
 import WeightChart from "./WeightChart";
 import { medicalHistoryHtml } from "./medical-history-export";
@@ -68,6 +69,14 @@ describe("Medical record attachments and history", () => {
         { type: "application/pdf" })],
       "r1", "Осмотр",
     )).rejects.toThrow(/2 МБ/);
+  });
+
+  it("keeps date and weight labels equally close to graph edges", () => {
+    const chartSource = readFileSync(new URL("./WeightChart.tsx", import.meta.url), "utf8");
+    expect(chartSource).toContain("const EDGE_GAP = 5;");
+    expect(chartSource).toContain("SIZE.height - EDGE_GAP");
+    expect(chartSource).toContain("displayKg(v).length");
+    expect(chartSource).toContain("x={left - 3}");
   });
 
   it("shows chart data even with a single measurement", () => {
