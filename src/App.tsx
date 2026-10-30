@@ -1143,7 +1143,7 @@ export default function App({
                 defaultValue={existing?.date ?? today()} max={today()} required />
             </Form>
             {existing && (
-              <Button fullWidth variant="ghost" onClick={() =>
+              <Button fullWidth variant="ghost" className="health-delete-action" onClick={() =>
                 setOverlay({ kind: "deleteWeight", entryId: existing.id })
               }>Удалить измерение</Button>
             )}
@@ -1179,10 +1179,10 @@ export default function App({
               <Field label="Дата" name="date" type="date"
                 defaultValue={existing?.date ?? today()} max={today()} required />
               <Note label="Результат или назначение" value={existing?.note ?? ""} />
-              <p className="hint">После сохранения запись можно связать с событием. Файлы добавляются в документы профиля.</p>
+              <p className="hint">Запись можно связать с событием, а файлы добавить в документы питомца.</p>
             </Form>
             {existing && (
-              <Button fullWidth variant="ghost" onClick={() =>
+              <Button fullWidth variant="ghost" className="health-delete-action" onClick={() =>
                 setOverlay({ kind: "deleteRecord", entryId: existing.id })
               }>Удалить медицинскую запись</Button>
             )}
@@ -1210,7 +1210,7 @@ export default function App({
                   : deletePetDocument(p, entryId)));
             }}
           >
-            <p>Подтвердите удаление. Это действие нельзя отменить.</p>
+            <p className="health-confirmation">Подтвердите удаление. Это действие нельзя отменить.</p>
             {kind === "deleteRecord" && pet.events.some((e) => e.linkedRecord === entryId) && (
               <p className="hint">Связанные события останутся в календаре, но связь с записью будет удалена.</p>
             )}
@@ -1222,8 +1222,8 @@ export default function App({
       }
       case "summary":
         return (
-          <>
-            <p className="notice">
+          <div className="health-summary">
+            <p className="health-summary-preview">
               Предпросмотр сводки. Экспорт PDF пока не реализован.
             </p>
             <h3>
@@ -1238,31 +1238,33 @@ export default function App({
               · {pet.sex || "Пол не указан"}
             </p>
             <p>Чип: {pet.chip || "Не указан"}</p>
-            <h3>История веса</h3>
-            {pet.weights.length ? (
-              pet.weights.map((w) => (
-                <p key={w.id}>
-                  {fmt(w.date)} · {w.value} кг
-                </p>
-              ))
-            ) : (
-              <p>Измерений нет.</p>
-            )}
-            <h3>Медицинские записи</h3>
-            {pet.records.length ? (
-              pet.records.map((r) => (
-                <Card key={r.id}>
-                  <strong>
-                    {r.type}: {r.name}
-                  </strong>
-                  <p>{fmt(r.date)}</p>
-                  <p className="note">{r.note || "Без заметки"}</p>
-                </Card>
-              ))
-            ) : (
-              <p>Записей нет.</p>
-            )}
-          </>
+            <section className="health-summary-section">
+              <h4>История веса</h4>
+              {pet.weights.length ? (
+                [...pet.weights].sort((a,b) => b.date.localeCompare(a.date)).map((w) => (
+                  <p key={w.id}>
+                    {fmt(w.date)} · {w.value.toLocaleString("ru-RU")} кг
+                  </p>
+                ))
+              ) : (
+                <p>Измерений нет.</p>
+              )}
+            </section>
+            <section className="health-summary-section">
+              <h4>Медицинские записи</h4>
+              {pet.records.length ? (
+                [...pet.records].sort((a,b) => b.date.localeCompare(a.date)).map((r) => (
+                  <div className="health-summary-record" key={r.id}>
+                    <strong>{r.type}: {r.name}</strong>
+                    <p>{fmt(r.date)}</p>
+                    {r.note?.trim() && <p className="health-summary-note">{r.note}</p>}
+                  </div>
+                ))
+              ) : (
+                <p>Записей нет.</p>
+              )}
+            </section>
+          </div>
         );
       case "finishShopping": {
         const item = pet.shopping.find((x) => x.id === overlay.itemId);
@@ -1770,7 +1772,9 @@ export default function App({
         </nav>}
         {overlay && (
           <Modal title={title} onClose={close}>
-            {modalBody()}
+            {["weight", "editWeight", "deleteWeight", "record", "editRecord", "deleteRecord", "summary"].includes(overlay.kind) ? (
+              <div className="health-modal-content">{modalBody()}</div>
+            ) : modalBody()}
           </Modal>
         )}
       </fieldset>
