@@ -1,17 +1,20 @@
+import { useState } from "react";
 import type { Pet } from "./domain";
 import { fmt } from "./domain";
 
 type Weight = Pet["weights"][number];
 
-const SIZE = { width: 340, height: 162, left: 47, right: 328, top: 12, bottom: 119 };
+// Use nearly the full plot width; reserve only the room needed for kilogram labels.
+const SIZE = { width: 360, height: 144, right: 357, top: 10, bottom: 109 };
 const displayKg = (n: number) => n.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
 const stamp = (date: string, includeYear: boolean) =>
   fmt(date, { day: "numeric", month: "short", ...(includeYear ? { year: "2-digit" as const } : {}) });
 
-/** The compact trend chart has labelled kilogram and date axes, even for a single reading. */
+/** Responsive weight trend with labelled axes and tap/keyboard-accessible point notes. */
 export default function WeightChart({
   measurements, compact = false,
 }: { measurements: Weight[]; compact?: boolean }) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const ordered = [...measurements].sort((a, b) =>
     a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
   const points = compact ? ordered.slice(-10) : ordered;
@@ -26,6 +29,7 @@ export default function WeightChart({
   const high = Math.ceil((maximum + padding) * 10) / 10;
   const range = Math.max(0.1, high - low);
   const yTicks = [low, low + range / 2, high];
+  const left = Math.max(32, Math.ceil(Math.max(...yTicks.map((v) => displayKg(v).length)) * 7 + 8));
   const toY = (value: number) =>
     SIZE.bottom - ((value - low) / range) * (SIZE.bottom - SIZE.top);
 
@@ -33,9 +37,9 @@ export default function WeightChart({
   const first = dates[0];
   const span = dates[dates.length - 1] - first;
   const toX = (date: number, index: number) =>
-    points.length === 1 ? (SIZE.left + SIZE.right) / 2
-      : span === 0 ? SIZE.left + (SIZE.right - SIZE.left) * index / (points.length - 1)
-      : SIZE.left + (SIZE.right - SIZE.left) * (date - first) / span;
+    points.length === 1 ? (left + SIZE.right) / 2
+      : span === 0 ? left + (SIZE.right - left) * index / (points.length - 1)
+      : left + (SIZE.right - left) * (date - first) / span;
   const positions = points.map((point, i) => ({
     x: toX(dates[i], i), y: toY(point.value),
   }));
@@ -47,40 +51,73 @@ export default function WeightChart({
   const xTicks = points.length === 1
     ? [{ x: positions[0].x, date: points[0].date, anchor: "middle" as const }]
     : [
-      { x: SIZE.left, date: points[0].date, anchor: "start" as const },
-      ...(points.length >= 5 && middle.x > SIZE.left + 95 && middle.x < SIZE.right - 95
+      { x: left, date: points[0].date, anchor: "start" as const },
+      ...(points.length >= 5 && middle.x > left + 95 && middle.x < SIZE.right - 95
         ? [{ x: middle.x, date: points[middleIndex].date, anchor: "middle" as const }] : []),
       { x: SIZE.right, date: points[points.length - 1].date, anchor: "end" as const },
     ];
+  const selectedIndex = points.findIndex((item) => item.id === selectedId);
+  const selected = selectedIndex >= 0 ? points[selectedIndex] : null;
+  const dot = selectedIndex >= 0 ? positions[selectedIndex] : null;
+  const noteX = dot ? Math.max(3, Math.min(SIZE.width - 149, dot.x - 73)) : 0;
+  const noteY = dot ? (dot.y > SIZE.top + 48 ? dot.y - 51 : dot.y + 14) : 0;
 
   return (
     <div className={compact ? "health-chart health-chart-compact" : "health-chart"}>
-      <svg viewBox={`0 0 ${SIZE.width} ${SIZE.height}`} role="img"
+      <svg viewBox={`0 0 ${SIZE.width} ${SIZE.height}`} role="group"
         aria-label={`График веса по датам: ${points.length} измерений, от ${displayKg(minimum)} до ${displayKg(maximum)} кг`}>
-        <text className="health-chart-axis-unit" x={SIZE.left} y="9">кг</text>
+        <text className="health-chart-axis-unit" x={left} y="9">кг</text>
         {yTicks.map((tick, i) => {
           const y = toY(tick);
           return <g key={i}>
-            <line className="health-chart-grid" x1={SIZE.left} x2={SIZE.right} y1={y} y2={y} />
-            <text className="health-chart-axis-label" x={SIZE.left - 8} y={y + 3}
+            <line className="health-chart-grid" x1={left} x2={SIZE.right} y1={y} y2={y} />
+            <text className="health-chart-axis-label" x={left - 6} y={y + 4}
               textAnchor="end">{displayKg(tick)}</text>
           </g>;
         })}
-        <line className="health-chart-axis" x1={SIZE.left} x2={SIZE.left}
+        <line className="health-chart-axis" x1={left} x2={left}
           y1={SIZE.top} y2={SIZE.bottom} />
-        <line className="health-chart-axis" x1={SIZE.left} x2={SIZE.right}
+        <line className="health-chart-axis" x1={left} x2={SIZE.right}
           y1={SIZE.bottom} y2={SIZE.bottom} />
         {positions.length > 1 && <path className="health-chart-line" d={path} />}
-        {positions.map((p, i) => <circle className="health-chart-point" key={points[i].id}
-          cx={p.x} cy={p.y} r={i === points.length - 1 ? 4 : 2.6}>
-          <title>{`${fmt(points[i].date)}: ${displayKg(points[i].value)} кг`}</title>
-        </circle>)}
+        {positions.map((p, i) => {
+          const point = points[i];
+          const isSelected = point.id === selectedId;
+          const toggle = () => setSelectedId(isSelected ? null : point.id);
+          return <g key={point.id} className="health-chart-point-hit" role="button"
+            tabIndex={0} aria-pressed={isSelected}
+            aria-label={`${fmt(point.date, {day:"numeric",month:"long",year:"numeric"})}, ${displayKg(point.value)} кг`}
+            onClick={toggle}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                toggle();
+              }
+              if (event.key === "Escape") setSelectedId(null);
+            }}>
+            <circle className="health-chart-hitarea" cx={p.x} cy={p.y} r={15} />
+            <circle className="health-chart-point" cx={p.x} cy={p.y}
+              r={isSelected || i === points.length - 1 ? 4 : 2.8}
+              pointerEvents="none" />
+          </g>;
+        })}
         {xTicks.map((tick, i) => <g key={i}>
           <line className="health-chart-axis" x1={tick.x} x2={tick.x}
             y1={SIZE.bottom} y2={SIZE.bottom + 4} />
-          <text className="health-chart-axis-label" x={tick.x} y={SIZE.bottom + 17}
+          <text className="health-chart-axis-label" x={tick.x} y={SIZE.bottom + 19}
             textAnchor={tick.anchor}>{stamp(tick.date, includeYear)}</text>
         </g>)}
+        {selected && dot && (
+          <g className="health-chart-note" pointerEvents="none" aria-hidden="true">
+            <rect x={noteX} y={noteY} width={146} height={42} rx={8} />
+            <text x={noteX + 9} y={noteY + 16}>
+              {fmt(selected.date, { day: "numeric", month: "short", year: "numeric" })}
+            </text>
+            <text className="health-chart-note-weight" x={noteX + 9} y={noteY + 33}>
+              {displayKg(selected.value)} кг
+            </text>
+          </g>
+        )}
       </svg>
     </div>
   );
