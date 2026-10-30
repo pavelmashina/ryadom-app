@@ -348,7 +348,7 @@ dialog:has(.health-modal-content) .modal-head h2 {
 /* Match the Day screen title's zero top offset and 20px type. */
 .health-screen .health-title-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-compact-3);
   min-width: 0;
