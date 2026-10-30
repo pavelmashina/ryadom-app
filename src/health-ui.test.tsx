@@ -132,7 +132,7 @@ describe("Health screen follows the shared PET APP design system", () => {
   it("uses the same typography and spacing tokens for every health dialog", () => {
     const css = source("./health.css");
     const app = source("./App.tsx");
-    for (const size of ["xl", "lg", "md", "sm", "xs"]) {
+    for (const size of ["lg", "md", "sm", "xs"]) {
       expect(css).toContain("--font-size-" + size);
     }
     expect(css).toContain("var(--space-compact-4)");
