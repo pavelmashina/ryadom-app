@@ -448,7 +448,7 @@ dialog:has(.health-modal-content) .modal-head h2 {
   display: grid;
   gap: 0;
 }
-.health-screen .health-weight-page > .health-title-row {
+.health-screen.health-weight-page > .health-title-row {
   margin: 0;
 }
 .health-screen .health-attachments {
