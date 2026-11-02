@@ -25,6 +25,7 @@ const session = (n: number, status: "planned" | "completed" = "completed"): Trai
 function cells(marked: TrainingSession[]) {
   const html = renderToStaticMarkup(
     <TrainingHistory
+      initialDate={date(1)}
       sessions={marked}
       commands={[]}
       onOpen={() => {}}
