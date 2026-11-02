@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
-import { blankPet } from "./domain";
+import { blankPet, today } from "./domain";
 import Calendar from "./Calendar";
 import EventForm from "./EventForm";
 import ReminderSettings from "./ReminderSettings";
@@ -26,8 +26,9 @@ describe("Day calendar matches Training and notifications follow category permis
   });
 
   it("positions selected and current-day circles with markers exactly as Training", () => {
+    const day = today();
     const html = renderToStaticMarkup(<Calendar pet={blankPet("Мася")}
-      selected="2026-10-25" month="2026-10-01"
+      selected={day} month={day.slice(0, 7) + "-01"}
       setSelected={() => {}} setMonth={() => {}}
       onAdd={() => {}} onTraining={() => {}} onToggle={() => {}} onDetail={() => {}} />);
     expect(html).toContain('class="day-screen"');
