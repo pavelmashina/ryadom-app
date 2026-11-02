@@ -4,16 +4,16 @@ import { readFileSync } from "node:fs";
 import Calendar from "./Calendar";
 import EventForm from "./EventForm";
 import TrainingTimeField from "./TrainingTimeField";
-import { blankPet } from "./domain";
+import { blankPet, today } from "./domain";
 
 const source = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
 
 describe("Day calendar unified with Training calendar layout", () => {
   it("preserves the month header controls and legend but uses compact circular dates", () => {
-    const day = "2026-10-25";
+    const day = today();
     const html = renderToStaticMarkup(<Calendar
       pet={blankPet("Мася")}
-      selected={day} month="2026-10-01"
+      selected={day} month={day.slice(0, 7) + "-01"}
       setSelected={() => {}} setMonth={() => {}}
       onAdd={() => {}} onTraining={() => {}}
       onToggle={() => {}} onDetail={() => {}}
