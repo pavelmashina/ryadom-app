@@ -4,6 +4,7 @@ import { Button, Card, Empty, IconButton, SectionHeader } from "./components";
 import { fmt, today, type Pet } from "./domain";
 import type { TrainingSession } from "./training-domain";
 import { monthDays, shiftMonth, sessionsOnDate } from "./training-calendar";
+import TrainingComment from "./TrainingComment";
 export default function TrainingHistory({
   sessions,
   commands,
@@ -226,15 +227,7 @@ export default function TrainingHistory({
               </span>
             ))}
           </div>
-          {s.comment && (
-            <details className="training-comment">
-              <summary>
-                <span className="training-excerpt">{s.comment}</span>
-                <span className="comment-toggle">Комментарий целиком</span>
-              </summary>
-              <p className="note">{s.comment}</p>
-            </details>
-          )}
+          {s.comment.trim() && <TrainingComment comment={s.comment} />}
           {s.status === "planned" && s.date === today() && !readOnly && (
             <div className="training-start-actions">
               <Button fullWidth variant="primary" onClick={() => onStart?.(s)}>
