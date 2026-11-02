@@ -93,7 +93,7 @@ export default function TrainingComment({ comment }: { comment: string }) {
       </p>
       <p className="training-comment-measure" ref={measureRef} aria-hidden="true">
         <span ref={measureTextRef} />
-        <span ref={measureSuffixRef}>
+        <span ref={measureSuffixRef} hidden>
           {"… "}
           <button type="button" className="training-comment-toggle" tabIndex={-1}>
             еще
