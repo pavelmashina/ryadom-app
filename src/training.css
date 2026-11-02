@@ -471,31 +471,60 @@
   font-weight: var(--font-weight-semibold);
   font-variant-numeric: tabular-nums;
 }
-.training-screen .training-comment summary {
-  cursor: pointer;
-  list-style: none;
+/* Three-line preview: measured copy reserves room for "еще" on line three.
+   Expanded text and "скрыть" share the final line whenever there is room. */
+.training-screen .training-comment {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+}
+.training-screen .training-comment-text,
+.training-screen .training-comment-measure {
+  margin: 0;
   color: var(--color-text-secondary);
+  font-family: var(--font-family-base);
   font-size: var(--font-size-sm);
-}
-.training-screen .training-comment .comment-toggle {
-  display: block;
-  margin-top: var(--space-compact-1);
-  color: var(--color-primary);
-  font-size: var(--font-size-xs);
-  text-decoration: underline;
-}
-.training-screen .training-comment .note {
-  margin: var(--space-compact-3) 0 0;
-  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-ui-body);
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.training-screen .training-excerpt {
+.training-screen .training-comment-pending {
   display: -webkit-box;
   overflow: hidden;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
 }
-.training-screen .training-comment[open] .training-excerpt {
+.training-screen .training-comment-toggle {
+  display: inline;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: var(--font-weight-medium);
+  line-height: inherit;
+  text-decoration: underline;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.training-screen .training-comment-toggle:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+.training-screen .training-comment-measure {
+  position: absolute;
+  inset: 0 auto auto 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: auto;
+  visibility: hidden;
+  pointer-events: none;
+}
+.training-screen .training-comment-measure [hidden] {
   display: none;
 }
 .training-screen .training-session-actions {
