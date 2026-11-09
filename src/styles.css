@@ -2514,6 +2514,28 @@ dialog:has(.event-editor-modal) .modal-head h2 {
   height: 5px;
   border-radius: 50%;
 }
+/* Match Training: outlined for planned, filled for completed.
+   When both exist on one day, show the filled dot inside the outline. */
+.day-screen .calendar .date.btn .dot.training-planned,
+.day-screen .calendar .date.btn .dot.training-mixed {
+  box-sizing: border-box;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--color-training);
+  background: transparent;
+}
+.day-screen .calendar .date.btn .dot.training-mixed {
+  display: grid;
+  place-items: center;
+}
+.day-screen .calendar .date.btn .dot.training-mixed::after {
+  content: "";
+  display: block;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--color-training);
+}
 .day-screen .calendar .date.btn:hover .day-date-number {
   background: var(--color-surface-secondary);
 }
