@@ -78,6 +78,6 @@ describe("Automatic missed-training status", () => {
     expect(html).toContain("Пропущена");
     expect(html).toContain("Проведена");
     // Missing a training does not count as a completed session.
-    expect(html).toContain("Выполнено <!-- -->1");
+    expect(html.replace(/<!--.*?-->/g, "")).toContain("Выполнено 1 из 2");
   });
 });
