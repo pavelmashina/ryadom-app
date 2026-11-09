@@ -124,15 +124,22 @@ export default function Calendar({
         </div>
         <div className="dates">
           {cells.map((s) => {
-            const ev = eventsFor(pet, s),
-              cats = [
-                ...new Set([
-                  ...ev.map((e) => e.category),
-                  ...pet.workouts
-                    .filter((w) => w.date === s && w.status !== "cancelled")
-                    .map(() => "training" as const),
-                ]),
-              ];
+            const ev = eventsFor(pet, s);
+            const workouts = pet.workouts.filter(
+              (w) => w.date === s && w.status !== "cancelled",
+            );
+            const trainingPlanned =
+              workouts.some((w) => w.status === "planned") ||
+              ev.some((e) => e.category === "training" && !pet.done[completionKey(e, s)]);
+            const trainingCompleted =
+              workouts.some((w) => w.status !== "planned") ||
+              ev.some((e) => e.category === "training" && !!pet.done[completionKey(e, s)]);
+            const cats = [
+              ...new Set([
+                ...ev.map((e) => e.category),
+                ...workouts.map(() => "training" as const),
+              ]),
+            ];
             return (
               <Button
                 key={s}
@@ -146,7 +153,15 @@ export default function Calendar({
                 <span className="day-date-number">{date(s).getDate()}</span>
                 <span className="dots" aria-hidden="true">
                   {cats.map((c) => (
-                    <i key={c} className={`dot ${c}`} />
+                    <i key={c} className={`dot ${c}${
+                      c === "training"
+                        ? trainingPlanned && trainingCompleted
+                          ? " training-mixed"
+                          : trainingPlanned
+                            ? " training-planned"
+                            : ""
+                        : ""
+                    }`} />
                   ))}
                 </span>
               </Button>
