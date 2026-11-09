@@ -5,6 +5,7 @@ import { fmt, today, type Pet } from "./domain";
 import type { TrainingSession } from "./training-domain";
 import { monthDays, shiftMonth, sessionsOnDate } from "./training-calendar";
 import TrainingComment from "./TrainingComment";
+import { trainingStatusLabel } from "./training-status";
 export default function TrainingHistory({
   sessions,
   commands,
@@ -201,7 +202,7 @@ export default function TrainingHistory({
                   {fmt(s.date, { day: "numeric", month: "long", year: "numeric" })}
                 </span>
               )}
-              <span>{s.status === "planned" ? "Запланирована" : "Проведена"}</span>
+              <span>{trainingStatusLabel(s, today())}</span>
               {s.time && <span> · {s.time}</span>}
               {s.duration_minutes && <span> · {s.duration_minutes} мин</span>}
               {!!s.results.length && <span> · {s.results.length} команд</span>}
