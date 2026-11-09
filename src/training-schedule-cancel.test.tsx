@@ -1,7 +1,8 @@
 import { describe,expect,it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
-import { blankPet } from "./domain";
+import { blankPet, today } from "./domain";
+import { trainingStatusLabel } from "./training-status";
 import type { TrainingSession } from "./training-domain";
 import type { TrainingSchedule } from "./training-planning";
 import { cancelPlannedTraining } from "./training-actions";
@@ -75,7 +76,7 @@ describe("Scheduled training editor and cancellation",()=>{
   const html=renderToStaticMarkup(<TrainingHistory
     initialDate="2026-10-23" sessions={[pet.workouts[1]]} commands={pet.commands}
     onOpen={()=>{}} onEdit={()=>{}}/>);
-  expect(html).toContain("Запланирована");
+  expect(html).toContain(trainingStatusLabel(pet.workouts[1], today()));
   expect(html).toContain("Редактировать");
   expect(html).not.toContain(">Подробнее</button>");
   expect(html).not.toContain(">Перенести</button>");
