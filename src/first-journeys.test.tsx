@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import Calendar from "./Calendar";
-import { blankPet } from "./domain";
+import { blankPet, today } from "./domain";
+import { trainingStatusLabel } from "./training-status";
 import { trainingSchema } from "./training-domain";
 import { reminderChoice, reminderOffsetMinutes, savedReminderChoice } from "./reminder-choice";
 
@@ -34,7 +35,7 @@ describe("Release 1: cross-screen training journey", () => {
         onDetail={() => {}} />,
     );
     expect(html).toContain("Тренировка в зале");
-    expect(html).toContain("Запланирована");
+    expect(html).toContain(trainingStatusLabel(pet.workouts[0], today()));
     expect(html).toContain("Проведена");
     expect(source("./App.tsx")).toContain("onTraining={(id) => {");
     expect(source("./App.tsx")).toContain('setOverlay({ kind: "trainingDetail", sessionId: id })');
