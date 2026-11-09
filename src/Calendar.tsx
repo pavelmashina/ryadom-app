@@ -1,5 +1,6 @@
 import { PageHeader, Button, IconButton, Empty, Checkbox } from "./components";
 import { ChevronLeft, ChevronRight, Plus, CalendarDays } from "lucide-react";
+import { trainingStatusLabel } from "./training-status";
 import {
   date,
   iso,
@@ -218,7 +219,7 @@ export default function Calendar({
               <strong>{w.name || "Тренировка"}</strong>
               <small>
                 {w.time || "Весь день"} ·{" "}
-                {w.status === "planned" ? "Запланирована" : "Проведена"}
+                {trainingStatusLabel(w, today())}
               </small>
             </Button>
             <ChevronRight />
