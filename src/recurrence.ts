@@ -8,11 +8,21 @@
  */
 export type RepeatFrequency = "once" | "daily" | "weekly" | "monthly" | "yearly";
 export type RepeatEndType = "never" | "date" | "count";
+/**
+ * A change to one scheduled occurrence (`on` is the scheduled day): cancel it,
+ * move it (`newDate`) and/or override some fields for that occurrence only.
+ */
 export type CalendarException = {
   on: string;
   newDate?: string;
   cancelled?: boolean;
+  name?: string;
+  time?: string;
+  note?: string;
+  kind?: "event" | "reminder";
+  category?: "health" | "training" | "care";
 };
+export const OVERRIDE_KEYS = ["name", "time", "note", "kind", "category"] as const;
 
 export type RecurrenceEvent = {
   date: string;
@@ -116,6 +126,38 @@ export function occursOn(e: RecurrenceEvent, day: string): boolean {
   if (!permitted(e, day)) return false;
   const exception = e.exceptions?.find((x) => x.on === day);
   return !exception?.cancelled && (!exception?.newDate || exception.newDate === day);
+}
+
+/**
+ * The scheduled day of the occurrence displayed on `day`: differs from `day`
+ * only for an occurrence moved there by an exception.
+ */
+export function originalOn(e: RecurrenceEvent, day: string): string {
+  const moved = (e.exceptions ?? []).find(
+    (x) => !x.cancelled && x.newDate === day && x.on !== day && permitted(e, x.on),
+  );
+  return moved ? moved.on : day;
+}
+
+/** The exception (move/override) applying to the occurrence shown on `day`. */
+export function exceptionShownOn(e: RecurrenceEvent, day: string): CalendarException | undefined {
+  const on = originalOn(e, day);
+  return e.exceptions?.find((x) => x.on === on && !x.cancelled);
+}
+
+/**
+ * Number of scheduled occurrences before the scheduled day `on` (moves and
+ * cancellations do not change it: count limits refer to the schedule).
+ */
+export function occurrencesBefore(e: RecurrenceEvent, on: string): number {
+  return Math.max(0, (occurrenceIndex(e, on) ?? 1) - 1);
+}
+
+/** Recurrence fields made explicit so a new start date keeps the pattern. */
+export function pinnedPattern(e: RecurrenceEvent): Partial<RecurrenceEvent> {
+  if (e.repeat === "weekly") return { repeatWeekdays: weekdaysOf(e) };
+  if (e.repeat === "monthly") return { repeatMonthday: e.repeatMonthday ?? parts(e.date)[2] };
+  return {};
 }
 
 export function previousDay(s: string) {

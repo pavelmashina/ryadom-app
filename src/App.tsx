@@ -58,6 +58,8 @@ import {
   fmt,
   id,
   completionKey,
+  deviceTimezone,
+  eventInstance,
   moveEvent,
   sessionSchema,
   petSchema,
@@ -66,7 +68,11 @@ import {
   type State,
 } from "./domain";
 import { parseBackup, download } from "./storage";
-import { recurrenceText, previousDay } from "./recurrence";
+import { recurrenceText, originalOn } from "./recurrence";
+import {
+  deleteAll, deleteFollowing, deleteOccurrence, editAll, editOccurrence,
+  followingSource, singleOccurrenceSource, splitSeries, type EventScope,
+} from "./event-scope";
 import { joinCodeFromUrl } from "./share-invitation";
 import { completeShoppingItem, restoreShoppingItem } from "./shopping-checkout";
 import {
@@ -74,7 +80,6 @@ import {
   unsyncedShoppingError, type PendingShopping,
 } from "./shopping-fast-save";
 type Screen = "day" | "health" | "training" | "stock" | "profile" | "account";
-type EventScope = "single" | "future" | "all";
 type Overlay =
   | {
       kind: "event";
@@ -485,7 +490,8 @@ export default function App({
     close();
   }
   async function addEvent(e: PetEvent) {
-    await saved(() => update((p) => ({ ...p, events: [...p.events, e] })));
+    const zoned = { ...e, timezone: e.timezone ?? deviceTimezone() };
+    await saved(() => update((p) => ({ ...p, events: [...p.events, zoned] })));
     if (e.reminderEnabled) await syncSharedReminder(e.id, e);
     setSelected(e.date);
     setMonth(e.date.slice(0, 7) + "-01");
@@ -513,91 +519,31 @@ export default function App({
     }
   }
   async function saveEventEdit(e: PetEvent, on: string, scope: EventScope, next: PetEvent) {
-    // Editing one occurrence or a future series creates a distinct event ID.
-    // Attach the shared reminder to the new ID, not the old series.
-    const targetId = e.repeat !== "once" && scope !== "all" ? id() : e.id;
+    // "Only this" keeps the series ID (an override on its exception);
+    // "this and following" continues under a new ID with its own reminder.
+    const splits = e.repeat !== "once" && scope === "future" && originalOn(e, on) > e.date;
+    const targetId = splits ? id() : e.id;
     await saved(() =>
       update((p) => {
-        if (e.repeat === "once" || scope === "all")
-          return {
-            ...p,
-            events: p.events.map((x) => x.id === e.id ? { ...next, id: e.id } : x),
-          };
-        const events = p.events.map((x) => x.id === e.id ? x : x);
-        if (scope === "single") {
-          const cancelled = {
-            ...e,
-            exceptions: [
-              ...(e.exceptions ?? []).filter((x) => x.on !== on),
-              { on, cancelled: true },
-            ],
-          };
-          return {
-            ...p,
-            events: [
-              ...events.map((x) => x.id === e.id ? cancelled : x),
-              {
-                ...next,
-                id: targetId,
-                repeat: "once" as const,
-                end: "",
-                repeatEndType: undefined,
-                repeatCount: undefined,
-                exceptions: undefined,
-              },
-            ],
-          };
-        }
-        const past = {
-          ...e,
-          end: previousDay(on),
-          repeatEndType: "date" as const,
-          repeatCount: undefined,
-          exceptions: (e.exceptions ?? []).filter((x) => x.on < on),
-        };
-        return {
-          ...p,
-          events: [
-            ...events.filter((x) => x.id !== e.id),
-            ...(on === e.date ? [] : [past]),
-            { ...next, id: targetId, exceptions: undefined },
-          ],
-        };
+        const series = p.events.find((x) => x.id === e.id) ?? e;
+        if (series.repeat === "once" || scope === "all") return editAll(p, series, next);
+        if (scope === "single") return editOccurrence(p, series, on, next);
+        return splitSeries(p, series, on, next, targetId);
       }),
     );
-    await syncSharedReminder(targetId, next);
+    // A single occurrence follows the series reminder.
+    if (e.repeat === "once" || scope !== "single") await syncSharedReminder(targetId, next);
     setSelected(next.date);
     setMonth(next.date.slice(0, 7) + "-01");
   }
   async function deleteEvent(e: PetEvent, on: string, scope: EventScope) {
     await saved(() =>
       update((p) => {
-        if (e.repeat === "once" || scope === "all" || (scope === "future" && on === e.date)) {
-          return {
-            ...p,
-            events: p.events.filter((x) => x.id !== e.id),
-            done: Object.fromEntries(Object.entries(p.done).filter(([key]) => !key.startsWith(e.id + ":"))),
-          };
-        }
-        const altered = scope === "single"
-          ? {
-              ...e,
-              exceptions: [
-                ...(e.exceptions ?? []).filter((x) => x.on !== on),
-                { on, cancelled: true },
-              ],
-            }
-          : {
-              ...e,
-              end: previousDay(on),
-              repeatEndType: "date" as const,
-              repeatCount: undefined,
-              exceptions: (e.exceptions ?? []).filter((x) => x.on < on),
-            };
-        return {
-          ...p,
-          events: p.events.map((x) => x.id === e.id ? altered : x),
-        };
+        const series = p.events.find((x) => x.id === e.id) ?? e;
+        if (series.repeat === "once" || scope === "all") return deleteAll(p, series);
+        return scope === "single"
+          ? deleteOccurrence(p, series, on)
+          : deleteFollowing(p, series, on);
       }),
     );
   }
@@ -734,14 +680,9 @@ export default function App({
         const scope = current.repeat === "once" ? "all" : eventScope;
         const editSource: PetEvent = scope === "all"
           ? current
-          : {
-              ...current,
-              date: overlay.on,
-              ...(scope === "single"
-                ? { repeat: "once" as const, end: "", repeatEndType: undefined, repeatCount: undefined }
-                : {}),
-              exceptions: undefined,
-            };
+          : scope === "single"
+            ? singleOccurrenceSource(current, overlay.on)
+            : followingSource(current, overlay.on);
         return (
           <div className="event-modify-modal">
             {current.repeat !== "once" && (
@@ -867,7 +808,10 @@ export default function App({
         );
       }
       case "detail": {
-        const e = pet.events.find((e) => e.id === overlay.event.id)!;
+        const series = pet.events.find((e) => e.id === overlay.event.id);
+        if (!series) return <p>Событие больше недоступно.</p>;
+        // Show this occurrence (with its own changes), act on the series.
+        const e = eventInstance(series, overlay.on);
         const done = pet.done[completionKey(e, overlay.on)];
         return (
           <div className="event-detail-modal">

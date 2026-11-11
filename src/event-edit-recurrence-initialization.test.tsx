@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
 import EventForm from "./EventForm";
 import { eventSchema } from "./domain";
+import { singleOccurrenceSource } from "./event-scope";
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
 const app = read("./App.tsx");
@@ -23,7 +24,11 @@ describe("Editing existing repeating events", () => {
     expect(open).toContain('e.repeat === "once" ? "all" : action === "edit" ? "all" : "single"');
     expect(app).toContain('const editSource: PetEvent = scope === "all"');
     expect(app).toContain('scope === "single"');
-    expect(app).toContain('{ repeat: "once" as const, end: "", repeatEndType: undefined');
+    expect(app).toContain("singleOccurrenceSource(current, overlay.on)");
+    // The single-occurrence form shows a one-off event for that day.
+    const single = singleOccurrenceSource(eventSchema.parse(sample), "2026-12-15");
+    expect(single).toMatchObject({ date: "2026-12-15", repeat: "once", end: "" });
+    expect(single.repeatEndType).toBeUndefined();
     expect(app).toContain('key={scope}');
   });
 

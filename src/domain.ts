@@ -1,5 +1,5 @@
 import { scheduleSchema } from "./training-planning";
-import { occursOn } from "./recurrence";
+import { exceptionShownOn, occursOn, OVERRIDE_KEYS } from "./recurrence";
 import { z } from "zod";
 import { trainingSchema } from "./training-domain";
 export const iso = (d: Date) =>
@@ -37,7 +37,15 @@ export const eventSchema = z
       on: daySchema,
       newDate: daySchema.optional(),
       cancelled: z.boolean().optional(),
+      // "Only this occurrence" overrides; absent keys inherit the series value.
+      name: nameSchema.optional(),
+      time: z.string().regex(/^$|^([01]\d|2[0-3]):[0-5]\d$/).optional(),
+      note: z.string().max(5000).optional(),
+      kind: z.enum(["event", "reminder"]).optional(),
+      category: z.enum(["health", "training", "care"]).optional(),
     })).optional(),
+    /** IANA zone the local date/time belong to (device zone at creation). */
+    timezone: z.string().max(64).optional(),
     end: z.union([z.literal(""), daySchema]),
     reminder: z.string().regex(/^\d+$/).refine((v) => Number(v) <= 525600, "Слишком раннее напоминание"),
     reminderEnabled: z.boolean().optional(),
@@ -225,10 +233,28 @@ export const initialState = (): State => ({version: 1, selectedPet: "", pets: []
 export function occurs(e: PetEvent, s: string) {
   return occursOn(e, s);
 }
+/** The occurrence shown on `day`: series values with that day's overrides. */
+export function eventInstance(e: PetEvent, day: string): PetEvent {
+  const x = exceptionShownOn(e, day);
+  if (!x) return e;
+  const overrides = Object.fromEntries(
+    OVERRIDE_KEYS.filter((k) => x[k] !== undefined).map((k) => [k, x[k]]),
+  );
+  return { ...e, ...overrides };
+}
 export const eventsFor = (p: Pet, s: string) =>
   p.events
     .filter((e) => occurs(e, s))
+    .map((e) => eventInstance(e, s))
     .sort((a, b) => a.time.localeCompare(b.time));
+/** Device IANA time zone; events keep their local time in this zone. */
+export function deviceTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Moscow";
+  } catch {
+    return "Europe/Moscow";
+  }
+}
 export const completionKey = (e: PetEvent, s: string) => `${e.id}:${s}`;
 export function moveEvent(p: Pet, eventId: string, to: string): Pet {
   daySchema.parse(to);

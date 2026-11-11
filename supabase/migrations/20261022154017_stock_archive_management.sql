@@ -65,7 +65,7 @@ begin
   from public.stock_items i
   where i.pet_id=p_pet and i.archived_at is not null;
   return coalesce(archived,'[]'::jsonb);
-end $function$
+end $function$;
 
 revoke all on function public.stock_archive(uuid,text,uuid) from public,anon,authenticated;
 grant execute on function public.stock_archive(uuid,text,uuid) to authenticated;
