@@ -1,0 +1,128 @@
+name: Issue statuses
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/issue-statuses.yml
+  workflow_dispatch:
+  issues:
+    types: [opened, labeled, reopened]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: issue-status-${{ github.event.issue.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  manage-statuses:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create and synchronize task statuses
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const statuses = [
+              {
+                name: 'Новая задача',
+                color: 'D0D7DE',
+                description: 'Задача создана и ожидает выполнения'
+              },
+              {
+                name: 'Выполнена',
+                color: '0969DA',
+                description: 'Изменения внесены, ожидают проверки владельцем'
+              },
+              {
+                name: 'Проверена',
+                color: '1A7F37',
+                description: 'Владелец проверил результат и принял задачу'
+              }
+            ];
+            const names = new Set(statuses.map(s => s.name));
+
+            // Make all three statuses available as native GitHub Issue labels.
+            for (const label of statuses) {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name: label.name });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                await github.rest.issues.createLabel({ owner, repo, ...label });
+              }
+            }
+
+            const currentNames = issue =>
+              new Set(issue.labels.map(l => typeof l === 'string' ? l : l.name));
+
+            async function applyNewToUnlabeled(issue) {
+              if (issue.pull_request) return;
+              if ([...currentNames(issue)].some(name => names.has(name))) return;
+              await github.rest.issues.addLabels({
+                owner, repo, issue_number: issue.number, labels: ['Новая задача']
+              });
+            }
+
+            // First installation: bring all open Issues into the new workflow.
+            // Closed Issues are not assumed to have been verified.
+            if (context.eventName === 'push' || context.eventName === 'workflow_dispatch') {
+              for await (const page of github.paginate.iterator(
+                github.rest.issues.listForRepo,
+                { owner, repo, state: 'open', per_page: 100 }
+              )) {
+                for (const issue of page.data) await applyNewToUnlabeled(issue);
+              }
+              return;
+            }
+
+            const issue = context.payload.issue;
+            if (!issue || issue.pull_request) return;
+
+            if (context.payload.action === 'opened') {
+              await applyNewToUnlabeled(issue);
+              return;
+            }
+
+            if (context.payload.action === 'reopened') {
+              // A previously verified item is back for rework.
+              if (currentNames(issue).has('Проверена')) {
+                await github.rest.issues.removeLabel({
+                  owner, repo, issue_number: issue.number, name: 'Проверена'
+                });
+                await github.rest.issues.addLabels({
+                  owner, repo, issue_number: issue.number, labels: ['Новая задача']
+                });
+              } else {
+                await applyNewToUnlabeled(issue);
+              }
+              return;
+            }
+
+            if (context.payload.action === 'labeled') {
+              const chosen = context.payload.label?.name;
+              if (!names.has(chosen)) return;
+
+              // At any time, exactly one of the three status labels can remain.
+              for (const other of statuses) {
+                if (other.name === chosen || !currentNames(issue).has(other.name)) continue;
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner, repo, issue_number: issue.number, name: other.name
+                  });
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                }
+              }
+
+              // A task becomes closed only after the owner marks it verified.
+              // Marking it new/done again restores the open Issue state.
+              const desiredState = chosen === 'Проверена' ? 'closed' : 'open';
+              if (issue.state !== desiredState) {
+                await github.rest.issues.update({
+                  owner, repo, issue_number: issue.number, state: desiredState
+                });
+              }
+            }
