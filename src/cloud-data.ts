@@ -22,6 +22,7 @@ export function sharedChanges(next: State, before?: State) {
           updateWorkouts: !old || !sameData(old.workouts, p.workouts),
           updateCommands: !old || !sameData(old.commands, p.commands),
           updateSchedules: !old || !sameData(old.trainingSchedules ?? [], p.trainingSchedules ?? []),
+          updateCalendar: !old || !sameData(old.events, p.events) || !sameData(old.done, p.done),
         },
       ];
     }),

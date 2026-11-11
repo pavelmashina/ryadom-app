@@ -58,7 +58,7 @@ begin
     update public.pets set revision=revision+1,updated_at=now() where id=p_pet;
   end if;
   return inserted_any;
-end $function$
+end $function$;
 
 revoke all on function public.materialize_training_month(uuid,date) from public,anon,authenticated;
 grant execute on function public.materialize_training_month(uuid,date) to authenticated;

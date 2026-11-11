@@ -85,8 +85,11 @@ describe("Release 1: shared pet reminder consistency", () => {
     const app = source("./App.tsx");
     expect(event).toContain("getSharedEventReminder(session, existing.id)");
     expect(event).toContain('if (!reminderReady) throw new Error');
-    expect(app).toContain('const targetId = e.repeat !== "once" && scope !== "all" ? id() : e.id;');
-    expect(app).toContain("await syncSharedReminder(targetId, next)");
+    // Only "this and following" creates a new series ID; "only this" keeps
+    // the series (and its shared reminder) and is stored as an override.
+    expect(app).toContain('const splits = e.repeat !== "once" && scope === "future" && originalOn(e, on) > e.date;');
+    expect(app).toContain("const targetId = splits ? id() : e.id;");
+    expect(app).toContain('if (e.repeat === "once" || scope !== "single") await syncSharedReminder(targetId, next);');
     expect(app).toContain("setSharedEventReminder(session, pet.id, eventId, Number(event.reminder), !!event.reminderEnabled)");
     expect(event).not.toContain("Отправка push-уведомлений будет подключена отдельно");
   });
